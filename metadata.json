@@ -1,0 +1,7 @@
+{
+  "name": "Everest Room Booking Dashboard",
+  "description": "A high-end, responsive room management and scheduling dashboard for modern offices, featuring live status tracking, timeline schedules, and a guest check-in system.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
