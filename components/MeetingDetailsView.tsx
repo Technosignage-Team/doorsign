@@ -260,7 +260,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
                     <button 
                       onClick={() => !isPast && onEdit(meeting.id)}
                       disabled={isPast}
-                      className={`flex-1 ${isPast ? 'bg-white/5 text-slate-100 cursor-not-allowed border-white/5' : isOngoing ? 'bg-white/5 text-slate-100 border-white/10 hover:bg-white/10' : 'bg-primary text-white border-white/20'} py-3 rounded-none text-sm font-black shadow-2xl transition-all flex items-center justify-center gap-2 border-t`}
+                      className={`flex-1 ${isPast ? 'bg-white/5 text-slate-100 cursor-not-allowed border-white/5' : isOngoing ? 'bg-white/5 text-slate-100 border-white/10 hover:bg-white/10' : 'bg-white text-black border-white/20 hover:bg-slate-100'} py-3 rounded-none text-sm font-black shadow-2xl transition-all flex items-center justify-center gap-2 border-t`}
                     >
                       <span className="material-symbols-outlined text-xl">
                         {isPast ? 'lock' : 'edit'}

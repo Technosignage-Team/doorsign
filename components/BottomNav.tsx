@@ -63,8 +63,8 @@ const BottomNav: React.FC<BottomNavProps> = ({
             }}
             className="w-full flex flex-row-reverse items-center gap-4 group transition-all duration-300"
           >
-            <div className={`size-14 shrink-0 rounded-none bg-primary text-white shadow-[0_10px_30px_rgba(19,127,236,0.4)] flex items-center justify-center border border-white/20 group-hover:scale-105 active:scale-95 transition-all duration-300 ${
-              activeView === View.BOOKING ? 'ring-2 ring-primary ring-offset-4 ring-offset-background-dark' : ''
+            <div className={`size-14 shrink-0 rounded-none bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.1)] flex items-center justify-center border border-white/20 group-hover:scale-105 active:scale-95 transition-all duration-300 ${
+              activeView === View.BOOKING ? 'ring-2 ring-white ring-offset-4 ring-offset-background-dark' : ''
             }`}>
               <span className="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform font-variation-fill">add_box</span>
             </div>

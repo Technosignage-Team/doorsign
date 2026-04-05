@@ -70,7 +70,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
               <div className="mt-4 flex justify-center">
                 <button 
                   onClick={onBook}
-                  className="px-10 py-3.5 bg-primary text-white text-sm font-black rounded-none shadow-xl shadow-primary/20 hover:brightness-110 active:scale-95 transition-all border-t border-white/20 uppercase tracking-[0.2em]"
+                  className="px-10 py-3.5 bg-white text-black text-sm font-black rounded-none shadow-xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all border-t border-white/20 uppercase tracking-[0.2em]"
                 >
                   Reserve Now
                 </button>
@@ -149,7 +149,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
                 </div>
                 <button 
                   onClick={() => setSelectedAmenity(null)}
-                  className="px-8 py-3.5 bg-primary text-white font-black rounded-none shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all uppercase tracking-widest text-[10px]"
+                  className="px-8 py-3.5 bg-white text-black font-black rounded-none shadow-lg shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-widest text-[10px]"
                 >
                   Got it
                 </button>

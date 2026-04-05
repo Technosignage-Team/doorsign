@@ -287,7 +287,7 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
                     <button 
                       onClick={onConfirmAction}
                       className={`w-full py-8 lg:py-10 rounded-none text-2xl lg:text-3xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 border-t border-white/20 flex items-center justify-center gap-4 ${
-                        mode === 'CHECK_IN' ? 'bg-primary shadow-primary/30' : 'bg-status-busy shadow-status-busy/30'
+                        mode === 'CHECK_IN' ? 'bg-white text-black shadow-white/10' : 'bg-status-busy text-white shadow-status-busy/30'
                       }`}
                     >
                       <span className="material-symbols-outlined text-4xl">
@@ -372,7 +372,7 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
                   <button 
                     onClick={() => handleAuth()}
                     disabled={!inputCode}
-                    className="w-full max-w-[340px] mt-6 bg-primary text-white py-5 rounded-none text-lg font-black uppercase tracking-[0.2em] shadow-2xl hover:brightness-110 active:scale-95 transition-all disabled:opacity-30 border-t border-white/20 relative z-10"
+                    className="w-full max-w-[340px] mt-6 bg-white text-black py-5 rounded-none text-lg font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-30 border-t border-white/20 relative z-10"
                   >
                     IDENTIFY
                   </button>
@@ -474,7 +474,7 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
               <div className="mt-16 w-full max-w-sm flex flex-col gap-6">
                  <button 
                   onClick={submitFeedback}
-                  className="w-full bg-primary text-white py-6 lg:py-8 rounded-none text-xl font-black shadow-2xl shadow-primary/20 hover:brightness-110 active:scale-95 transition-all uppercase tracking-[0.2em] border-t border-white/20"
+                  className="w-full bg-white text-black py-6 lg:py-8 rounded-none text-xl font-black shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-[0.2em] border-t border-white/20"
                  >
                    Confirm & Finish
                  </button>
