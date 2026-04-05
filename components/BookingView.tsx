@@ -507,8 +507,8 @@ const BookingView: React.FC<BookingViewProps> = ({
                 )}
 
                 <div className="mt-0.5">
-                  <button type="submit" disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting} className="w-full bg-primary text-white py-1.5 rounded-none text-xs font-black shadow-2xl hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 border-t border-white/20">
-                    {isSubmitting ? <span className="size-3 border-2 border-white/30 border-t-white rounded-none animate-spin"></span> : <><span className="material-symbols-outlined text-sm font-bold">{initialMeetingId ? 'save' : 'event_available'}</span>{initialMeetingId ? 'Update' : 'Confirm'}</>}
+                  <button type="submit" disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting} className="w-full bg-white text-black py-1.5 rounded-none text-xs font-black shadow-2xl hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 border-t border-white/20">
+                    {isSubmitting ? <span className="size-3 border-2 border-black/30 border-t-black rounded-none animate-spin"></span> : <><span className="material-symbols-outlined text-sm font-bold">{initialMeetingId ? 'save' : 'event_available'}</span>{initialMeetingId ? 'Update' : 'Confirm'}</>}
                   </button>
                 </div>
               </section>

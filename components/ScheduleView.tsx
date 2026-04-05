@@ -303,7 +303,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
                         )}
                       </div>
                       {!isPast && (
-                        <div className="bg-[#0b1a2d] text-primary px-8 py-3 rounded-none text-[11px] font-black uppercase tracking-widest shadow-lg transition-all group-hover/btn:scale-105 group-active/btn:scale-95 group-hover/btn:bg-primary group-hover/btn:text-white border border-primary/20">
+                        <div className="bg-white text-black px-8 py-3 rounded-none text-[11px] font-black uppercase tracking-widest shadow-lg transition-all group-hover/btn:scale-105 group-active/btn:scale-95 group-hover/btn:bg-slate-100 border border-white/20">
                           Quick Reserve
                         </div>
                       )}

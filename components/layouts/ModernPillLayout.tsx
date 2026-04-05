@@ -36,10 +36,10 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
         </div>
 
         <div className="flex flex-col items-center">
-          <h1 className="text-[40px] lg:text-[50px] font-black leading-none tracking-tighter drop-shadow-2xl text-slate-500">
+          <h1 className="text-[40px] lg:text-[50px] font-black leading-none tracking-tighter drop-shadow-2xl text-slate-600">
             {formattedTime}
           </h1>
-          <p className="text-slate-500 text-lg font-black uppercase tracking-[0.3em] mt-1">
+          <p className="text-slate-600 text-lg font-black uppercase tracking-[0.3em] mt-1">
             {formattedDate}
           </p>
           <div className="flex items-center gap-4 mt-4 opacity-80">
@@ -117,30 +117,30 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
               <>
                 <button 
                   onClick={() => onExtend(roomStatus.currentMeeting!.id)}
-                  className="w-full bg-white/5 text-slate-500 py-4 rounded-none text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3"
+                  className="w-full bg-white/5 text-slate-600 py-4 rounded-none text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3"
                 >
-                  <span className="material-symbols-outlined text-2xl font-variation-fill text-slate-500">more_time</span>
+                  <span className="material-symbols-outlined text-2xl font-variation-fill text-slate-600">more_time</span>
                   EXTEND
                 </button>
                 <button 
                   onClick={() => onEndNow(roomStatus.currentMeeting!.id)}
-                  className="w-full bg-white/5 text-slate-500 py-4 rounded-none text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 group"
+                  className="w-full bg-white/5 text-slate-600 py-4 rounded-none text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 group"
                 >
-                  <span className="material-symbols-outlined text-2xl text-slate-500 group-hover:scale-110 transition-transform">cancel</span>
+                  <span className="material-symbols-outlined text-2xl text-slate-600 group-hover:scale-110 transition-transform">cancel</span>
                   END NOW
                 </button>
                 <button 
                   onClick={onCheckIn}
-                  className="w-full bg-white/5 text-slate-500 py-4 rounded-none text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 group"
+                  className="w-full bg-white/5 text-slate-600 py-4 rounded-none text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 group"
                 >
-                  <span className="material-symbols-outlined text-2xl text-slate-500 group-hover:scale-110 transition-transform">verified_user</span>
+                  <span className="material-symbols-outlined text-2xl text-slate-600 group-hover:scale-110 transition-transform">verified_user</span>
                   CHECK IN
                 </button>
               </>
             ) : (
               <button 
                 onClick={() => onBook()}
-                className="w-full bg-blue-600 text-slate-200 py-5 rounded-none text-2xl font-black shadow-[0_20px_40px_rgba(19,127,236,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-4 border-t border-white/20"
+                className="w-full bg-white/95 backdrop-blur-xl text-black py-5 rounded-none text-2xl font-black shadow-[0_20px_40px_rgba(255,255,255,0.1)] hover:bg-white active:scale-95 transition-all flex items-center justify-center gap-4 border border-white/40"
               >
                 <span className="material-symbols-outlined text-3xl">add_circle</span>
                 BOOK
@@ -154,13 +154,13 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
       {roomStatus.isAvailable && (
         <button 
           onClick={() => onBook()}
-          className="w-full max-w-xl bg-white/5 backdrop-blur-xl border border-white/20 rounded-none p-6 lg:p-8 flex items-center justify-between text-slate-200 hover:bg-white/10 hover:border-white/40 active:scale-[0.98] transition-all group shadow-2xl shrink-0"
+          className="w-full max-w-xl bg-white/95 backdrop-blur-xl text-black border border-white/40 rounded-none p-6 lg:p-8 flex items-center justify-between hover:bg-white active:scale-[0.98] transition-all group shadow-2xl shrink-0"
         >
           <div className="flex flex-col items-start">
             <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-60">ROOM IS FREE</p>
             <p className="text-xl lg:text-2xl font-black tracking-tighter">QUICK RESERVE 30 MINS</p>
           </div>
-          <div className="size-14 rounded-none bg-white/10 border border-white/20 text-slate-200 flex items-center justify-center shadow-xl group-hover:rotate-90 transition-transform duration-700">
+          <div className="size-14 rounded-none bg-black/10 border border-black/20 text-black flex items-center justify-center shadow-xl group-hover:rotate-90 transition-transform duration-700">
             <span className="material-symbols-outlined text-3xl">add</span>
           </div>
         </button>
@@ -182,9 +182,9 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
                       <span className="material-symbols-outlined text-3xl font-variation-fill">calendar_today</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-slate-500 text-[9px] font-black uppercase tracking-[0.4em] mb-1">UP NEXT</span>
-                      <p className="text-slate-500 text-sm lg:text-base font-black tracking-tight leading-tight group-hover:text-primary transition-colors">{meeting.title}</p>
-                      <p className="text-slate-500 text-xs font-bold mt-1">
+                      <span className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em] mb-1">UP NEXT</span>
+                      <p className="text-slate-600 text-sm lg:text-base font-black tracking-tight leading-tight group-hover:text-primary transition-colors">{meeting.title}</p>
+                      <p className="text-slate-600 text-xs font-bold mt-1">
                         {meeting.startTime} • {meeting.organizer}
                       </p>
                     </div>

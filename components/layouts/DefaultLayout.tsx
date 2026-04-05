@@ -43,8 +43,8 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
           </div>
         </div>
         <div className="flex flex-col items-end">
-          <p className="text-xl lg:text-2xl font-black tracking-tighter text-slate-500">{formattedTime}</p>
-          <p className="text-sm lg:text-base text-slate-500 font-bold uppercase tracking-widest">{formattedDate}</p>
+          <p className="text-xl lg:text-2xl font-black tracking-tighter text-slate-600">{formattedTime}</p>
+          <p className="text-sm lg:text-base text-slate-600 font-bold uppercase tracking-widest">{formattedDate}</p>
         </div>
       </div>
 
@@ -111,30 +111,30 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
                     <>
                       <button 
                         onClick={() => onExtend(roomStatus.currentMeeting!.id)} 
-                        className="flex-1 flex items-center justify-center rounded-none h-20 bg-white/5 text-slate-500 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
+                        className="flex-1 flex items-center justify-center rounded-none h-20 bg-white/5 text-slate-600 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
                       >
-                        <span className="material-symbols-outlined mr-4 text-3xl text-slate-500">more_time</span>
+                        <span className="material-symbols-outlined mr-4 text-3xl text-slate-600">more_time</span>
                         Extend
                       </button>
                       <button 
                         onClick={() => onEndNow(roomStatus.currentMeeting!.id)} 
-                        className="flex-1 flex items-center justify-center rounded-none h-20 bg-white/5 text-slate-500 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
+                        className="flex-1 flex items-center justify-center rounded-none h-20 bg-white/5 text-slate-600 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
                       >
-                        <span className="material-symbols-outlined mr-4 text-3xl text-slate-500">logout</span>
+                        <span className="material-symbols-outlined mr-4 text-3xl text-slate-600">logout</span>
                         End Now
                       </button>
                       <button 
                         onClick={onCheckIn} 
-                        className="flex-1 flex items-center justify-center rounded-none h-20 bg-white/5 text-slate-500 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
+                        className="flex-1 flex items-center justify-center rounded-none h-20 bg-white/5 text-slate-600 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
                       >
-                        <span className="material-symbols-outlined mr-4 text-3xl text-slate-500">verified_user</span>
+                        <span className="material-symbols-outlined mr-4 text-3xl text-slate-600">verified_user</span>
                         Check In
                       </button>
                     </>
                   ) : (
                     <button 
                       onClick={() => onBook()} 
-                      className="w-full flex items-center justify-center rounded-none h-20 bg-green-600 text-slate-200 text-lg font-black shadow-[0_15px_40px_rgba(22,163,74,0.5)] hover:brightness-110 active:scale-95 transition-all border-t border-white/20"
+                      className="w-full flex items-center justify-center rounded-none h-20 bg-white/95 backdrop-blur-xl text-black text-lg font-black shadow-[0_15px_40px_rgba(255,255,255,0.1)] hover:bg-white active:scale-95 transition-all border border-white/40"
                     >
                       <span className="material-symbols-outlined mr-4 text-3xl text-status-available">add_box</span>
                       Book
@@ -159,9 +159,9 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
                 <span className="material-symbols-outlined text-3xl font-variation-fill">calendar_today</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-slate-500 text-[9px] font-black uppercase tracking-[0.4em] mb-1">UP NEXT</span>
-                <p className="text-slate-500 font-black text-sm lg:text-base tracking-tight leading-none">{roomStatus.nextMeeting.title}</p>
-                <p className="text-slate-500 font-bold text-[10px] mt-1">{roomStatus.nextMeeting.startTime} • {roomStatus.nextMeeting.organizer}</p>
+                <span className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em] mb-1">UP NEXT</span>
+                <p className="text-slate-600 font-black text-sm lg:text-base tracking-tight leading-none">{roomStatus.nextMeeting.title}</p>
+                <p className="text-slate-600 font-bold text-[10px] mt-1">{roomStatus.nextMeeting.startTime} • {roomStatus.nextMeeting.organizer}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 pr-4">

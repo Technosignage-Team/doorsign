@@ -141,7 +141,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
           <button 
             onClick={() => handleLogin()}
             disabled={!employeeId}
-            className="w-full bg-primary text-white py-6 rounded-none text-xl font-black shadow-2xl shadow-primary/30 hover:brightness-110 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-[0.2em] border-t border-white/20 mt-2"
+            className="w-full bg-white text-black py-6 rounded-none text-xl font-black shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-[0.2em] border-t border-white/20 mt-2"
           >
             Authenticate
           </button>
