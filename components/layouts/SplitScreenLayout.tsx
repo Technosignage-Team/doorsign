@@ -116,7 +116,7 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
                 </p>
                 <button 
                   onClick={handleBookNow}
-                  className="bg-primary text-slate-200 px-10 py-5 rounded-none text-xl font-black shadow-[0_25px_50px_rgba(19,127,236,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-4 border-t border-white/20"
+                  className="bg-blue-600 text-slate-200 px-10 py-5 rounded-none text-xl font-black shadow-[0_25px_50px_rgba(19,127,236,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-4 border-t border-white/20"
                 >
                   <span className="material-symbols-outlined text-3xl font-bold">add_circle</span>
                   Book Now
