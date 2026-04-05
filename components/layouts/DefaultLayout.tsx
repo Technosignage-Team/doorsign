@@ -137,7 +137,7 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
                       className="w-full flex items-center justify-center rounded-none h-20 bg-green-600 text-slate-200 text-lg font-black shadow-[0_15px_40px_rgba(22,163,74,0.5)] hover:brightness-110 active:scale-95 transition-all border-t border-white/20"
                     >
                       <span className="material-symbols-outlined mr-4 text-3xl text-status-available">add_box</span>
-                      Book Now
+                      Book
                     </button>
                   )}
                 </div>
