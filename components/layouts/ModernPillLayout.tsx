@@ -143,7 +143,7 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
                 className="w-full bg-blue-600 text-slate-200 py-5 rounded-none text-2xl font-black shadow-[0_20px_40px_rgba(19,127,236,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-4 border-t border-white/20"
               >
                 <span className="material-symbols-outlined text-3xl">add_circle</span>
-                BOOK NOW
+                BOOK
               </button>
             )}
           </div>
