@@ -7,6 +7,7 @@ interface BookingViewProps {
   initialMeetingId?: string;
   currentUser: User | null;
   slotPrecision?: 15 | 30;
+  roomName?: string;
   onBack: () => void;
   onSuccess: () => void;
   onTriggerLogin: () => void;
@@ -35,6 +36,7 @@ const BookingView: React.FC<BookingViewProps> = ({
   initialMeetingId, 
   currentUser,
   slotPrecision = 30,
+  roomName = 'Conference Room A',
   onBack, 
   onSuccess,
   onTriggerLogin
@@ -353,7 +355,7 @@ const BookingView: React.FC<BookingViewProps> = ({
                 </button>
               )}
             </div>
-            <p className="text-slate-300 text-[6px] font-black uppercase tracking-[0.4em] mt-0.5">Everest Boardroom</p>
+            <p className="text-slate-300 text-[6px] font-black uppercase tracking-[0.4em] mt-0.5">{roomName}</p>
           </div>
         </div>
         {initialMeetingId && !isPastMeeting && (

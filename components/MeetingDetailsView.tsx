@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { db } from '../lib/db';
-import { AMENITIES_DATA } from '../constants';
+import { Amenity } from '../types';
 
 interface MeetingDetailsViewProps {
   meetingId: string;
@@ -8,11 +8,13 @@ interface MeetingDetailsViewProps {
   onEdit: (id: string) => void;
   onExtend: (id: string) => void;
   onEndNow: (id: string) => void;
+  roomName?: string;
+  amenities?: Amenity[];
 }
 
 type ServiceType = 'CATERING' | 'SUPPORT' | 'CLEANING' | null;
 
-const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBack, onEdit, onExtend, onEndNow }) => {
+const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBack, onEdit, onExtend, onEndNow, roomName = 'Conference Room A', amenities = [] }) => {
   const [isAmenitiesOpen, setIsAmenitiesOpen] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [requestStatus, setRequestStatus] = useState<'IDLE' | 'PENDING' | 'SUCCESS'>('IDLE');
@@ -121,7 +123,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
         </button>
         <div className="flex flex-col ml-3">
           <h1 className="text-xl font-black text-white tracking-tight leading-none uppercase">Meeting Details</h1>
-          <p className="text-white text-[8px] font-black uppercase tracking-[0.4em] mt-1">Everest Boardroom • Core Information</p>
+          <p className="text-white text-[8px] font-black uppercase tracking-[0.4em] mt-1">{roomName} • Core Information</p>
         </div>
       </header>
 
@@ -374,19 +376,19 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
           </header>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 flex flex-col gap-3">
-            {AMENITIES_DATA.map((amenity) => (
+            {amenities.map((amenity) => (
               <div
                 key={amenity.id}
                 className="w-full bg-white/[0.03] border border-white/10 rounded-none overflow-hidden group transition-all hover:bg-white/[0.06] hover:border-white/20 shadow-xl"
               >
                 <div className="flex flex-row">
-                   <div className="w-20 aspect-square shrink-0 relative overflow-hidden bg-black/40 border-r border-white/5">
+                   <div className="w-20 aspect-square shrink-0 relative overflow-hidden bg-black/60 border-r border-white/5">
                       {!imgErrors[amenity.id] && amenity.img ? (
                         <img 
                           src={amenity.img} 
                           alt={amenity.title} 
                           onError={() => setImgErrors(prev => ({ ...prev, [amenity.id]: true }))}
-                          className="size-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                          className="size-full object-contain object-center transition-transform duration-700 group-hover:scale-110" 
                           referrerPolicy="no-referrer"
                         />
                       ) : (

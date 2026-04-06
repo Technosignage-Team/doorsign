@@ -77,8 +77,8 @@ export const AMENITIES_DATA: Amenity[] = [
 ];
 
 export const ROOM_INFO: RoomStatus = {
-  name: 'Executive Boardroom',
-  location: 'Building A • Floor 3 • Room 302',
+  name: 'Conference Room A',
+  location: 'Nile Business Center – Tower A • Level 1',
   isAvailable: false,
   capacity: 12,
   currentMeeting: MOCK_MEETINGS[0],

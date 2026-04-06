@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, RoomStatus, HomeLayout, User, Meeting } from './types';
+import { View, RoomStatus, HomeLayout, User, Meeting, Amenity } from './types';
 import DashboardView from './components/DashboardView';
 import ScheduleView from './components/ScheduleView';
 import DetailsView from './components/DetailsView';
@@ -21,6 +21,148 @@ interface PendingAction {
 interface ExtensionSlot {
   minutes: number;
   endTime: string;
+}
+
+const DIGITAL_SIGN_ID = '8799e27e-cc85-4d98-a974-04d84e9f6e25';
+
+// Maps Lucide React icon names → Material Symbols names
+const LUCIDE_TO_MATERIAL: Record<string, string> = {
+  // Transport
+  car: 'directions_car',
+  truck: 'local_shipping',
+  bus: 'directions_bus',
+  train: 'train',
+  bike: 'directions_bike',
+  plane: 'flight',
+  ship: 'directions_boat',
+  parkingcircle: 'local_parking',
+  parkingsquare: 'local_parking',
+  parking: 'local_parking',
+  // Food & Drink
+  coffee: 'coffee',
+  utensils: 'restaurant',
+  utensilscrossed: 'no_food',
+  pizza: 'local_pizza',
+  apple: 'nutrition',
+  // Tech & Devices
+  monitor: 'monitor',
+  tv: 'tv',
+  laptop: 'laptop',
+  tablet: 'tablet',
+  smartphone: 'smartphone',
+  phone: 'phone',
+  phoneoff: 'phone_disabled',
+  printer: 'print',
+  camera: 'camera_alt',
+  video: 'videocam',
+  videooff: 'videocam_off',
+  mic: 'mic',
+  micoff: 'mic_off',
+  headphones: 'headphones',
+  speaker: 'speaker',
+  cpu: 'memory',
+  harddrive: 'storage',
+  usb: 'usb',
+  bluetooth: 'bluetooth',
+  wifi: 'wifi',
+  wifioff: 'wifi_off',
+  battery: 'battery_full',
+  batterycharging: 'battery_charging_full',
+  plug: 'power',
+  power: 'power_settings_new',
+  // People & Places
+  user: 'person',
+  users: 'group',
+  building: 'business',
+  building2: 'corporate_fare',
+  home: 'home',
+  warehouse: 'warehouse',
+  // Nature & Climate
+  thermometer: 'thermostat',
+  wind: 'air',
+  snowflake: 'ac_unit',
+  sun: 'light_mode',
+  moon: 'dark_mode',
+  cloud: 'cloud',
+  droplets: 'water_drop',
+  flame: 'local_fire_department',
+  zap: 'bolt',
+  airvent: 'hvac',
+  // Office
+  briefcase: 'work',
+  clipboard: 'assignment',
+  book: 'book',
+  bookopen: 'menu_book',
+  calendar: 'calendar_today',
+  clock: 'schedule',
+  key: 'key',
+  lock: 'lock',
+  unlock: 'lock_open',
+  mail: 'mail',
+  inbox: 'inbox',
+  archive: 'archive',
+  package: 'package_2',
+  box: 'inventory_2',
+  shoppingbag: 'shopping_bag',
+  tag: 'label',
+  bookmark: 'bookmark',
+  flag: 'flag',
+  // Media & Content
+  image: 'image',
+  film: 'movie',
+  music: 'music_note',
+  volume: 'volume_up',
+  volumex: 'volume_off',
+  // UI & Actions
+  search: 'search',
+  bell: 'notifications',
+  settings: 'settings',
+  shield: 'shield',
+  security: 'security',
+  eye: 'visibility',
+  eyeoff: 'visibility_off',
+  edit: 'edit',
+  trash: 'delete',
+  plus: 'add',
+  minus: 'remove',
+  x: 'close',
+  check: 'check',
+  link: 'link',
+  externallink: 'open_in_new',
+  download: 'download',
+  upload: 'upload',
+  copy: 'content_copy',
+  share: 'share',
+  share2: 'share',
+  refresh: 'refresh',
+  refreshcw: 'refresh',
+  globe: 'language',
+  compass: 'explore',
+  map: 'map',
+  mappin: 'location_on',
+  navigation: 'navigation',
+  grid: 'grid_view',
+  list: 'list',
+  layout: 'dashboard',
+  menu: 'menu',
+  filter: 'filter_list',
+  star: 'star',
+  heart: 'favorite',
+  alertcircle: 'error',
+  alerttriangle: 'warning',
+  info: 'info',
+  helpcircle: 'help',
+  checkcircle: 'check_circle',
+  xcircle: 'cancel',
+  maximize: 'fullscreen',
+  minimize: 'fullscreen_exit',
+  chair: 'chair',
+  accessibility: 'accessibility',
+};
+
+function mapIcon(apiIcon: string): string {
+  const key = apiIcon.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return LUCIDE_TO_MATERIAL[key] ?? apiIcon.toLowerCase();
 }
 
 const App: React.FC = () => {
@@ -53,9 +195,55 @@ const App: React.FC = () => {
   const [confirmEndId, setConfirmEndId] = useState<string | null>(null);
   const [extendMeetingId, setExtendMeetingId] = useState<string | null>(null);
   const [availableExtensions, setAvailableExtensions] = useState<ExtensionSlot[]>([]);
+  const [amenities, setAmenities] = useState<Amenity[]>([]);
 
   useEffect(() => {
     db.init();
+  }, []);
+
+  useEffect(() => {
+    fetch(`https://sb.asasconnect.com/api/DigitalSigns/${DIGITAL_SIGN_ID}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`Failed to load digital sign: ${res.status}`);
+        return res.json();
+      })
+      .then((data: {
+        signName: string;
+        resourceId?: string;
+        resource?: {
+          label?: string;
+          floorName?: string;
+          buildingName?: string;
+        };
+      }) => {
+        const resource = data.resource ?? {};
+        const locationParts = [resource.buildingName, resource.floorName].filter(Boolean);
+        setRoomStatus(prev => ({
+          ...prev,
+          name: resource.label ?? prev.name,
+          location: locationParts.length > 0 ? locationParts.join(' • ') : prev.location,
+        }));
+        if (data.resourceId) {
+          fetch(`https://sb.asasconnect.com/api/Amenities/resource/${data.resourceId}`)
+            .then(r => {
+              if (!r.ok) throw new Error(`Failed to load amenities: ${r.status}`);
+              return r.json();
+            })
+            .then((items: Array<{ id: string; name: string; description: string | null; icon: string; imageUrl: string | null }>) => {
+              setAmenities(items.map(a => ({
+                id: a.id,
+                title: a.name,
+                subtitle: a.description ?? '',
+                description: a.description ?? '',
+                icon: mapIcon(a.icon),
+                img: a.imageUrl ?? '',
+                status: 'Operational',
+              })));
+            })
+            .catch(err => console.error('Amenities API error:', err));
+        }
+      })
+      .catch(err => console.error('DigitalSigns API error:', err));
   }, []);
 
   useEffect(() => {
@@ -259,7 +447,7 @@ const App: React.FC = () => {
           />
         );
       case View.DETAILS:
-        return <DetailsView onBack={() => setCurrentView(View.DASHBOARD)} onBook={() => handleBookAtTime()} />;
+        return <DetailsView onBack={() => setCurrentView(View.DASHBOARD)} onBook={() => handleBookAtTime()} roomName={roomStatus.name} roomLocation={roomStatus.location} amenities={amenities} />;
       case View.CHECKIN:
         return <CheckInOutView onBack={() => setCurrentView(View.DASHBOARD)} currentTime={currentTime} roomStatus={roomStatus} />;
       case View.MEETING_DETAILS:
@@ -270,6 +458,8 @@ const App: React.FC = () => {
             onEdit={(id) => handleBookAtTime(undefined, id)}
             onExtend={onExtendRequested}
             onEndNow={onEndNowRequested}
+            roomName={roomStatus.name}
+            amenities={amenities}
           />
         );
       case View.LOGIN:
@@ -291,6 +481,7 @@ const App: React.FC = () => {
             initialMeetingId={selectedMeetingId}
             currentUser={currentUser}
             slotPrecision={slotPrecision}
+            roomName={roomStatus.name}
             onBack={() => {
               setCurrentView(View.DASHBOARD);
               setSelectedStartTime(undefined);

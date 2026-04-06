@@ -82,11 +82,11 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-slate-400 text-sm">location_on</span>
               <p className="text-xs lg:text-sm font-black uppercase tracking-[0.2em] text-slate-200">
-                BUILDING A • FLOOR 3 • ROOM 302
+                {roomStatus.location.toUpperCase()}
               </p>
             </div>
             <p className="text-[10px] lg:text-xs font-black uppercase tracking-[0.4em] text-slate-200/80 pl-6">
-              ROOM 302 • {roomStatus.capacity} PERSONS
+              {roomStatus.name.toUpperCase()} • {roomStatus.capacity} PERSONS
             </p>
           </div>
         </div>

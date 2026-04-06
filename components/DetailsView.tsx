@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Amenity } from '../types';
-import { AMENITIES_DATA } from '../constants';
 
 interface DetailsViewProps {
   onBack: () => void;
   onBook: () => void;
+  roomName?: string;
+  roomLocation?: string;
+  amenities?: Amenity[];
 }
 
-const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook }) => {
+const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'Conference Room A', roomLocation = 'Nile Business Center – Tower A • Level 1', amenities = [] }) => {
   const [selectedAmenity, setSelectedAmenity] = useState<Amenity | null>(null);
 
   return (
@@ -18,9 +20,9 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook }) => {
           <span className="material-symbols-outlined text-3xl">arrow_back</span>
         </button>
         <div className="flex flex-col flex-1 text-center">
-          <h2 className="text-2xl font-black tracking-tighter uppercase text-white">Everest Boardroom</h2>
+          <h2 className="text-2xl font-black tracking-tighter uppercase text-white">{roomName}</h2>
           <p className="text-[9px] font-black text-primary tracking-[0.4em] uppercase mt-1">
-            Executive Suite • Building A • Floor 3 • Suite 302-EX
+            {roomLocation}
           </p>
         </div>
         <button className="size-12 flex items-center justify-center text-white hover:bg-white/5 hover:text-white rounded-none transition-all">
@@ -84,7 +86,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook }) => {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {AMENITIES_DATA.map((amenity) => (
+              {amenities.map((amenity) => (
                 <AmenityCard 
                   key={amenity.id}
                   amenity={amenity}
@@ -155,11 +157,13 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook }) => {
             </div>
 
             {selectedAmenity.img && (
-              <div 
-                className="w-full aspect-[21/7] bg-cover bg-center border-t border-white/10 relative"
-                style={{ backgroundImage: `url(${selectedAmenity.img})` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-b from-card-dark/60 to-transparent" />
+              <div className="w-full h-56 overflow-hidden border-t border-white/10 relative bg-black/60">
+                <img
+                  src={selectedAmenity.img}
+                  alt={selectedAmenity.title}
+                  className="w-full h-full object-contain object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-card-dark/40 to-transparent pointer-events-none" />
                 <div className="absolute bottom-4 right-8 text-[7px] font-black text-white/20 uppercase tracking-[0.3em]">Hardware Visualization</div>
               </div>
             )}
@@ -196,13 +200,13 @@ const AmenityCard: React.FC<{ amenity: Amenity; onClick: () => void }> = ({ amen
       </div>
       
       {amenity.img && (
-        <div className="w-full h-24 overflow-hidden border-t border-white/10 relative shrink-0">
-          <div 
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-125"
-            style={{ backgroundImage: `url(${amenity.img})` }}
+        <div className="w-full h-36 overflow-hidden border-t border-white/10 relative shrink-0 bg-black/60">
+          <img
+            src={amenity.img}
+            alt={amenity.title}
+            className="w-full h-full object-contain object-center transition-transform duration-700 group-hover:scale-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-1 right-2 text-[6px] font-black text-white/50 uppercase tracking-widest">Detail</div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
         </div>
       )}
     </div>
