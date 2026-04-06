@@ -334,186 +334,228 @@ const BookingView: React.FC<BookingViewProps> = ({
   return (
     <div className="flex flex-col h-full bg-[#050505] overflow-hidden relative">
       <div className="absolute top-[-20%] right-[-10%] size-[80%] bg-primary/20 blur-[150px] rounded-xl pointer-events-none" />
-      <header className="flex items-center justify-between p-1.5 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={onBack} className="size-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-200 hover:text-white transition-all">
-            <span className="material-symbols-outlined text-lg">arrow_back</span>
+
+      {/* Header — matching MeetingDetailsView */}
+      <header className="flex items-center justify-between p-3 lg:p-4 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={onBack} className="size-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
+            <span className="material-symbols-outlined text-xl">arrow_back</span>
           </button>
           <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-base font-black text-white tracking-tight leading-none">
-                {initialMeetingId ? (isPastMeeting ? 'Archived' : 'Edit') : 'New Booking'}
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-black text-white tracking-tight leading-none uppercase">
+                {initialMeetingId ? (isPastMeeting ? 'Archived Booking' : 'Edit Booking') : 'New Booking'}
               </h1>
               {initialMeetingId && !isPastMeeting && (
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsServiceModalOpen(true)}
-                  className="size-6 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 group shadow-lg"
+                  className="size-8 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 group shadow-lg"
                   title="Request Service"
                 >
                   <span className="material-symbols-outlined text-base font-variation-fill group-hover:rotate-12 transition-transform">notifications_active</span>
                 </button>
               )}
             </div>
-            <p className="text-slate-300 text-[6px] font-black uppercase tracking-[0.4em] mt-0.5">{roomName}</p>
+            <p className="text-white text-[8px] font-black uppercase tracking-[0.4em] mt-1">{roomName} • Booking Details</p>
           </div>
         </div>
         {initialMeetingId && !isPastMeeting && (
-          <button onClick={handleDelete} className="px-2 py-1 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[7px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
-            Cancel
+          <button onClick={handleDelete} className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+            Cancel Booking
           </button>
         )}
       </header>
 
-      <main className="flex-1 overflow-hidden p-1.5 relative z-10">
-        <form onSubmit={handleSubmit} className="h-full max-w-5xl mx-auto flex flex-col gap-1.5">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5">
-            {/* Left Column: Organizer & Info */}
-            <div className="lg:col-span-1 flex flex-col gap-1.5">
-              {(initialMeetingId || currentUser) && organizerPhoto && (
-                <div className="bg-white/[0.03] border border-white/10 rounded-xl p-1.5 flex items-center gap-2 shadow-xl backdrop-blur-md">
-                  <div className="size-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-0.5 shrink-0 shadow-inner group relative">
-                     <div className="relative size-full overflow-hidden rounded-xl">
-                       <img src={organizerPhoto} alt={organizer} className="size-full object-cover shadow-2xl transition-transform group-hover:scale-110" />
-                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+      <main className="flex-1 overflow-y-auto p-3 lg:p-4 relative z-10 custom-scrollbar">
+        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto flex flex-col gap-3">
+
+          {/* Organizer card */}
+          {(initialMeetingId || currentUser) && organizerPhoto && (
+            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex items-center gap-4">
+              <div className="size-14 rounded-xl bg-white/5 border border-white/10 p-0.5 shrink-0 relative overflow-hidden">
+                <img src={organizerPhoto} alt={organizer} className="size-full object-cover rounded-xl" />
+                <div className="absolute -bottom-1 -right-1 size-4 bg-emerald-500 border-2 border-[#050505] rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="material-symbols-outlined text-white text-[6px] font-bold">verified</span>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">Lead Organizer</span>
+                <h3 className="text-lg font-black text-white tracking-tight leading-none">{organizer}</h3>
+                <span className="text-primary text-[8px] font-black uppercase tracking-widest mt-1">Authenticated</span>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {/* Left column: Details + Recurring */}
+            <div className="flex flex-col gap-3">
+
+              {/* Event Details card */}
+              <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                  <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                    <span className="material-symbols-outlined text-base">title</span>
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">Event Details</span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Event Title</label>
+                  <div className="flex gap-2">
+                    <input
+                      required type="text" value={title}
+                      onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('title'); } }}
+                      readOnly placeholder="e.g., Weekly Sync"
+                      className={`flex-1 bg-white/5 border rounded-xl p-2.5 text-sm font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'title' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
+                    />
+                    <button type="button" disabled={isPastMeeting} onClick={() => setIsSuggestionsOpen(true)} className="size-10 rounded-xl bg-[#0b1a2d] border border-primary/20 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-xl active:scale-95 group shrink-0">
+                      <span className="material-symbols-outlined text-base group-hover:rotate-12 transition-transform">magic_button</span>
+                    </button>
+                  </div>
+                </div>
+
+                {!currentUser && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Organizer Name</label>
+                    <input
+                      required type="text" value={organizer}
+                      onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('organizer'); } }}
+                      readOnly placeholder="Your Full Name"
+                      className={`bg-white/5 border rounded-xl p-2.5 text-sm font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'organizer' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
+                    />
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Session Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['INTERNAL', 'CLIENT'] as const).map(t => (
+                      <button key={t} type="button" disabled={isPastMeeting} onClick={() => setType(t)}
+                        className={`py-2.5 rounded-xl text-[10px] font-black transition-all border uppercase tracking-widest ${type === t ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Date</label>
+                  <input
+                    type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                    disabled={!!initialMeetingId}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark disabled:opacity-50 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Recurring card */}
+              <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4">
+                <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                  <div className="flex items-center gap-2">
+                    <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                      <span className="material-symbols-outlined text-base">repeat</span>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 size-3 bg-emerald-500 border-2 border-[#0a0a0a] rounded-xl flex items-center justify-center shadow-lg">
-                      <span className="material-symbols-outlined text-white text-[5px] font-bold">verified</span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">Recurring</span>
+                  </div>
+                  <button type="button" disabled={isPastMeeting} onClick={() => setIsRecurring(!isRecurring)}
+                    className={`size-8 rounded-xl flex items-center justify-center transition-all ${isRecurring ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 border border-white/10'}`}>
+                    <span className="material-symbols-outlined text-base">{isRecurring ? 'toggle_on' : 'toggle_off'}</span>
+                  </button>
+                </div>
+                {isRecurring ? (
+                  <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="grid grid-cols-3 gap-2">
+                      {['DAILY', 'WEEKLY', 'MONTHLY'].map(f => (
+                        <button key={f} type="button" onClick={() => setRecurrence(f as any)}
+                          className={`py-2 rounded-xl text-[9px] font-black transition-all border uppercase tracking-widest ${recurrence === f ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>{f}</button>
+                      ))}
                     </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">End Date</label>
+                      <input type="date" value={recurrenceEndDate} onChange={(e) => setRecurrenceEndDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark transition-all" />
+                    </div>
+                    {initialMeetingId && (
+                      <button type="button" onClick={() => setUpdateSeries(!updateSeries)}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all ${updateSeries ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-slate-300'}`}>
+                        <span className="material-symbols-outlined text-base">{updateSeries ? 'check_box' : 'check_box_outline_blank'}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest">Update Entire Series</span>
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest">One-time meeting</p>
+                )}
+              </div>
+            </div>
+
+            {/* Right column: Schedule & Submit */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                  <span className="material-symbols-outlined text-base font-variation-fill">schedule</span>
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">Schedule</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Start Time</label>
+                  <select disabled={isPastMeeting} value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
+                    {startOptions.map(t => <option key={t} value={t} className="bg-[#111]">{t}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">End Time</label>
+                  <select disabled={availableEndOptions.length === 0 || isPastMeeting} value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
+                    {availableEndOptions.map(t => <option key={t} value={t} className="bg-[#111]">{t}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Quick Duration</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {QUICK_DURATIONS.map(dur => (
+                    <button key={dur} type="button" disabled={!availableDurations.includes(dur) || isPastMeeting} onClick={() => handleSetDuration(dur)}
+                      className={`py-2.5 rounded-xl text-[10px] font-black transition-all border ${currentDuration === dur ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 disabled:opacity-30 hover:border-white/20 hover:text-white'}`}>
+                      {dur >= 60 ? `${dur / 60}h` : `${dur}m`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Duration summary */}
+              {currentDuration && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center gap-3 animate-in fade-in duration-300">
+                  <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
+                    <span className="material-symbols-outlined text-base font-variation-fill">hourglass_empty</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-primary text-[4px] font-black uppercase tracking-[0.4em] mb-0.5">Organizer</span>
-                    <h3 className="text-[10px] font-black text-white tracking-tight leading-none">{organizer}</h3>
+                    <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Duration</span>
+                    <span className="text-white text-sm font-black">
+                      {startTime} — {endTime} &nbsp;·&nbsp; {currentDuration >= 60 ? `${currentDuration / 60}h` : `${currentDuration}m`}
+                    </span>
                   </div>
                 </div>
               )}
 
-              <section className="flex flex-col gap-1 bg-white/[0.02] border border-white/5 p-1.5 rounded-xl">
-                <h2 className="text-primary text-[6px] font-black uppercase tracking-[0.5em] mb-0.5 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[9px]">info</span> Meeting Info
-                </h2>
-                <div className="flex flex-col gap-0.5">
-                  <label className="text-slate-300 text-[5px] font-black uppercase tracking-widest ml-1">Date</label>
-                  <input 
-                    type="date" 
-                    value={date} 
-                    onChange={(e) => setDate(e.target.value)}
-                    disabled={!!initialMeetingId}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-1 text-[10px] font-bold text-white outline-none focus:border-primary color-scheme-dark disabled:opacity-50" 
-                  />
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center gap-2 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <span className="material-symbols-outlined text-base">error</span>
+                  <p className="text-[10px] font-bold">{error}</p>
                 </div>
-                {!currentUser && (
-                  <div className="flex flex-col gap-0.5">
-                    <label className="text-slate-300 text-[5px] font-black uppercase tracking-widest ml-1">Organizer</label>
-                    <input 
-                      required type="text" value={organizer} 
-                      onFocus={() => { if(!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('organizer'); } }}
-                      readOnly placeholder="Your Full Name" 
-                      className={`bg-white/5 border rounded-xl p-1 text-[10px] font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'organizer' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`} 
-                    />
-                  </div>
-                )}
-              </section>
-            </div>
+              )}
 
-            {/* Middle Column: Title & Recurring */}
-            <div className="lg:col-span-1 flex flex-col gap-1.5">
-              <section className="flex flex-col gap-1 bg-white/[0.02] border border-white/5 p-1.5 rounded-xl">
-                <h2 className="text-primary text-[6px] font-black uppercase tracking-[0.5em] mb-0.5 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[9px]">title</span> Details
-                </h2>
-                <div className="flex flex-col gap-0.5">
-                  <label className="text-slate-300 text-[5px] font-black uppercase tracking-widest ml-1">Event Title</label>
-                  <div className="flex gap-1">
-                    <input 
-                      required type="text" value={title} 
-                      onFocus={() => { if(!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('title'); } }}
-                      readOnly placeholder="e.g., Weekly Sync" 
-                      className={`flex-1 bg-white/5 border rounded-xl p-1 text-[10px] font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'title' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`} 
-                    />
-                    <button type="button" disabled={isPastMeeting} onClick={() => setIsSuggestionsOpen(true)} className="size-7 rounded-xl bg-[#0b1a2d] border border-primary/20 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-xl active:scale-95 group shrink-0">
-                      <span className="material-symbols-outlined text-sm group-hover:rotate-12 transition-transform">magic_button</span>
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <section className="flex flex-col gap-1 bg-white/[0.02] border border-white/5 p-1.5 rounded-xl">
-                <div className="flex items-center justify-between">
-                   <h2 className="text-primary text-[6px] font-black uppercase tracking-[0.5em] flex items-center gap-1.5">
-                     <span className="material-symbols-outlined text-[9px]">repeat</span> Recurring
-                   </h2>
-                   <button type="button" disabled={isPastMeeting} onClick={() => setIsRecurring(!isRecurring)} className={`size-5 rounded-xl flex items-center justify-center transition-all ${isRecurring ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 border border-white/10'}`}>
-                     <span className="material-symbols-outlined text-xs">{isRecurring ? 'toggle_on' : 'toggle_off'}</span>
-                   </button>
-                </div>
-                {isRecurring && (
-                  <div className="flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="grid grid-cols-3 gap-1">
-                      {['DAILY', 'WEEKLY', 'MONTHLY'].map(f => (
-                        <button key={f} type="button" onClick={() => setRecurrence(f as any)} className={`py-0.5 rounded-xl text-[5px] font-black transition-all border uppercase tracking-widest ${recurrence === f ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>{f}</button>
-                      ))}
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <label className="text-slate-300 text-[5px] font-black uppercase tracking-widest ml-1">End Date</label>
-                      <input type="date" value={recurrenceEndDate} onChange={(e) => setRecurrenceEndDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-1 text-[9px] font-bold text-white outline-none focus:border-primary color-scheme-dark" />
-                    </div>
-                    {initialMeetingId && (
-                      <button 
-                        type="button" 
-                        onClick={() => setUpdateSeries(!updateSeries)}
-                        className={`flex items-center gap-1 p-0.5 rounded-xl border transition-all ${updateSeries ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-slate-300'}`}
-                      >
-                        <span className="material-symbols-outlined text-xs">{updateSeries ? 'check_box' : 'check_box_outline_blank'}</span>
-                        <span className="text-[5px] font-black uppercase tracking-widest">Update Series</span>
-                      </button>
-                    )}
-                  </div>
-                )}
-              </section>
-            </div>
-
-            {/* Right Column: Schedule & Submit */}
-            <div className="lg:col-span-1 flex flex-col gap-1.5">
-              <section className="flex flex-col gap-1 bg-white/[0.02] border border-white/5 p-1.5 rounded-xl">
-                <h2 className="text-primary text-[6px] font-black uppercase tracking-[0.5em] mb-0.5 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[9px]">schedule</span> Schedule
-                </h2>
-                <div className="grid grid-cols-2 gap-1">
-                  <div className="flex flex-col gap-0.5">
-                    <label className="text-slate-300 text-[5px] font-black uppercase tracking-widest ml-1">Start</label>
-                    <select disabled={isPastMeeting} value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-1 text-[10px] font-bold text-white outline-none focus:border-primary appearance-none">
-                      {startOptions.map(t => <option key={t} value={t} className="bg-[#111]">{t}</option>)}
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <label className="text-slate-300 text-[5px] font-black uppercase tracking-widest ml-1">End</label>
-                    <select disabled={availableEndOptions.length === 0 || isPastMeeting} value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-1 text-[10px] font-bold text-white outline-none focus:border-primary appearance-none">
-                      {availableEndOptions.map(t => <option key={t} value={t} className="bg-[#111]">{t}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 gap-1">
-                  {QUICK_DURATIONS.map(dur => (
-                    <button key={dur} type="button" disabled={!availableDurations.includes(dur) || isPastMeeting} onClick={() => handleSetDuration(dur)} className={`py-0.5 rounded-xl text-[6px] font-black transition-all border ${currentDuration === dur ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 disabled:opacity-30'}`}>
-                      {dur >= 60 ? `${dur/60}h` : `${dur}m`}
-                    </button>
-                  ))}
-                </div>
-                
-                {error && (
-                  <div className="bg-status-busy/20 border border-status-busy/40 rounded-xl p-1 flex items-center gap-1 text-status-busy animate-in fade-in slide-in-from-top-2 duration-300">
-                    <span className="material-symbols-outlined text-xs">error</span>
-                    <p className="text-[7px] font-bold">{error}</p>
-                  </div>
-                )}
-
-                <div className="mt-0.5">
-                  <button type="submit" disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting} className="w-full bg-white text-black py-1.5 rounded-xl text-xs font-black shadow-2xl hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 border-t border-white/20">
-                    {isSubmitting ? <span className="size-3 border-2 border-black/30 border-t-black rounded-xl animate-spin"></span> : <><span className="material-symbols-outlined text-sm font-bold">{initialMeetingId ? 'save' : 'event_available'}</span>{initialMeetingId ? 'Update' : 'Confirm'}</>}
-                  </button>
-                </div>
-              </section>
+              <div className="mt-auto pt-1">
+                <button type="submit" disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting}
+                  className="w-full bg-white text-black py-4 rounded-xl text-sm font-black shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 border-t border-white/20 uppercase tracking-widest">
+                  {isSubmitting
+                    ? <span className="size-4 border-2 border-black/30 border-t-black rounded-xl animate-spin"></span>
+                    : <><span className="material-symbols-outlined text-lg font-bold">{initialMeetingId ? 'save' : 'event_available'}</span>{initialMeetingId ? 'Update Booking' : 'Confirm Booking'}</>
+                  }
+                </button>
+              </div>
             </div>
           </div>
         </form>
