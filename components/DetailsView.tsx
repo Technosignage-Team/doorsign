@@ -16,7 +16,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
     <div className="flex flex-col h-full overflow-hidden bg-background-dark text-white">
       {/* Sticky Header */}
       <div className="flex items-center bg-background-dark/95 backdrop-blur-xl p-6 border-b border-white/5 shrink-0">
-        <button onClick={onBack} className="text-white flex size-12 items-center justify-center hover:bg-white/5 hover:text-white rounded-none transition-all">
+        <button onClick={onBack} className="text-white flex size-12 items-center justify-center hover:bg-white/5 hover:text-white rounded-xl transition-all">
           <span className="material-symbols-outlined text-3xl">arrow_back</span>
         </button>
         <div className="flex flex-col flex-1 text-center">
@@ -25,7 +25,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
             {roomLocation}
           </p>
         </div>
-        <button className="size-12 flex items-center justify-center text-white hover:bg-white/5 hover:text-white rounded-none transition-all">
+        <button className="size-12 flex items-center justify-center text-white hover:bg-white/5 hover:text-white rounded-xl transition-all">
           <span className="material-symbols-outlined text-2xl">share</span>
         </button>
       </div>
@@ -36,19 +36,19 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
           <div className="flex flex-col gap-8">
             {/* Main Photo - Shorter height, rounded corners */}
             <div 
-              className="aspect-[21/10] rounded-none border border-white/10 bg-cover bg-center shadow-2xl overflow-hidden relative group shrink-0"
+              className="aspect-[21/10] rounded-xl border border-white/10 bg-cover bg-center shadow-2xl overflow-hidden relative group shrink-0"
               style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800")' }}
             >
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               
               {/* Capacity Overlay on Photo */}
-              <div className="absolute bottom-6 left-6 flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-2 rounded-none border border-white/10">
+              <div className="absolute bottom-6 left-6 flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
                 <span className="material-symbols-outlined text-primary text-xl">groups</span>
                 <span className="text-white font-black text-sm uppercase tracking-widest">12 Persons</span>
               </div>
 
-              <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-none border border-white/10">
-                <span className="flex h-1.5 w-1.5 rounded-none bg-status-available animate-pulse"></span>
+              <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+                <span className="flex h-1.5 w-1.5 rounded-xl bg-status-available animate-pulse"></span>
                 <span className="text-white text-[8px] font-black uppercase tracking-widest">Live View</span>
               </div>
             </div>
@@ -57,7 +57,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3 mb-1">
                 <span className="text-status-available text-[9px] font-black uppercase tracking-widest">Room Ready</span>
-                <span className="flex h-1.5 w-1.5 rounded-none bg-status-available animate-pulse"></span>
+                <span className="flex h-1.5 w-1.5 rounded-xl bg-status-available animate-pulse"></span>
                 <div className="h-px flex-1 bg-white/10" />
               </div>
               <p className="text-white text-lg lg:text-xl leading-relaxed font-medium">
@@ -70,7 +70,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
               <div className="mt-4 flex justify-center">
                 <button 
                   onClick={onBook}
-                  className="px-10 py-3.5 bg-white text-black text-sm font-black rounded-none shadow-xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all border-t border-white/20 uppercase tracking-[0.2em]"
+                  className="px-10 py-3.5 bg-white text-black text-sm font-black rounded-xl shadow-xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all border-t border-white/20 uppercase tracking-[0.2em]"
                 >
                   Reserve Now
                 </button>
@@ -103,13 +103,13 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
       {selectedAmenity && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-2xl" onClick={() => setSelectedAmenity(null)} />
-          <div className="relative w-full max-w-xl bg-card-dark rounded-none border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="relative w-full max-w-xl bg-card-dark rounded-xl border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden animate-in zoom-in-95 duration-300">
             {/* Modal Header */}
             <div className="px-8 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
               <h2 className="text-[9px] font-black text-slate-300 uppercase tracking-[0.5em]">Amenity Details</h2>
               <button 
                 onClick={() => setSelectedAmenity(null)}
-                className="size-8 rounded-none bg-white/5 border border-white/10 text-white flex items-center justify-center hover:bg-white/10 transition-all"
+                className="size-8 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center hover:bg-white/10 transition-all"
               >
                 <span className="material-symbols-outlined text-xl">close</span>
               </button>
@@ -118,7 +118,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
             <div className="p-8 lg:p-10 flex flex-col gap-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="size-12 rounded-none bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-lg shrink-0">
+                  <div className="size-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-lg shrink-0">
                     <span className="material-symbols-outlined text-2xl font-variation-fill">{selectedAmenity.icon}</span>
                   </div>
                   <div className="flex flex-col">
@@ -127,7 +127,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
                   </div>
                 </div>
                 {selectedAmenity.quantity && (
-                  <div className="px-4 py-2 bg-white/5 rounded-none border border-white/10">
+                  <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/10">
                     <span className="text-white font-black text-xs uppercase tracking-widest">{selectedAmenity.quantity}</span>
                   </div>
                 )}
@@ -143,13 +143,13 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
                 <div className="flex flex-col gap-0.5">
                   <p className="text-slate-100 text-[9px] font-black uppercase tracking-widest">Health Status</p>
                   <div className="flex items-center gap-2">
-                    <span className="size-1.5 rounded-none bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"></span>
+                    <span className="size-1.5 rounded-xl bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"></span>
                     <span className="text-white font-black uppercase text-xs tracking-widest">{selectedAmenity.status}</span>
                   </div>
                 </div>
                 <button 
                   onClick={() => setSelectedAmenity(null)}
-                  className="px-8 py-3.5 bg-white text-black font-black rounded-none shadow-lg shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-widest text-[10px]"
+                  className="px-8 py-3.5 bg-white text-black font-black rounded-xl shadow-lg shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-widest text-[10px]"
                 >
                   Got it
                 </button>
@@ -176,7 +176,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
 
 const GalleryItem: React.FC<{ img: string; label: string }> = ({ img, label }) => (
   <div className="flex flex-col gap-4 group cursor-pointer">
-    <div className="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover rounded-none border-2 border-white/5 transition-all duration-500 group-hover:scale-[1.03] group-hover:border-primary/40 shadow-xl overflow-hidden" style={{ backgroundImage: `url(${img})` }} />
+    <div className="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover rounded-xl border-2 border-white/5 transition-all duration-500 group-hover:scale-[1.03] group-hover:border-primary/40 shadow-xl overflow-hidden" style={{ backgroundImage: `url(${img})` }} />
     <div className="px-2">
       <p className="text-white font-black text-sm uppercase tracking-[0.2em] opacity-80 group-hover:text-primary transition-colors">{label}</p>
     </div>
@@ -186,12 +186,12 @@ const GalleryItem: React.FC<{ img: string; label: string }> = ({ img, label }) =
 const AmenityCard: React.FC<{ amenity: Amenity; onClick: () => void }> = ({ amenity, onClick }) => (
   <button 
     onClick={onClick}
-    className="group relative flex flex-col bg-white/[0.03] border border-white/5 rounded-none text-left transition-all duration-300 hover:bg-white/[0.07] hover:border-white/20 hover:translate-y-[-4px] active:scale-95 overflow-hidden min-h-[160px]"
+    className="group relative flex flex-col bg-white/[0.03] border border-white/5 rounded-xl text-left transition-all duration-300 hover:bg-white/[0.07] hover:border-white/20 hover:translate-y-[-4px] active:scale-95 overflow-hidden min-h-[160px]"
   >
     <div className="flex flex-col h-full w-full">
       <div className="flex-1 flex flex-col min-w-0 p-4">
         <div className="flex items-center gap-3 mb-2">
-          <div className="size-10 rounded-none bg-primary/20 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shrink-0">
+          <div className="size-10 rounded-xl bg-primary/20 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shrink-0">
             <span className="material-symbols-outlined text-xl font-variation-fill">{amenity.icon}</span>
           </div>
           <h4 className="text-white text-sm font-black tracking-tight truncate uppercase leading-none">{amenity.title}</h4>

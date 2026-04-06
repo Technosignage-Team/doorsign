@@ -31,13 +31,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-3xl" onClick={onClose} />
       
-      <div className="relative w-full max-w-3xl bg-card-dark rounded-none border border-white/10 shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-3xl bg-card-dark rounded-xl border border-white/10 shadow-2xl overflow-hidden flex flex-col">
         <header className="p-10 border-b border-white/5 flex justify-between items-center">
           <div className="flex flex-col">
             <h2 className="text-3xl font-black text-white">System Settings</h2>
             <p className="text-slate-300 font-bold uppercase tracking-widest text-xs mt-1">Appearance & Layout</p>
           </div>
-          <button onClick={onClose} className="size-12 rounded-none bg-white/5 text-slate-300 flex items-center justify-center hover:text-white hover:bg-white/10 transition-all">
+          <button onClick={onClose} className="size-12 rounded-xl bg-white/5 text-slate-300 flex items-center justify-center hover:text-white hover:bg-white/10 transition-all">
             <span className="material-symbols-outlined">close</span>
           </button>
         </header>
@@ -56,13 +56,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClick={() => {
                     onSelectLayout(layout.id);
                   }}
-                  className={`flex items-center gap-6 p-8 rounded-none border-2 transition-all text-left group ${
+                  className={`flex items-center gap-6 p-8 rounded-xl border-2 transition-all text-left group ${
                     currentLayout === layout.id 
                       ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10' 
                       : 'bg-white/5 border-transparent hover:border-white/20'
                   }`}
                 >
-                  <div className={`size-16 rounded-none flex items-center justify-center transition-all ${
+                  <div className={`size-16 rounded-xl flex items-center justify-center transition-all ${
                     currentLayout === layout.id ? 'bg-primary text-white' : 'bg-slate-800 text-slate-300 group-hover:text-white'
                   }`}>
                     <span className="material-symbols-outlined text-3xl">{layout.icon}</span>
@@ -86,16 +86,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               <span className="material-symbols-outlined text-primary">linear_scale</span>
               Timeline Precision
             </h3>
-            <div className="bg-white/5 p-2 rounded-none border border-white/5 flex gap-2">
+            <div className="bg-white/5 p-2 rounded-xl border border-white/5 flex gap-2">
                <button 
                 onClick={() => onSelectSlotPrecision(15)}
-                className={`flex-1 py-6 rounded-none font-black uppercase tracking-widest text-xs transition-all ${currentSlotPrecision === 15 ? 'bg-primary text-white shadow-xl' : 'text-slate-300 hover:text-slate-200'}`}
+                className={`flex-1 py-6 rounded-xl font-black uppercase tracking-widest text-xs transition-all ${currentSlotPrecision === 15 ? 'bg-primary text-white shadow-xl' : 'text-slate-300 hover:text-slate-200'}`}
                >
                  15 Minutes
                </button>
                <button 
                 onClick={() => onSelectSlotPrecision(30)}
-                className={`flex-1 py-6 rounded-none font-black uppercase tracking-widest text-xs transition-all ${currentSlotPrecision === 30 ? 'bg-primary text-white shadow-xl' : 'text-slate-300 hover:text-slate-200'}`}
+                className={`flex-1 py-6 rounded-xl font-black uppercase tracking-widest text-xs transition-all ${currentSlotPrecision === 30 ? 'bg-primary text-white shadow-xl' : 'text-slate-300 hover:text-slate-200'}`}
                >
                  30 Minutes
                </button>

@@ -54,10 +54,10 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
 
   return (
     <div className="flex flex-col h-full bg-[#050505] overflow-hidden relative">
-      <div className="absolute top-[-20%] left-[-10%] size-[80%] bg-primary/10 blur-[150px] rounded-none pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] size-[80%] bg-primary/10 blur-[150px] rounded-xl pointer-events-none" />
       
       <header className="flex items-center p-8 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10">
-        <button onClick={onBack} className="size-14 rounded-none bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
+        <button onClick={onBack} className="size-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
           <span className="material-symbols-outlined text-3xl">arrow_back</span>
         </button>
         <div className="flex flex-col ml-6">
@@ -69,7 +69,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
       <main className="flex-1 flex flex-col md:flex-row items-center justify-center p-8 lg:p-16 gap-12 lg:gap-24 relative z-10 overflow-y-auto custom-scrollbar">
         {/* Left Side: Instructions & Demo Users */}
         <div className="max-w-md w-full flex flex-col items-center md:items-start text-center md:text-left">
-          <div className={`size-24 rounded-none flex items-center justify-center mb-8 shadow-2xl transition-colors ${error ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-primary/20 text-primary border border-primary/30'}`}>
+          <div className={`size-24 rounded-xl flex items-center justify-center mb-8 shadow-2xl transition-colors ${error ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-primary/20 text-primary border border-primary/30'}`}>
             <span className="material-symbols-outlined text-5xl font-variation-fill">
               {error ? 'lock_reset' : 'verified_user'}
             </span>
@@ -90,9 +90,9 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
         </div>
 
         {/* Right Side: Keypad Container */}
-        <div className="w-full max-w-sm bg-card-dark border border-white/10 rounded-none p-10 shadow-[0_30px_100px_rgba(0,0,0,0.6)] flex flex-col gap-8">
+        <div className="w-full max-w-sm bg-card-dark border border-white/10 rounded-xl p-10 shadow-[0_30px_100px_rgba(0,0,0,0.6)] flex flex-col gap-8">
           {/* Display Area */}
-          <div className="bg-black/40 border border-white/5 rounded-none p-6 h-28 flex flex-col items-center justify-center relative overflow-hidden group">
+          <div className="bg-black/40 border border-white/5 rounded-xl p-6 h-28 flex flex-col items-center justify-center relative overflow-hidden group">
             <span className="absolute top-2 left-4 text-[8px] font-black text-slate-600 uppercase tracking-widest">Input Stream</span>
             <div className="w-full text-center">
               <span className={`text-4xl font-black tracking-widest break-all transition-all duration-300 ${employeeId ? 'text-white' : 'text-slate-800'}`}>
@@ -101,9 +101,9 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
             </div>
             {employeeId && (
               <div className="absolute bottom-2 right-4 flex gap-1">
-                <span className="size-1 rounded-none bg-primary animate-pulse"></span>
-                <span className="size-1 rounded-none bg-primary animate-pulse delay-75"></span>
-                <span className="size-1 rounded-none bg-primary animate-pulse delay-150"></span>
+                <span className="size-1 rounded-xl bg-primary animate-pulse"></span>
+                <span className="size-1 rounded-xl bg-primary animate-pulse delay-75"></span>
+                <span className="size-1 rounded-xl bg-primary animate-pulse delay-150"></span>
               </div>
             )}
           </div>
@@ -118,7 +118,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
                   else if (key === 'C') setEmployeeId('');
                   else handleKeyPress(key);
                 }}
-                className={`h-20 rounded-none text-2xl font-black transition-all flex items-center justify-center ${
+                className={`h-20 rounded-xl text-2xl font-black transition-all flex items-center justify-center ${
                   key === 'delete' || key === 'C'
                     ? 'text-slate-500 hover:text-white hover:bg-white/5 active:scale-90'
                     : 'bg-white/5 text-white border border-white/5 hover:bg-primary/20 hover:border-primary active:scale-90 shadow-lg'
@@ -133,7 +133,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
           <button 
             onClick={handleLogin}
             disabled={!employeeId || loading}
-            className="w-full bg-primary text-white py-6 rounded-none text-xl font-black shadow-2xl shadow-primary/30 hover:brightness-110 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-[0.2em] border-t border-white/20 mt-2"
+            className="w-full bg-white text-black py-6 rounded-none text-xl font-black shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-[0.2em] border-t border-white/20 mt-2"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-3">
