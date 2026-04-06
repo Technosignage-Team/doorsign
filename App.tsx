@@ -337,8 +337,8 @@ const App: React.FC = () => {
       {confirmEndId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={() => setConfirmEndId(null)} />
-          <div className="relative w-full max-w-md bg-card-dark rounded-none border border-white/10 shadow-2xl p-10 flex flex-col items-center text-center gap-6 animate-in zoom-in-95 duration-300">
-             <div className="size-20 rounded-none bg-status-busy/25 border-4 border-status-busy/40 flex items-center justify-center text-status-busy mb-2 shadow-[0_0_40px_rgba(239,68,68,0.4)]">
+          <div className="relative w-full max-w-md bg-card-dark rounded-xl border border-white/10 shadow-2xl p-10 flex flex-col items-center text-center gap-6 animate-in zoom-in-95 duration-300">
+             <div className="size-20 rounded-xl bg-status-busy/25 border-4 border-status-busy/40 flex items-center justify-center text-status-busy mb-2 shadow-[0_0_40px_rgba(239,68,68,0.4)]">
                 <span className="material-symbols-outlined text-4xl font-bold">logout</span>
              </div>
              <div className="flex flex-col gap-2">
@@ -348,13 +348,13 @@ const App: React.FC = () => {
              <div className="flex flex-col gap-3 w-full mt-4">
                <button 
                 onClick={confirmEndMeeting}
-                className="w-full bg-status-busy text-white py-5 rounded-none text-xl font-black shadow-xl shadow-status-busy/20 hover:brightness-110 active:scale-95 transition-all uppercase tracking-widest border-t border-white/20"
+                className="w-full bg-status-busy text-white py-5 rounded-xl text-xl font-black shadow-xl shadow-status-busy/20 hover:brightness-110 active:scale-95 transition-all uppercase tracking-widest border-t border-white/20"
                >
                  End Now
                </button>
                <button 
                 onClick={() => setConfirmEndId(null)}
-                className="w-full bg-white/5 text-slate-300 py-5 rounded-none text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
+                className="w-full bg-white/5 text-slate-300 py-5 rounded-xl text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
                >
                  Cancel
                </button>
@@ -367,8 +367,8 @@ const App: React.FC = () => {
       {extendMeetingId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={() => setExtendMeetingId(null)} />
-          <div className="relative w-full max-w-lg bg-card-dark rounded-none border border-white/10 shadow-2xl p-10 lg:p-14 flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300">
-             <div className="size-20 rounded-none bg-primary/10 border-4 border-primary/20 flex items-center justify-center text-primary mb-2 shadow-[0_0_40px_rgba(19,127,236,0.2)]">
+          <div className="relative w-full max-w-lg bg-card-dark rounded-xl border border-white/10 shadow-2xl p-10 lg:p-14 flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300">
+             <div className="size-20 rounded-xl bg-primary/10 border-4 border-primary/20 flex items-center justify-center text-primary mb-2 shadow-[0_0_40px_rgba(19,127,236,0.2)]">
                 <span className="material-symbols-outlined text-4xl font-bold">more_time</span>
              </div>
              <div className="flex flex-col gap-2 text-center">
@@ -382,7 +382,7 @@ const App: React.FC = () => {
                    <button 
                     key={slot.minutes}
                     onClick={() => confirmExtendMeeting(slot.minutes)}
-                    className="bg-white/5 border border-white/10 rounded-none py-6 flex flex-col items-center gap-2 hover:bg-primary/10 hover:border-primary transition-all active:scale-95 group shadow-lg"
+                    className="bg-white/5 border border-white/10 rounded-xl py-6 flex flex-col items-center gap-2 hover:bg-primary/10 hover:border-primary transition-all active:scale-95 group shadow-lg"
                    >
                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">Until</span>
                      <span className="text-2xl lg:text-3xl font-black text-white group-hover:text-primary transition-colors">{slot.endTime}</span>
@@ -390,7 +390,7 @@ const App: React.FC = () => {
                    </button>
                  ))
                ) : (
-                 <div className="col-span-2 py-8 bg-red-500/15 border border-red-500/25 rounded-none text-center flex flex-col items-center gap-4">
+                 <div className="col-span-2 py-8 bg-red-500/15 border border-red-500/25 rounded-xl text-center flex flex-col items-center gap-4">
                     <span className="material-symbols-outlined text-red-500 text-3xl">event_busy</span>
                     <p className="text-red-500 font-black uppercase tracking-widest text-xs">No extensions available.<br/>Next meeting starts soon.</p>
                  </div>

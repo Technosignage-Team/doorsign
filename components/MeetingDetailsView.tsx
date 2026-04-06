@@ -113,10 +113,10 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
 
   return (
     <div className="flex flex-col h-full bg-[#050505] overflow-hidden relative">
-      <div className="absolute top-[-20%] left-[-10%] size-[80%] bg-primary/10 blur-[150px] rounded-none pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] size-[80%] bg-primary/10 blur-[150px] rounded-xl pointer-events-none" />
       
       <header className="flex items-center p-3 lg:p-4 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
-        <button onClick={onBack} className="size-10 rounded-none bg-white/5 border border-white/10 flex items-center justify-center text-slate-100 hover:text-white transition-all">
+        <button onClick={onBack} className="size-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-100 hover:text-white transition-all">
           <span className="material-symbols-outlined text-xl">arrow_back</span>
         </button>
         <div className="flex flex-col ml-3">
@@ -128,14 +128,14 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
       <main className="flex-1 overflow-hidden p-3 lg:p-4 relative z-10 flex flex-col justify-center">
         <div className="max-w-4xl mx-auto w-full flex flex-col gap-3">
           
-          <div className="bg-white/[0.03] border border-white/10 rounded-none p-4 lg:p-6 shadow-2xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 size-48 bg-primary/5 blur-[60px] rounded-none pointer-events-none -translate-y-16 translate-x-16" />
+          <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-6 shadow-2xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 size-48 bg-primary/5 blur-[60px] rounded-xl pointer-events-none -translate-y-16 translate-x-16" />
              
              {/* Bell Button - Only for current/future meetings */}
              {!isPast && (
                <button 
                  onClick={() => setIsServiceModalOpen(true)}
-                 className="absolute top-4 right-32 size-10 rounded-none bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 group z-20 shadow-xl"
+                 className="absolute top-4 right-32 size-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 group z-20 shadow-xl"
                  title="Request Service"
                >
                  <span className="material-symbols-outlined text-xl font-variation-fill group-hover:rotate-12 transition-transform">notifications_active</span>
@@ -144,7 +144,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
 
              {/* Dynamic Status Indicator - Top Right */}
              <div className="absolute top-4 right-4 flex items-center gap-2">
-                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-none border backdrop-blur-md transition-all duration-500 ${status?.bg} ${status?.border} ${status?.color} ${status?.pulse ? 'shadow-[0_0_15px_rgba(251,191,36,0.1)]' : ''}`}>
+                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-xl border backdrop-blur-md transition-all duration-500 ${status?.bg} ${status?.border} ${status?.color} ${status?.pulse ? 'shadow-[0_0_15px_rgba(251,191,36,0.1)]' : ''}`}>
                   <span className={`material-symbols-outlined text-xs ${status?.pulse ? 'animate-pulse' : ''}`}>
                     {status?.icon}
                   </span>
@@ -155,11 +155,11 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
              <div className="flex flex-col gap-4 relative z-10">
                 <div className="flex flex-col gap-2">
                    <div className="flex items-center gap-2">
-                      <div className="inline-flex items-center px-2 py-0.5 rounded-none bg-primary/10 text-primary border border-primary/20 text-[8px] font-black uppercase tracking-widest self-start">
+                      <div className="inline-flex items-center px-2 py-0.5 rounded-xl bg-primary/10 text-primary border border-primary/20 text-[8px] font-black uppercase tracking-widest self-start">
                          {meeting.type} Session
                       </div>
                       {meeting.recurrence && meeting.recurrence !== 'NONE' && (
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase tracking-widest self-start">
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase tracking-widest self-start">
                            <span className="material-symbols-outlined text-[10px]">repeat</span>
                            {meeting.recurrence}
                         </div>
@@ -170,7 +170,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
                    </h2>
                 </div>                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 border-y border-white/5">
                    <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-none bg-white/5 flex items-center justify-center text-primary border border-white/10">
+                      <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-primary border border-white/10">
                         <span className="material-symbols-outlined text-xl font-variation-fill">schedule</span>
                       </div>
                       <div className="flex flex-col">
@@ -181,7 +181,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
                       </div>
                    </div>
                    <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-none bg-white/5 flex items-center justify-center text-primary border border-white/10 overflow-hidden shadow-lg">
+                      <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-primary border border-white/10 overflow-hidden shadow-lg">
                         {meeting.organizerPhoto ? (
                           <img src={meeting.organizerPhoto} className={`size-full object-cover ${meeting.isCancelled ? 'grayscale opacity-50' : ''}`} alt={meeting.organizer} referrerPolicy="no-referrer" />
                         ) : (
@@ -201,24 +201,24 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
                 <div className="flex flex-col gap-3">
                    <div className="flex items-center justify-between">
                       <h4 className="text-slate-100 text-[9px] font-black uppercase tracking-[0.4em]">Attendees List</h4>
-                      <span className="text-[8px] font-black bg-white/5 px-1.5 py-0.5 rounded-none border border-white/10">{meeting.attendees?.length || 1} Total</span>
+                      <span className="text-[8px] font-black bg-white/5 px-1.5 py-0.5 rounded-xl border border-white/10">{meeting.attendees?.length || 1} Total</span>
                    </div>
                    <div className="flex flex-wrap gap-3">
                       {meeting.attendees && meeting.attendees.length > 0 ? (
                         meeting.attendees.map((person, i) => (
                           <div key={i} className="flex flex-col items-center gap-1.5 group">
                              <div className="relative">
-                                <div className={`absolute inset-0 bg-primary/20 blur-md rounded-none opacity-0 group-hover:opacity-100 transition-opacity`}></div>
-                                <div className={`size-10 rounded-none border border-white/10 bg-white/5 p-0.5 relative z-10 overflow-hidden group-hover:border-primary transition-all ${meeting.isCancelled ? 'grayscale opacity-40' : ''}`}>
+                                <div className={`absolute inset-0 bg-primary/20 blur-md rounded-xl opacity-0 group-hover:opacity-100 transition-opacity`}></div>
+                                <div className={`size-10 rounded-xl border border-white/10 bg-white/5 p-0.5 relative z-10 overflow-hidden group-hover:border-primary transition-all ${meeting.isCancelled ? 'grayscale opacity-40' : ''}`}>
                                    {person.photo ? (
                                      <img 
                                         src={person.photo} 
                                         alt={person.name} 
-                                        className="size-full rounded-none object-cover" 
+                                        className="size-full rounded-xl object-cover" 
                                         referrerPolicy="no-referrer"
                                       />
                                    ) : (
-                                     <div className="size-full rounded-none bg-primary/10 flex items-center justify-center text-primary font-black text-sm">
+                                     <div className="size-full rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm">
                                         {person.name.charAt(0)}
                                      </div>
                                    )}
@@ -239,14 +239,14 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
                     <div className="grid grid-cols-2 gap-2 animate-in slide-in-from-bottom-4 duration-500">
                       <button 
                         onClick={() => onExtend(meeting.id)}
-                        className="flex-1 bg-white/5 text-slate-100 py-2.5 rounded-none text-sm font-black shadow-2xl border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 bg-white/5 text-slate-100 py-2.5 rounded-xl text-sm font-black shadow-2xl border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2"
                       >
                         <span className="material-symbols-outlined text-xl text-slate-100">more_time</span>
                         Extend
                       </button>
                       <button 
                         onClick={() => { onEndNow(meeting.id); }}
-                        className="flex-1 bg-white/5 text-slate-100 py-2.5 rounded-none text-sm font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 bg-white/5 text-slate-100 py-2.5 rounded-xl text-sm font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2"
                       >
                         <span className="material-symbols-outlined text-xl text-slate-100">logout</span>
                         Finish Early
@@ -258,7 +258,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
                     <button 
                       onClick={() => !isPast && onEdit(meeting.id)}
                       disabled={isPast}
-                      className={`flex-1 ${isPast ? 'bg-white/5 text-slate-100 cursor-not-allowed border-white/5' : isOngoing ? 'bg-white/5 text-slate-100 border-white/10 hover:bg-white/10' : 'bg-white text-black border-white/20 hover:bg-slate-100'} py-3 rounded-none text-sm font-black shadow-2xl transition-all flex items-center justify-center gap-2 border-t`}
+                      className={`flex-1 ${isPast ? 'bg-white/5 text-slate-100 cursor-not-allowed border-white/5' : isOngoing ? 'bg-white/5 text-slate-100 border-white/10 hover:bg-white/10' : 'bg-white text-black border-white/20 hover:bg-slate-100'} py-3 rounded-xl text-sm font-black shadow-2xl transition-all flex items-center justify-center gap-2 border-t`}
                     >
                       <span className="material-symbols-outlined text-xl">
                         {isPast ? 'lock' : 'edit'}
@@ -267,7 +267,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
                     </button>
                     <button 
                       onClick={onBack}
-                      className="flex-1 bg-white/5 text-slate-100 py-3 rounded-none text-sm font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all uppercase tracking-widest"
+                      className="flex-1 bg-white/5 text-slate-100 py-3 rounded-xl text-sm font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all uppercase tracking-widest"
                     >
                       {isOngoing ? 'Go Back' : 'Close'}
                     </button>
@@ -290,11 +290,11 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
       {isServiceModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-300">
            <div className="absolute inset-0 bg-black/90 backdrop-blur-2xl" onClick={() => !requestStatus.includes('PENDING') && setIsServiceModalOpen(false)} />
-           <div className="relative w-full max-w-2xl bg-card-dark rounded-none border border-white/10 shadow-[0_0_100px_rgba(0,0,0,1)] p-10 lg:p-14 flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300 overflow-hidden">
+           <div className="relative w-full max-w-2xl bg-card-dark rounded-xl border border-white/10 shadow-[0_0_100px_rgba(0,0,0,1)] p-10 lg:p-14 flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300 overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-amber-500/50" />
               
               <div className="flex flex-col items-center text-center gap-3">
-                 <div className="size-20 rounded-none bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-2">
+                 <div className="size-20 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-2">
                     <span className="material-symbols-outlined text-4xl font-variation-fill animate-bounce">notifications_active</span>
                  </div>
                  <h2 className="text-4xl font-black text-white tracking-tighter uppercase">Room Services</h2>
@@ -303,7 +303,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
 
               {requestStatus === 'SUCCESS' ? (
                 <div className="flex flex-col items-center gap-6 py-10 animate-in fade-in zoom-in duration-500">
-                   <div className="size-32 rounded-none bg-emerald-500/10 border-4 border-emerald-500/30 flex items-center justify-center text-emerald-500 shadow-[0_0_50px_rgba(16,185,129,0.2)]">
+                   <div className="size-32 rounded-xl bg-emerald-500/10 border-4 border-emerald-500/30 flex items-center justify-center text-emerald-500 shadow-[0_0_50px_rgba(16,185,129,0.2)]">
                       <span className="material-symbols-outlined text-6xl font-black">check_circle</span>
                    </div>
                    <div className="text-center">
@@ -353,12 +353,12 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
           isAmenitiesOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="absolute top-[-10%] right-[-10%] size-[120%] bg-primary/10 blur-[150px] rounded-none pointer-events-none opacity-50" />
+        <div className="absolute top-[-10%] right-[-10%] size-[120%] bg-primary/10 blur-[150px] rounded-xl pointer-events-none opacity-50" />
         <div className="h-full flex flex-col relative z-10 overflow-hidden">
           <header className="flex items-center justify-between p-4 lg:p-6 border-b border-white/5 bg-black/20 shrink-0">
             <div className="flex flex-col">
               <div className="flex items-center gap-2 mb-0.5">
-                <div className="size-8 rounded-none bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-lg">
+                <div className="size-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-lg">
                   <span className="material-symbols-outlined text-xl font-variation-fill">inventory_2</span>
                 </div>
                 <h2 className="text-xl font-black text-white tracking-tighter uppercase">Room Amenities</h2>
@@ -367,7 +367,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
             </div>
             <button 
               onClick={() => setIsAmenitiesOpen(false)}
-              className="size-8 rounded-none bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all group"
+              className="size-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all group"
             >
               <span className="material-symbols-outlined text-lg text-slate-100 group-hover:text-white">close</span>
             </button>
@@ -377,7 +377,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
             {AMENITIES_DATA.map((amenity) => (
               <div
                 key={amenity.id}
-                className="w-full bg-white/[0.03] border border-white/10 rounded-none overflow-hidden group transition-all hover:bg-white/[0.06] hover:border-white/20 shadow-xl"
+                className="w-full bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden group transition-all hover:bg-white/[0.06] hover:border-white/20 shadow-xl"
               >
                 <div className="flex flex-row">
                    <div className="w-20 aspect-square shrink-0 relative overflow-hidden bg-black/40 border-r border-white/5">
@@ -412,8 +412,8 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
                            <h4 className="text-white font-black text-base tracking-tight uppercase leading-none mb-0.5">{amenity.title}</h4>
                            <span className="text-primary font-black text-[7px] uppercase tracking-widest">{amenity.subtitle}</span>
                         </div>
-                        <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-none shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
-                           <span className="size-1 rounded-none bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></span>
+                        <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                           <span className="size-1 rounded-xl bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></span>
                            <span className="text-[6px] font-black text-emerald-500 uppercase tracking-widest">Active</span>
                         </div>
                       </div>
@@ -450,8 +450,8 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
 };
 
 const InfoCard: React.FC<{ icon: string; label: string; value: string; clickable?: boolean }> = ({ icon, label, value, clickable }) => (
-  <div className={`bg-white/[0.03] border border-white/5 rounded-none p-4 flex items-center gap-3 transition-all ${clickable ? 'hover:bg-primary/10 hover:border-primary/40 group-hover:translate-y-[-4px]' : ''}`}>
-    <div className={`size-10 rounded-none bg-white/5 flex items-center justify-center text-slate-100 border border-white/5 ${clickable ? 'group-hover:bg-primary/20 group-hover:text-primary transition-colors' : ''}`}>
+  <div className={`bg-white/[0.03] border border-white/5 rounded-xl p-4 flex items-center gap-3 transition-all ${clickable ? 'hover:bg-primary/10 hover:border-primary/40 group-hover:translate-y-[-4px]' : ''}`}>
+    <div className={`size-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-100 border border-white/5 ${clickable ? 'group-hover:bg-primary/20 group-hover:text-primary transition-colors' : ''}`}>
        <span className="material-symbols-outlined text-xl">{icon}</span>
     </div>
     <div className="flex flex-col">
@@ -465,15 +465,15 @@ const ServiceCard: React.FC<{ icon: string; title: string; desc: string; isPendi
   <button 
     onClick={onClick}
     disabled={isPending}
-    className={`p-6 rounded-none border-2 transition-all flex flex-col items-center gap-4 group h-full relative ${
+    className={`p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-4 group h-full relative ${
       isPending 
         ? 'bg-amber-500/10 border-amber-500/40 shadow-xl' 
         : 'bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-amber-500/5 active:scale-95'
     }`}
   >
-    <div className={`size-16 rounded-none flex items-center justify-center transition-all ${isPending ? 'bg-amber-500 text-white' : 'bg-slate-700 text-slate-100 group-hover:text-amber-500'}`}>
+    <div className={`size-16 rounded-xl flex items-center justify-center transition-all ${isPending ? 'bg-amber-500 text-white' : 'bg-slate-700 text-slate-100 group-hover:text-amber-500'}`}>
        {isPending ? (
-         <span className="size-8 border-4 border-white/30 border-t-white rounded-none animate-spin"></span>
+         <span className="size-8 border-4 border-white/30 border-t-white rounded-xl animate-spin"></span>
        ) : (
          <span className="material-symbols-outlined text-3xl font-variation-fill">{icon}</span>
        )}

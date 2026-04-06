@@ -73,7 +73,7 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
             </h1>
             <button 
               onClick={onShowDetails} 
-              className="size-14 shrink-0 rounded-none bg-[#0a192f] text-primary/70 shadow-[0_10px_30px_rgba(10,25,47,0.4)] flex items-center justify-center border border-white/5 hover:scale-105 active:scale-95 transition-all group"
+              className="size-14 shrink-0 rounded-xl bg-[#0a192f] text-primary/70 shadow-[0_10px_30px_rgba(10,25,47,0.4)] flex items-center justify-center border border-white/5 hover:scale-105 active:scale-95 transition-all group"
             >
               <span className="material-symbols-outlined text-3xl font-variation-fill group-hover:scale-110 transition-transform">info</span>
             </button>
@@ -116,7 +116,7 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
                 </p>
                 <button 
                   onClick={handleBookNow}
-                  className="bg-white/95 backdrop-blur-xl text-black px-10 py-5 rounded-none text-xl font-black shadow-[0_25px_50px_rgba(255,255,255,0.1)] hover:bg-white active:scale-95 transition-all flex items-center gap-4 border border-white/40"
+                  className="bg-white/95 backdrop-blur-xl text-black px-10 py-5 rounded-xl text-xl font-black shadow-[0_25px_50px_rgba(255,255,255,0.1)] hover:bg-white active:scale-95 transition-all flex items-center gap-4 border border-white/40"
                 >
                   <span className="material-symbols-outlined text-3xl font-bold">add_circle</span>
                   Book
@@ -133,7 +133,7 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
                 
                 <div 
                   onClick={() => onShowMeetingDetails(roomStatus.currentMeeting?.id || '')}
-                  className="w-full max-w-lg bg-white/[0.03] border border-white/10 rounded-none p-8 lg:p-10 flex flex-col gap-4 relative overflow-hidden group cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition-all shadow-2xl"
+                  className="w-full max-w-lg bg-white/[0.03] border border-white/10 rounded-xl p-8 lg:p-10 flex flex-col gap-4 relative overflow-hidden group cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition-all shadow-2xl"
                 >
                   <div className={`absolute left-0 top-0 bottom-0 w-2 ${roomStatus.isAvailable ? 'bg-status-available' : 'bg-status-busy'} shadow-[0_0_20px_rgba(239,68,68,0.4)]`}></div>
                   
@@ -147,13 +147,13 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
                 </div>
                 
                 <div className="flex items-center gap-3 w-full max-w-lg">
-                  <button onClick={() => roomStatus.currentMeeting && onExtend(roomStatus.currentMeeting.id)} className="flex-1 bg-white/5 text-slate-600 py-5 rounded-none text-sm lg:text-base font-black border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-95">
+                  <button onClick={() => roomStatus.currentMeeting && onExtend(roomStatus.currentMeeting.id)} className="flex-1 bg-white/5 text-slate-600 py-5 rounded-xl text-sm lg:text-base font-black border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-95">
                     <span className="material-symbols-outlined text-xl text-slate-600">more_time</span> Extend
                   </button>
-                  <button onClick={() => roomStatus.currentMeeting && onEndNow(roomStatus.currentMeeting.id)} className="flex-1 bg-white/5 text-slate-600 py-5 rounded-none text-sm lg:text-base font-black border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-95">
+                  <button onClick={() => roomStatus.currentMeeting && onEndNow(roomStatus.currentMeeting.id)} className="flex-1 bg-white/5 text-slate-600 py-5 rounded-xl text-sm lg:text-base font-black border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-95">
                     <span className="material-symbols-outlined text-xl text-slate-600">logout</span> End Now
                   </button>
-                  <button onClick={onCheckIn} className="flex-1 bg-white/5 text-slate-600 py-5 rounded-none text-sm lg:text-base font-black border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-95">
+                  <button onClick={onCheckIn} className="flex-1 bg-white/5 text-slate-600 py-5 rounded-xl text-sm lg:text-base font-black border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-95">
                     <span className="material-symbols-outlined text-xl text-slate-600">verified_user</span> Check In/Out
                   </button>
                 </div>
@@ -163,8 +163,8 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
         </div>
 
         <div className="mt-auto pt-10">
-          <div className="bg-[#0c0c0c] border border-white/10 rounded-none p-8 lg:p-10 shadow-2xl hover:border-white/20 transition-all group overflow-hidden relative max-w-md">
-            <div className="absolute top-0 right-0 size-48 bg-primary/5 blur-[50px] rounded-none pointer-events-none translate-x-12 -translate-y-12" />
+          <div className="bg-[#0c0c0c] border border-white/10 rounded-xl p-8 lg:p-10 shadow-2xl hover:border-white/20 transition-all group overflow-hidden relative max-w-md">
+            <div className="absolute top-0 right-0 size-48 bg-primary/5 blur-[50px] rounded-xl pointer-events-none translate-x-12 -translate-y-12" />
             
             {upcomingMeetings.length > 0 ? (
               upcomingMeetings.slice(0, 1).map((meeting) => {

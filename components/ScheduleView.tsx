@@ -97,13 +97,13 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
       <header className="sticky top-0 z-50 bg-background-dark/95 backdrop-blur-xl border-b border-white/5">
         <div className="flex items-center p-8 justify-between w-full">
           <div className="flex items-center gap-6">
-            <div className="size-14 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
+            <div className="size-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
               <span className="material-symbols-outlined text-4xl font-variation-fill">calendar_view_day</span>
             </div>
             <div className="flex flex-col">
               <h1 className="text-3xl font-black leading-tight tracking-tight text-white">Timeline Schedule</h1>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`flex size-1.5 rounded-none ${isToday ? 'bg-emerald-500 animate-pulse' : 'bg-slate-200'}`}></span>
+                <span className={`flex size-1.5 rounded-xl ${isToday ? 'bg-emerald-500 animate-pulse' : 'bg-slate-200'}`}></span>
                 <p className="text-[10px] font-black text-slate-100 uppercase tracking-[0.4em]">{isToday ? 'Live View' : 'Historical/Future View'} • {slotPrecision}m Grid • {selectedDate}</p>
               </div>
             </div>
@@ -112,26 +112,26 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
           <div className="flex items-center gap-4">
             <button 
               onClick={() => {}} // This view is already the schedule, but we can add an info trigger if needed
-              className="size-14 shrink-0 rounded-none bg-[#0a192f] text-primary shadow-[0_10px_30px_rgba(10,25,47,0.4)] flex items-center justify-center border border-white/5 hover:scale-105 active:scale-95 transition-all group"
+              className="size-14 shrink-0 rounded-xl bg-[#0a192f] text-primary shadow-[0_10px_30px_rgba(10,25,47,0.4)] flex items-center justify-center border border-white/5 hover:scale-105 active:scale-95 transition-all group"
             >
               <span className="material-symbols-outlined text-3xl font-variation-fill group-hover:scale-110 transition-transform">info</span>
             </button>
             
-            <div className="flex items-center bg-white/5 border border-white/10 rounded-none p-1">
-              <button onClick={handlePrevDay} className="p-3 hover:bg-white/5 rounded-none text-slate-100 hover:text-white transition-all">
+            <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1">
+              <button onClick={handlePrevDay} className="p-3 hover:bg-white/5 rounded-xl text-slate-100 hover:text-white transition-all">
                 <span className="material-symbols-outlined">chevron_left</span>
               </button>
               <div className="px-4 text-[10px] font-black uppercase tracking-widest text-slate-50">
                 {isToday ? 'Today' : selectedDate}
               </div>
-              <button onClick={handleNextDay} className="p-3 hover:bg-white/5 rounded-none text-slate-100 hover:text-white transition-all">
+              <button onClick={handleNextDay} className="p-3 hover:bg-white/5 rounded-xl text-slate-100 hover:text-white transition-all">
                 <span className="material-symbols-outlined">chevron_right</span>
               </button>
             </div>
             
             <button 
               onClick={() => { db.clear(); if(onUpdate) onUpdate(); }} 
-              className="px-6 py-3 bg-white/5 border border-white/10 rounded-none text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all text-slate-100 hover:text-white"
+              className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all text-slate-100 hover:text-white"
             >
               Reset Room Data
             </button>
@@ -199,10 +199,10 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
                   {isCurrent && (
                     <div className="absolute right-[-6px] z-[60] flex items-center" style={{ top: `${topOffsetPercent}%` }}>
                       <div className="relative">
-                        <div className="absolute inset-0 size-3 rounded-none bg-status-busy animate-ping opacity-75" />
-                        <div className="relative size-3 rounded-none bg-status-busy shadow-[0_0_15px_rgba(239,68,68,1)] border-2 border-background-dark" />
+                        <div className="absolute inset-0 size-3 rounded-xl bg-status-busy animate-ping opacity-75" />
+                        <div className="relative size-3 rounded-xl bg-status-busy shadow-[0_0_15px_rgba(239,68,68,1)] border-2 border-background-dark" />
                       </div>
-                      <div className="bg-status-busy text-white text-[9px] font-black px-3 py-1 rounded-none ml-3 shadow-[0_10px_25_rgba(239,68,68,0.4)] tracking-[0.1em] uppercase transform -translate-y-1/2 whitespace-nowrap flex items-center gap-2 border border-white/20 backdrop-blur-md">
+                      <div className="bg-status-busy text-white text-[9px] font-black px-3 py-1 rounded-xl ml-3 shadow-[0_10px_25_rgba(239,68,68,0.4)] tracking-[0.1em] uppercase transform -translate-y-1/2 whitespace-nowrap flex items-center gap-2 border border-white/20 backdrop-blur-md">
                         <span className="material-symbols-outlined text-sm font-black">timer</span>
                         {getRemainingTimeText()}
                       </div>
@@ -217,7 +217,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
                   >
                     <button 
                       onClick={() => onShowMeetingDetails(meetingAtSlot.id)}
-                      className={`h-full w-full p-8 rounded-none border transition-all duration-500 relative overflow-hidden flex flex-col justify-center text-left ${
+                      className={`h-full w-full p-8 rounded-xl border transition-all duration-500 relative overflow-hidden flex flex-col justify-center text-left ${
                         isCurrent ? 'bg-status-busy/15 border-status-busy/50 shadow-2xl ring-1 ring-status-busy/25' : 'bg-white/[0.03] border-white/5'
                       } hover:bg-white/[0.07] hover:border-white/10`}
                     >
@@ -228,7 +228,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
                       <div className="flex flex-col gap-2 pl-4">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-3">
-                             <span className={`text-[10px] px-4 py-1.5 rounded-none font-black tracking-widest uppercase transition-all duration-500 ${
+                             <span className={`text-[10px] px-4 py-1.5 rounded-xl font-black tracking-widest uppercase transition-all duration-500 ${
                               isCurrent ? 'bg-status-busy text-white shadow-lg' : meetingAtSlot.type === 'CLIENT' ? 'bg-purple-500/40 text-purple-400 border border-purple-500/40' : 'bg-primary/40 text-primary border border-primary/40'
                             }`}>
                               {meetingAtSlot.type} {isCurrent && '(NOW)'}
@@ -252,13 +252,13 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
                                <img 
                                  src={meetingAtSlot.organizerPhoto} 
                                  alt={meetingAtSlot.organizer} 
-                                 className="size-8 rounded-none border border-white/20 shadow-md"
+                                 className="size-8 rounded-xl border border-white/20 shadow-md"
                                  referrerPolicy="no-referrer"
                                />
                              )}
                              <span className="text-[12px] uppercase tracking-widest truncate max-w-[180px]">{meetingAtSlot.organizer}</span>
                            </div>
-                           <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-none border border-white/5">
+                           <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-xl border border-white/5">
                              <span className="material-symbols-outlined text-xl text-primary">schedule</span>
                              <span className="text-[12px] uppercase tracking-widest">{meetingAtSlot.startTime} - {meetingAtSlot.endTime}</span>
                            </div>
@@ -276,13 +276,13 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
                     <button 
                       onClick={() => !isPast && onBook(slot)}
                       disabled={isPast}
-                      className={`w-full h-full min-h-[110px] border-2 border-dashed rounded-none flex flex-col items-center justify-center gap-4 px-10 transition-all group/btn ${
+                      className={`w-full h-full min-h-[110px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-4 px-10 transition-all group/btn ${
                         isPast ? 'border-white/5 opacity-40 cursor-not-allowed' : 'border-primary/40 text-primary hover:border-primary/70 hover:bg-primary/15'
                       }`}
                     >
                       <div className="flex flex-col items-center gap-2">
                         <div className="flex items-center gap-5">
-                          <div className={`size-10 rounded-none border-2 flex items-center justify-center transition-transform ${
+                          <div className={`size-10 rounded-xl border-2 flex items-center justify-center transition-transform ${
                             isPast ? 'border-slate-400 text-slate-400' : 'border-primary group-hover/btn:rotate-90'
                           }`}>
                             <span className="material-symbols-outlined text-2xl font-bold">{isPast ? 'lock' : 'add'}</span>
@@ -303,7 +303,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
                         )}
                       </div>
                       {!isPast && (
-                        <div className="bg-white text-black px-8 py-3 rounded-none text-[11px] font-black uppercase tracking-widest shadow-lg transition-all group-hover/btn:scale-105 group-active/btn:scale-95 group-hover/btn:bg-slate-100 border border-white/20">
+                        <div className="bg-white text-black px-8 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg transition-all group-hover/btn:scale-105 group-active/btn:scale-95 group-hover/btn:bg-slate-100 border border-white/20">
                           Quick Reserve
                         </div>
                       )}
