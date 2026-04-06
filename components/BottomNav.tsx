@@ -27,7 +27,7 @@ const BottomNav: React.FC<BottomNavProps> = ({
         <div className="relative">
           <button 
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`size-14 rounded-none flex items-center justify-center transition-all duration-300 shadow-2xl active:scale-90 ${
+            className={`size-14 rounded-xl flex items-center justify-center transition-all duration-300 shadow-2xl active:scale-90 ${
               isExpanded 
                 ? 'bg-white text-black' 
                 : 'bg-[#0a192f] text-primary border border-white/5'
@@ -49,7 +49,7 @@ const BottomNav: React.FC<BottomNavProps> = ({
         {/* Top Header inside Panel */}
         <div className="flex flex-row-reverse items-center justify-between w-full px-6 mb-12">
           {/* Dashboard Button (Mirror of the external toggle) */}
-          <div className="size-14 shrink-0 rounded-none bg-[#0a192f] text-primary shadow-[0_10px_30px_rgba(10,25,47,0.4)] flex items-center justify-center border border-white/5">
+          <div className="size-14 shrink-0 rounded-xl bg-[#0a192f] text-primary shadow-[0_10px_30px_rgba(10,25,47,0.4)] flex items-center justify-center border border-white/5">
             <span className="material-symbols-outlined text-3xl font-variation-fill">blur_on</span>
           </div>
         </div>
@@ -63,7 +63,7 @@ const BottomNav: React.FC<BottomNavProps> = ({
             }}
             className="w-full flex flex-row-reverse items-center gap-4 group transition-all duration-300"
           >
-            <div className={`size-14 shrink-0 rounded-none bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.1)] flex items-center justify-center border border-white/20 group-hover:scale-105 active:scale-95 transition-all duration-300 ${
+            <div className={`size-14 shrink-0 rounded-xl bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.1)] flex items-center justify-center border border-white/20 group-hover:scale-105 active:scale-95 transition-all duration-300 ${
               activeView === View.BOOKING ? 'ring-2 ring-white ring-offset-4 ring-offset-background-dark' : ''
             }`}>
               <span className="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform font-variation-fill">add_box</span>
@@ -144,7 +144,7 @@ const NavButton: React.FC<{
       className="w-full flex flex-row-reverse items-center gap-4 group transition-all duration-300"
     >
       <div 
-        className={`size-14 shrink-0 flex items-center justify-center transition-all duration-300 rounded-none ${!noBorder ? 'border border-white/10' : ''} ${
+        className={`size-14 shrink-0 flex items-center justify-center transition-all duration-300 rounded-xl ${!noBorder ? 'border border-white/10' : ''} ${
           isActiveWhite
             ? 'bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.3)]'
             : isNavy

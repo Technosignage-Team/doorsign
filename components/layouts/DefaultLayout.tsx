@@ -22,20 +22,20 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
     <div className="flex flex-col h-full overflow-hidden pb-24 md:pb-8">
       <div className="flex items-center p-6 lg:p-10 pb-4 justify-between border-b border-white/5 shrink-0">
         <div className="flex items-center gap-4">
-          <div className="bg-primary/10 p-2.5 rounded-none border border-primary/20 relative">
+          <div className="bg-primary/10 p-2.5 rounded-xl border border-primary/20 relative">
             <span className="material-symbols-outlined text-primary text-4xl font-variation-fill">meeting_room</span>
-            <div className={`absolute -top-1 -right-1 size-3 rounded-none border-2 border-background-dark transition-colors duration-500 ${isSyncing ? 'bg-primary animate-ping' : 'bg-emerald-500'}`}></div>
+            <div className={`absolute -top-1 -right-1 size-3 rounded-xl border-2 border-background-dark transition-colors duration-500 ${isSyncing ? 'bg-primary animate-ping' : 'bg-emerald-500'}`}></div>
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-white">Everest</h1>
               <button 
                 onClick={onShowDetails} 
-                className="size-12 shrink-0 rounded-none bg-[#0a192f] text-primary/70 shadow-[0_10px_30px_rgba(10,25,47,0.4)] flex items-center justify-center border border-white/5 hover:scale-105 active:scale-95 transition-all group"
+                className="size-12 shrink-0 rounded-xl bg-[#0a192f] text-primary/70 shadow-[0_10px_30px_rgba(10,25,47,0.4)] flex items-center justify-center border border-white/5 hover:scale-105 active:scale-95 transition-all group"
               >
                 <span className="material-symbols-outlined text-2xl font-variation-fill group-hover:scale-110 transition-transform">info</span>
               </button>
-              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-none border ${isSyncing ? 'text-primary border-primary/30' : 'text-slate-300 border-white/10'} uppercase tracking-widest`}>
+              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-xl border ${isSyncing ? 'text-primary border-primary/30' : 'text-slate-300 border-white/10'} uppercase tracking-widest`}>
                 {isSyncing ? 'Syncing...' : 'Live'}
               </span>
             </div>
@@ -50,7 +50,7 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
 
       <div className="flex flex-col md:flex-row flex-1 p-4 lg:p-8 gap-6 overflow-hidden">
         <div className="flex-1 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2">
-          <div className={`flex w-full overflow-hidden rounded-none border-2 p-4 lg:p-6 items-center justify-between transition-all duration-500 shrink-0 ${
+          <div className={`flex w-full overflow-hidden rounded-xl border-2 p-4 lg:p-6 items-center justify-between transition-all duration-500 shrink-0 ${
             roomStatus.isAvailable ? 'bg-status-available/50 border-status-available' : 'bg-status-busy/50 border-status-busy'
           }`}>
             <div className="flex items-center gap-6">
@@ -65,20 +65,20 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
                 <p className="text-slate-200 font-bold text-sm lg:text-lg truncate max-w-[300px]">{roomStatus.location}</p>
               </div>
             </div>
-            <div className={`${roomStatus.isAvailable ? 'bg-status-available' : 'bg-status-busy shadow-[0_0_20px_rgba(239,68,68,0.4)]'} p-3.5 lg:p-4 rounded-none`}>
+            <div className={`${roomStatus.isAvailable ? 'bg-status-available' : 'bg-status-busy shadow-[0_0_20px_rgba(239,68,68,0.4)]'} p-3.5 lg:p-4 rounded-xl`}>
               <span className="material-symbols-outlined text-white text-2xl lg:text-3xl font-variation-fill">
                 {roomStatus.isAvailable ? 'check_circle' : 'sensors'}
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col rounded-none shadow-2xl bg-card-dark border border-white/5 overflow-hidden flex-1 min-h-[500px]">
+          <div className="flex flex-col rounded-xl shadow-2xl bg-card-dark border border-white/5 overflow-hidden flex-1 min-h-[500px]">
             <div className="w-full bg-center bg-no-repeat aspect-video md:aspect-auto md:flex-[1.1] bg-cover relative group" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200")' }}>
               <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent opacity-90" />
               {!roomStatus.isAvailable && (
                 <div className="absolute top-8 left-8">
-                  <div className="bg-status-busy px-6 py-2.5 rounded-none text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_0_25px_rgba(239,68,68,0.6)] flex items-center gap-2 border border-white/20">
-                    <span className="w-2 h-2 rounded-none bg-white animate-pulse"></span>
+                  <div className="bg-status-busy px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_0_25px_rgba(239,68,68,0.6)] flex items-center gap-2 border border-white/20">
+                    <span className="w-2 h-2 rounded-xl bg-white animate-pulse"></span>
                     Running Now
                   </div>
                 </div>
@@ -111,21 +111,21 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
                     <>
                       <button 
                         onClick={() => onExtend(roomStatus.currentMeeting!.id)} 
-                        className="flex-1 flex items-center justify-center rounded-none h-20 bg-white/5 text-slate-600 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
+                        className="flex-1 flex items-center justify-center rounded-xl h-20 bg-white/5 text-slate-600 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
                       >
                         <span className="material-symbols-outlined mr-4 text-3xl text-slate-600">more_time</span>
                         Extend
                       </button>
                       <button 
                         onClick={() => onEndNow(roomStatus.currentMeeting!.id)} 
-                        className="flex-1 flex items-center justify-center rounded-none h-20 bg-white/5 text-slate-600 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
+                        className="flex-1 flex items-center justify-center rounded-xl h-20 bg-white/5 text-slate-600 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
                       >
                         <span className="material-symbols-outlined mr-4 text-3xl text-slate-600">logout</span>
                         End Now
                       </button>
                       <button 
                         onClick={onCheckIn} 
-                        className="flex-1 flex items-center justify-center rounded-none h-20 bg-white/5 text-slate-600 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
+                        className="flex-1 flex items-center justify-center rounded-xl h-20 bg-white/5 text-slate-600 text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
                       >
                         <span className="material-symbols-outlined mr-4 text-3xl text-slate-600">verified_user</span>
                         Check In
@@ -134,7 +134,7 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
                   ) : (
                     <button 
                       onClick={() => onBook()} 
-                      className="w-full flex items-center justify-center rounded-none h-20 bg-white/95 backdrop-blur-xl text-black text-lg font-black shadow-[0_15px_40px_rgba(255,255,255,0.1)] hover:bg-white active:scale-95 transition-all border border-white/40"
+                      className="w-full flex items-center justify-center rounded-xl h-20 bg-white/95 backdrop-blur-xl text-black text-lg font-black shadow-[0_15px_40px_rgba(255,255,255,0.1)] hover:bg-white active:scale-95 transition-all border border-white/40"
                     >
                       <span className="material-symbols-outlined mr-4 text-3xl text-status-available">add_box</span>
                       Book
@@ -152,10 +152,10 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
         <div className="px-4 lg:px-8 pb-4 shrink-0">
           <button 
             onClick={() => onBook(undefined, roomStatus.nextMeeting?.id)} 
-            className="w-full flex items-center justify-between p-4 lg:p-6 rounded-none bg-white/[0.03] border border-white/10 group hover:bg-white/[0.05] transition-all text-left shadow-xl"
+            className="w-full flex items-center justify-between p-4 lg:p-6 rounded-xl bg-white/[0.03] border border-white/10 group hover:bg-white/[0.05] transition-all text-left shadow-xl"
           >
             <div className="flex items-center gap-6">
-              <div className="size-14 lg:size-16 rounded-none bg-slate-800 flex items-center justify-center text-slate-300 group-hover:scale-105 transition-transform border border-white/5">
+              <div className="size-14 lg:size-16 rounded-xl bg-slate-800 flex items-center justify-center text-slate-300 group-hover:scale-105 transition-transform border border-white/5">
                 <span className="material-symbols-outlined text-3xl font-variation-fill">calendar_today</span>
               </div>
               <div className="flex flex-col">
@@ -176,12 +176,12 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
 };
 
 const ScheduleCardItem: React.FC<{ title: string; time: string; organizer: string; isNext?: boolean; isOngoing?: boolean }> = ({ title, time, organizer, isNext, isOngoing }) => (
-  <div className={`flex items-center gap-4 p-5 rounded-none border text-left transition-all ${
+  <div className={`flex items-center gap-4 p-5 rounded-xl border text-left transition-all ${
     isOngoing ? 'bg-status-busy/10 border-status-busy/40' : 
     isNext ? 'bg-card-dark border-primary/40' : 
     'bg-transparent border-white/5 hover:bg-white/5'
   }`}>
-    <div className={`size-12 rounded-none flex items-center justify-center shrink-0 ${
+    <div className={`size-12 rounded-xl flex items-center justify-center shrink-0 ${
       isOngoing ? 'bg-status-busy text-white' : isNext ? 'bg-primary text-white' : 'bg-slate-800 text-slate-300'
     }`}>
       <span className="material-symbols-outlined text-2xl font-variation-fill">
