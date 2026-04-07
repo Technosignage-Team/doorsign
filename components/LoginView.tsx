@@ -13,10 +13,11 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
 
   const handleKeyPress = (num: string) => {
     setError(null);
-    setEmployeeId(prev => prev + num);
+    if (employeeId.length < 10) setEmployeeId(prev => prev + num);
   };
 
   const handleBackspace = () => {
+    setError(null);
     setEmployeeId(prev => prev.slice(0, -1));
   };
 
@@ -37,11 +38,22 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
       }
       const data = await res.json();
       const token: string = data.token ?? data.accessToken ?? data.access_token ?? '';
+      const rawName =
+        data.name ??
+        data.fullName ??
+        data.displayName ??
+        data.employee?.name ??
+        data.employee?.fullName ??
+        data.user?.name ??
+        data.user?.fullName ??
+        (data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : null) ??
+        (data.employee?.firstName && data.employee?.lastName ? `${data.employee.firstName} ${data.employee.lastName}` : null) ??
+        null;
       const user: User = {
         employeeId,
-        name: data.name ?? data.fullName ?? data.displayName ?? `Employee ${employeeId}`,
-        role: data.role ?? data.jobTitle ?? data.position ?? 'Employee',
-        photo: data.photo ?? data.avatar ?? data.profileImage ?? `https://i.pravatar.cc/150?u=${employeeId}`,
+        name: rawName ?? employeeId,
+        role: data.role ?? data.jobTitle ?? data.position ?? data.employee?.jobTitle ?? 'Employee',
+        photo: data.photo ?? data.avatar ?? data.profileImage ?? data.employee?.photo ?? `https://i.pravatar.cc/150?u=${employeeId}`,
         token,
       };
       onLogin(user);
@@ -52,98 +64,101 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
     }
   };
 
+  const dots = employeeId.split('').map((_, i) => <span key={i} className="size-3 rounded-full bg-white inline-block" />);
+
   return (
-    <div className="flex flex-col h-full bg-[#050505] overflow-hidden relative">
-      <div className="absolute top-[-20%] left-[-10%] size-[80%] bg-primary/10 blur-[150px] rounded-xl pointer-events-none" />
-      
-      <header className="flex items-center p-8 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10">
-        <button onClick={onBack} className="size-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
-          <span className="material-symbols-outlined text-3xl">arrow_back</span>
+    <div className="flex flex-col h-full bg-[#050505] text-white relative overflow-hidden">
+      <div className="absolute top-[-20%] left-[-10%] size-[70%] bg-primary/10 blur-[150px] rounded-full pointer-events-none" />
+
+      {/* Header */}
+      <div className="flex items-center gap-4 px-6 py-5 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
+        <button onClick={onBack} className="size-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all shrink-0">
+          <span className="material-symbols-outlined text-2xl">arrow_back</span>
         </button>
-        <div className="flex flex-col ml-6">
-          <h1 className="text-3xl font-black text-white tracking-tight leading-none">Authentication</h1>
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2">Everest Management System</p>
+        <div className="flex flex-col">
+          <h1 className="text-xl font-black tracking-tight leading-none text-white">Employee Authentication</h1>
+          <p className="text-slate-500 text-[9px] font-black uppercase tracking-[0.4em] mt-1">Enter your corporate ID to continue</p>
         </div>
-      </header>
+      </div>
 
-      <main className="flex-1 flex flex-col md:flex-row items-center justify-center p-8 lg:p-16 gap-12 lg:gap-24 relative z-10 overflow-y-auto custom-scrollbar">
-        {/* Left Side: Instructions & Demo Users */}
-        <div className="max-w-md w-full flex flex-col items-center md:items-start text-center md:text-left">
-          <div className={`size-24 rounded-xl flex items-center justify-center mb-8 shadow-2xl transition-colors ${error ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-primary/20 text-primary border border-primary/30'}`}>
-            <span className="material-symbols-outlined text-5xl font-variation-fill">
-              {error ? 'lock_reset' : 'verified_user'}
-            </span>
-          </div>
-          <h2 className="text-5xl lg:text-6xl font-black text-white tracking-tighter leading-none mb-6">Employee ID Required</h2>
-          <p className="text-slate-400 text-lg lg:text-xl leading-relaxed mb-10">
-            Please enter your corporate ID to proceed with room booking or modification.
-          </p>
-          
-          <div className="w-full flex flex-col gap-4">
-             {error && (
-               <div className="text-red-500 font-black uppercase tracking-widest text-xs animate-bounce flex items-center gap-2 mt-4">
-                 <span className="material-symbols-outlined text-lg">error</span>
-                 {error}
-               </div>
-             )}
-          </div>
-        </div>
+      {/* Body */}
+      <div className="flex-1 flex items-center justify-center p-6 relative z-10 overflow-y-auto custom-scrollbar">
+        <div className="w-full max-w-sm flex flex-col gap-5">
 
-        {/* Right Side: Keypad Container */}
-        <div className="w-full max-w-sm bg-card-dark border border-white/10 rounded-xl p-10 shadow-[0_30px_100px_rgba(0,0,0,0.6)] flex flex-col gap-8">
-          {/* Display Area */}
-          <div className="bg-black/40 border border-white/5 rounded-xl p-6 h-28 flex flex-col items-center justify-center relative overflow-hidden group">
-            <span className="absolute top-2 left-4 text-[8px] font-black text-slate-600 uppercase tracking-widest">Input Stream</span>
-            <div className="w-full text-center">
-              <span className={`text-4xl font-black tracking-widest break-all transition-all duration-300 ${employeeId ? 'text-white' : 'text-slate-800'}`}>
-                {employeeId || 'ID NUMBER'}
+          {/* Lock icon + title */}
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className={`size-16 rounded-2xl flex items-center justify-center border transition-colors duration-300 ${error ? 'bg-red-500/15 border-red-500/30 text-red-400' : 'bg-primary/10 border-primary/20 text-primary'}`}>
+              <span className="material-symbols-outlined text-3xl font-variation-fill">
+                {error ? 'lock_reset' : 'shield_person'}
               </span>
             </div>
-            {employeeId && (
-              <div className="absolute bottom-2 right-4 flex gap-1">
-                <span className="size-1 rounded-xl bg-primary animate-pulse"></span>
-                <span className="size-1 rounded-xl bg-primary animate-pulse delay-75"></span>
-                <span className="size-1 rounded-xl bg-primary animate-pulse delay-150"></span>
-              </div>
+            {error ? (
+              <p className="text-red-400 text-sm font-black uppercase tracking-widest animate-in fade-in duration-200">{error}</p>
+            ) : (
+              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Secure Access Portal</p>
+            )}
+          </div>
+
+          {/* ID Display */}
+          <div className="bg-white/[0.04] border border-white/10 rounded-2xl px-6 py-5 flex flex-col items-center gap-3 min-h-[90px] justify-center">
+            {employeeId ? (
+              <>
+                <div className="flex items-center gap-2">
+                  {dots}
+                  <span className="w-0.5 h-5 bg-primary animate-pulse rounded-full ml-1" />
+                </div>
+                <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest">{employeeId.length} digit{employeeId.length !== 1 ? 's' : ''} entered</p>
+              </>
+            ) : (
+              <p className="text-slate-700 text-sm font-black uppercase tracking-widest">Enter ID Number</p>
             )}
           </div>
 
           {/* Keypad */}
-          <div className="grid grid-cols-3 gap-4">
-            {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'delete'].map((key) => (
+          <div className="grid grid-cols-3 gap-3">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'del'].map((key) => (
               <button
                 key={key}
                 onClick={() => {
-                  if (key === 'delete') handleBackspace();
-                  else if (key === 'C') setEmployeeId('');
+                  if (key === 'del') handleBackspace();
+                  else if (key === 'C') { setEmployeeId(''); setError(null); }
                   else handleKeyPress(key);
                 }}
-                className={`h-20 rounded-xl text-2xl font-black transition-all flex items-center justify-center ${
-                  key === 'delete' || key === 'C'
-                    ? 'text-slate-500 hover:text-white hover:bg-white/5 active:scale-90'
-                    : 'bg-white/5 text-white border border-white/5 hover:bg-primary/20 hover:border-primary active:scale-90 shadow-lg'
+                className={`h-16 rounded-xl text-lg font-black transition-all active:scale-90 flex items-center justify-center ${
+                  key === 'del'
+                    ? 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/5'
+                    : key === 'C'
+                    ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/10'
+                    : 'bg-white/[0.06] text-white border border-white/10 hover:bg-primary/20 hover:border-primary/40 shadow-lg'
                 }`}
               >
-                {key === 'delete' ? <span className="material-symbols-outlined text-3xl">backspace</span> : key}
+                {key === 'del'
+                  ? <span className="material-symbols-outlined text-xl">backspace</span>
+                  : key}
               </button>
             ))}
           </div>
 
-          {/* Action Button */}
-          <button 
+          {/* Authenticate button */}
+          <button
             onClick={handleLogin}
             disabled={!employeeId || loading}
-            className="w-full bg-white text-black py-6 rounded-none text-xl font-black shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-[0.2em] border-t border-white/20 mt-2"
+            className="w-full bg-white text-black py-5 rounded-xl text-base font-black uppercase tracking-[0.2em] shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none border-t border-white/20 flex items-center justify-center gap-3"
           >
             {loading ? (
-              <span className="flex items-center justify-center gap-3">
-                <span className="material-symbols-outlined text-2xl animate-spin">progress_activity</span>
-                Authenticating...
-              </span>
-            ) : 'Authenticate'}
+              <>
+                <span className="material-symbols-outlined text-xl animate-spin">progress_activity</span>
+                Authenticating…
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-xl">login</span>
+                Authenticate
+              </>
+            )}
           </button>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
