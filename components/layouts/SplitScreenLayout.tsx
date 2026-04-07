@@ -57,9 +57,9 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
     >
       {/* Left: Room Branding & Status */}
       <div className="relative w-[42%] h-full shrink-0 overflow-hidden border-r border-white/5">
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] hover:scale-105"
-          style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200")' }}
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] hover:scale-105 bg-white/5"
+          style={roomStatus.imageUrl ? { backgroundImage: `url("${roomStatus.imageUrl}")` } : undefined}
         />
         <div className={`absolute inset-0 transition-colors duration-1000 ${
           roomStatus.isAvailable ? 'bg-emerald-500/60' : 'bg-rose-500/60'

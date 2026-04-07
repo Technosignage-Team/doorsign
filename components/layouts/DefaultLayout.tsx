@@ -28,7 +28,7 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-white">Everest</h1>
+              <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-white">{roomStatus.name}</h1>
               <button 
                 onClick={onShowDetails} 
                 className="size-12 shrink-0 rounded-xl bg-[#0a192f] text-primary/70 shadow-[0_10px_30px_rgba(10,25,47,0.4)] flex items-center justify-center border border-white/5 hover:scale-105 active:scale-95 transition-all group"
@@ -73,7 +73,7 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
           </div>
 
           <div className="flex flex-col rounded-xl shadow-2xl bg-card-dark border border-white/5 overflow-hidden flex-1 min-h-[500px]">
-            <div className="w-full bg-center bg-no-repeat aspect-video md:aspect-auto md:flex-[1.1] bg-cover relative group" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200")' }}>
+            <div className="w-full bg-center bg-no-repeat aspect-video md:aspect-auto md:flex-[1.1] bg-cover relative group bg-white/5" style={roomStatus.imageUrl ? { backgroundImage: `url("${roomStatus.imageUrl}")` } : undefined}>
               <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent opacity-90" />
               {!roomStatus.isAvailable && (
                 <div className="absolute top-8 left-8">

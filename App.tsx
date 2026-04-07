@@ -208,9 +208,14 @@ const App: React.FC = () => {
         signName: string;
         resourceId?: string;
         resource?: {
+          id?: string;
           label?: string;
           floorName?: string;
           buildingName?: string;
+          capacity?: number;
+          description?: string;
+          imageUrl?: string;
+          amenities?: Array<{ id: string; name: string; description: string | null; icon: string; imageUrl: string | null }>;
         };
       }) => {
         const resource = data.resource ?? {};
@@ -219,25 +224,20 @@ const App: React.FC = () => {
           ...prev,
           name: resource.label ?? prev.name,
           location: locationParts.length > 0 ? locationParts.join(' • ') : prev.location,
+          ...(resource.capacity != null && { capacity: resource.capacity }),
+          ...(resource.description && { description: resource.description }),
+          ...(resource.imageUrl && { imageUrl: resource.imageUrl }),
         }));
-        if (data.resourceId) {
-          fetch(`https://sb.asasconnect.com/api/Amenities/resource/${data.resourceId}`)
-            .then(r => {
-              if (!r.ok) throw new Error(`Failed to load amenities: ${r.status}`);
-              return r.json();
-            })
-            .then((items: Array<{ id: string; name: string; description: string | null; icon: string; imageUrl: string | null }>) => {
-              setAmenities(items.map(a => ({
-                id: a.id,
-                title: a.name,
-                subtitle: a.description ?? '',
-                description: a.description ?? '',
-                icon: mapIcon(a.icon),
-                img: a.imageUrl ?? '',
-                status: 'Operational',
-              })));
-            })
-            .catch(err => console.error('Amenities API error:', err));
+        if (resource.amenities?.length) {
+          setAmenities(resource.amenities.map(a => ({
+            id: a.id,
+            title: a.name,
+            subtitle: a.description ?? '',
+            description: a.description ?? '',
+            icon: mapIcon(a.icon),
+            img: a.imageUrl ?? '',
+            status: 'Operational',
+          })));
         }
       })
       .catch(err => console.error('DigitalSigns API error:', err));
@@ -432,7 +432,7 @@ const App: React.FC = () => {
           />
         );
       case View.DETAILS:
-        return <DetailsView onBack={() => setCurrentView(View.DASHBOARD)} onBook={() => handleBookAtTime()} roomName={roomStatus.name} roomLocation={roomStatus.location} amenities={amenities} />;
+        return <DetailsView onBack={() => setCurrentView(View.DASHBOARD)} onBook={() => handleBookAtTime()} roomName={roomStatus.name} roomLocation={roomStatus.location} capacity={roomStatus.capacity} description={roomStatus.description} imageUrl={roomStatus.imageUrl} amenities={amenities} />;
       case View.CHECKIN:
         return <CheckInOutView onBack={() => setCurrentView(View.DASHBOARD)} currentTime={currentTime} roomStatus={roomStatus} />;
       case View.MEETING_DETAILS:

@@ -32,7 +32,7 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
           }`}>
             {roomStatus.isAvailable ? 'check_circle' : 'sensors'}
           </span>
-          <span className="text-white text-2xl font-black tracking-[0.1em] uppercase">EVEREST</span>
+          <span className="text-white text-2xl font-black tracking-[0.1em] uppercase">{roomStatus.name.toUpperCase()}</span>
         </div>
 
         <div className="flex flex-col items-center">
@@ -61,9 +61,9 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
 
       {/* Main Card */}
       <div className="w-full max-w-xl bg-[#111] rounded-xl border border-white/5 shadow-2xl overflow-hidden relative group shrink-0">
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-30 transition-opacity duration-700"
-          style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200")' }}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-30 transition-opacity duration-700 bg-white/5"
+          style={roomStatus.imageUrl ? { backgroundImage: `url("${roomStatus.imageUrl}")` } : undefined}
         />
         <div className={`absolute inset-0 transition-colors duration-1000 ${
           roomStatus.isAvailable ? 'bg-emerald-500/30' : 'bg-rose-500/30'

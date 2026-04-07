@@ -6,10 +6,13 @@ interface DetailsViewProps {
   onBook: () => void;
   roomName?: string;
   roomLocation?: string;
+  capacity?: number;
+  description?: string;
+  imageUrl?: string;
   amenities?: Amenity[];
 }
 
-const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'Conference Room A', roomLocation = 'Nile Business Center – Tower A • Level 1', amenities = [] }) => {
+const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'Conference Room A', roomLocation = 'Nile Business Center – Tower A • Level 1', capacity = 12, description, imageUrl, amenities = [] }) => {
   const [selectedAmenity, setSelectedAmenity] = useState<Amenity | null>(null);
 
   return (
@@ -35,16 +38,21 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
           {/* Left Column: Media & Info */}
           <div className="flex flex-col gap-8">
             {/* Main Photo - Shorter height, rounded corners */}
-            <div 
-              className="aspect-[21/10] rounded-xl border border-white/10 bg-cover bg-center shadow-2xl overflow-hidden relative group shrink-0"
-              style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800")' }}
+            <div
+              className="aspect-[21/10] rounded-xl border border-white/10 bg-cover bg-center shadow-2xl overflow-hidden relative group shrink-0 bg-white/5"
+              style={imageUrl ? { backgroundImage: `url("${imageUrl}")` } : undefined}
             >
+              {!imageUrl && (
+                <div className="absolute inset-0 flex items-center justify-center text-white/10">
+                  <span className="material-symbols-outlined text-[80px]">meeting_room</span>
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              
+
               {/* Capacity Overlay on Photo */}
               <div className="absolute bottom-6 left-6 flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
                 <span className="material-symbols-outlined text-primary text-xl">groups</span>
-                <span className="text-white font-black text-sm uppercase tracking-widest">12 Persons</span>
+                <span className="text-white font-black text-sm uppercase tracking-widest">{capacity} Persons</span>
               </div>
 
               <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
@@ -61,9 +69,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
                 <div className="h-px flex-1 bg-white/10" />
               </div>
               <p className="text-white text-lg lg:text-xl leading-relaxed font-medium">
-                The premier meeting space designed for high-stakes decision making and global collaboration. 
-                Featuring state-of-the-art acoustic treatment, ergonomic seating, and integrated smart technology 
-                to ensure seamless communication.
+                {description || 'Premier meeting space designed for high-stakes decision making and global collaboration. Featuring state-of-the-art acoustic treatment, ergonomic seating, and integrated smart technology to ensure seamless communication.'}
               </p>
 
               {/* Small Reserve Now Button - Moved here */}
@@ -85,15 +91,22 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
               <p className="text-slate-100 font-bold text-[10px] uppercase tracking-widest">Click for details</p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {amenities.map((amenity) => (
-                <AmenityCard 
-                  key={amenity.id}
-                  amenity={amenity}
-                  onClick={() => setSelectedAmenity(amenity)}
-                />
-              ))}
-            </div>
+            {amenities.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {amenities.map((amenity) => (
+                  <AmenityCard
+                    key={amenity.id}
+                    amenity={amenity}
+                    onClick={() => setSelectedAmenity(amenity)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 gap-4 text-white/20 border border-white/5 rounded-xl bg-white/[0.02]">
+                <span className="material-symbols-outlined text-5xl">category</span>
+                <p className="text-[10px] font-black uppercase tracking-widest">Loading amenities…</p>
+              </div>
+            )}
 
           </div>
         </div>

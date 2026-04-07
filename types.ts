@@ -63,4 +63,6 @@ export interface RoomStatus {
   name: string;
   location: string;
   capacity: number;
+  description?: string;
+  imageUrl?: string;
 }
