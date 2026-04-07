@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { db } from '../lib/db';
 import { User } from '../types';
 
 interface LoginViewProps {
@@ -7,25 +6,13 @@ interface LoginViewProps {
   onLogin: (user: User) => void;
 }
 
-const DEMO_USERS = [
-  {
-    id: '1234',
-    name: 'Sarah Chen',
-    photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150'
-  },
-  {
-    id: '5678',
-    name: 'Marcus Aurelius',
-    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150'
-  }
-];
-
 const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
   const [employeeId, setEmployeeId] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleKeyPress = (num: string) => {
-    setError(false);
+    setError(null);
     setEmployeeId(prev => prev + num);
   };
 
@@ -33,14 +20,35 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
     setEmployeeId(prev => prev.slice(0, -1));
   };
 
-  const handleLogin = (idOverride?: string) => {
-    const idToAuth = idOverride || employeeId;
-    const user = db.getEmployee(idToAuth);
-    if (user) {
+  const handleLogin = async () => {
+    if (!employeeId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('https://sb.asasconnect.com/api/Auth/login/employee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ EmployeeNumber: employeeId, pinCode: employeeId }),
+      });
+      if (!res.ok) {
+        setError('ID Not Recognized');
+        setEmployeeId('');
+        return;
+      }
+      const data = await res.json();
+      const token: string = data.token ?? data.accessToken ?? data.access_token ?? '';
+      const user: User = {
+        employeeId,
+        name: data.name ?? data.fullName ?? data.displayName ?? `Employee ${employeeId}`,
+        role: data.role ?? data.jobTitle ?? data.position ?? 'Employee',
+        photo: data.photo ?? data.avatar ?? data.profileImage ?? `https://i.pravatar.cc/150?u=${employeeId}`,
+        token,
+      };
       onLogin(user);
-    } else {
-      setError(true);
-      setEmployeeId('');
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,26 +80,10 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
           </p>
           
           <div className="w-full flex flex-col gap-4">
-             <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2">Quick Access for Testing</p>
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {DEMO_USERS.map(user => (
-                  <button 
-                    key={user.id}
-                    onClick={() => handleLogin(user.id)}
-                    className="bg-white/5 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:bg-primary/10 hover:border-primary/40 transition-all group text-left"
-                  >
-                    <img src={user.photo} alt={user.name} className="size-12 rounded-none object-cover grayscale group-hover:grayscale-0 transition-all shadow-lg" />
-                    <div className="flex flex-col">
-                      <span className="text-white font-black text-sm leading-tight">{user.name}</span>
-                      <span className="text-slate-500 font-bold text-[10px] uppercase tracking-widest mt-0.5">ID: {user.id}</span>
-                    </div>
-                  </button>
-                ))}
-             </div>
              {error && (
                <div className="text-red-500 font-black uppercase tracking-widest text-xs animate-bounce flex items-center gap-2 mt-4">
                  <span className="material-symbols-outlined text-lg">error</span>
-                 ID Not Recognized
+                 {error}
                </div>
              )}
           </div>
@@ -139,11 +131,16 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
 
           {/* Action Button */}
           <button 
-            onClick={() => handleLogin()}
-            disabled={!employeeId}
+            onClick={handleLogin}
+            disabled={!employeeId || loading}
             className="w-full bg-primary text-white py-6 rounded-none text-xl font-black shadow-2xl shadow-primary/30 hover:brightness-110 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-[0.2em] border-t border-white/20 mt-2"
           >
-            Authenticate
+            {loading ? (
+              <span className="flex items-center justify-center gap-3">
+                <span className="material-symbols-outlined text-2xl animate-spin">progress_activity</span>
+                Authenticating...
+              </span>
+            ) : 'Authenticate'}
           </button>
         </div>
       </main>

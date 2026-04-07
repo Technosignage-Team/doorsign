@@ -170,10 +170,7 @@ const App: React.FC = () => {
   const [selectedStartTime, setSelectedStartTime] = useState<string | undefined>(undefined);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | undefined>(undefined);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('currentUser');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   
   const [homeLayout, setHomeLayout] = useState<HomeLayout>(() => {
     const saved = localStorage.getItem('homeLayout');
@@ -254,14 +251,6 @@ const App: React.FC = () => {
     localStorage.setItem('slotPrecision', slotPrecision.toString());
   }, [slotPrecision]);
 
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('currentUser');
-    }
-  }, [currentUser]);
-
   const parseTimeString = useCallback((timeStr: string) => {
     const [time, modifier] = timeStr.split(' ');
     let [hours, minutes] = time.split(':').map(Number);
@@ -333,14 +322,10 @@ const App: React.FC = () => {
       finalTime = formatToTimeString(now);
     }
 
-    if (!currentUser) {
-      setPendingAction({ startTime: finalTime, meetingId });
-      setCurrentView(View.LOGIN);
-    } else {
-      setSelectedStartTime(finalTime);
-      setSelectedMeetingId(meetingId);
-      setCurrentView(View.BOOKING);
-    }
+    // Always require fresh authentication before booking or editing
+    setCurrentUser(null);
+    setPendingAction({ startTime: finalTime, meetingId });
+    setCurrentView(View.LOGIN);
   };
 
   const onEndNowRequested = (id: string) => {

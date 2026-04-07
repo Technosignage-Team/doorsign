@@ -110,7 +110,9 @@ export const db = {
   },
 
   getEmployee: (id: string): User | undefined => {
-    return MOCK_EMPLOYEES.find(e => e.employeeId === id);
+    const found = MOCK_EMPLOYEES.find(e => e.employeeId === id);
+    if (!found) return undefined;
+    return { ...found, token: '' };
   },
   
   addMeeting: (meeting: Omit<Meeting, 'id'>) => {
