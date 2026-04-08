@@ -17,6 +17,7 @@ export enum HomeLayout {
 
 export interface User {
   employeeId: string;
+  userId: string;
   name: string;
   role: string;
   photo: string;

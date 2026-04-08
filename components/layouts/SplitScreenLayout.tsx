@@ -1,6 +1,5 @@
 import React from 'react';
 import { RoomStatus } from '../../types';
-import { db } from '../../lib/db';
 
 interface LayoutProps {
   currentTime: Date;
@@ -18,12 +17,17 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
   const formattedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   const formattedDate = currentTime.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 
-  const meetings = db.getMeetings();
-  
-  const upcomingMeetings = meetings.filter(m => {
-    const mStart = parseToDate(m.startTime);
-    return mStart > currentTime;
-  }).sort((a, b) => parseToDate(a.startTime).getTime() - parseToDate(b.startTime).getTime());
+  const minsUntilNext = (() => {
+    if (!roomStatus.nextMeeting) return null;
+    const [time, mod] = roomStatus.nextMeeting.startTime.split(' ');
+    let [h, m] = time.split(':').map(Number);
+    if (mod === 'PM' && h < 12) h += 12;
+    if (mod === 'AM' && h === 12) h = 0;
+    const start = new Date(currentTime);
+    start.setHours(h, m, 0, 0);
+    return Math.max(0, Math.ceil((start.getTime() - currentTime.getTime()) / 60000));
+  })();
+
 
   function parseToDate(timeStr: string) {
     const [time, modifier] = timeStr.split(' ');
@@ -114,7 +118,7 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
                 <p className="text-slate-100 text-lg lg:text-xl font-medium max-w-lg leading-relaxed">
                   The boardroom is currently unoccupied. Create a booking to start your session.
                 </p>
-                <button 
+                <button
                   onClick={handleBookNow}
                   className="bg-white/95 backdrop-blur-xl text-black px-10 py-5 rounded-xl text-xl font-black shadow-[0_25px_50px_rgba(255,255,255,0.1)] hover:bg-white active:scale-95 transition-all flex items-center gap-4 border border-white/40"
                 >
@@ -124,28 +128,26 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
               </div>
             ) : (
               <>
-                <h3 
+                <h3
                   className="text-white text-[32px] lg:text-[48px] font-black leading-[1.1] tracking-tight w-full cursor-pointer hover:text-primary transition-colors"
                   onClick={() => onShowMeetingDetails(roomStatus.currentMeeting?.id || '')}
                 >
                   {roomStatus.currentMeeting?.title}
                 </h3>
-                
-                <div 
+
+                <div
                   onClick={() => onShowMeetingDetails(roomStatus.currentMeeting?.id || '')}
                   className="w-full max-w-lg bg-white/[0.03] border border-white/10 rounded-xl p-8 lg:p-10 flex flex-col gap-4 relative overflow-hidden group cursor-pointer hover:bg-white/[0.06] hover:border-white/20 transition-all shadow-2xl"
                 >
                   <div className={`absolute left-0 top-0 bottom-0 w-2 ${roomStatus.isAvailable ? 'bg-status-available' : 'bg-status-busy'} shadow-[0_0_20px_rgba(239,68,68,0.4)]`}></div>
-                  
                   <p className="text-white text-3xl lg:text-4xl font-black tracking-tight leading-none group-hover:text-primary transition-colors">
                     {roomStatus.currentMeeting?.startTime} - {roomStatus.currentMeeting?.endTime}
                   </p>
-                  
                   <p className="text-white text-3xl lg:text-4xl font-black tracking-tight leading-none group-hover:text-primary transition-colors">
                     {roomStatus.currentMeeting?.organizer || 'System'}
                   </p>
                 </div>
-                
+
                 <div className="flex items-center gap-3 w-full max-w-lg">
                   <button onClick={() => roomStatus.currentMeeting && onExtend(roomStatus.currentMeeting.id)} className="flex-1 bg-white/5 text-slate-600 py-5 rounded-xl text-sm lg:text-base font-black border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-95">
                     <span className="material-symbols-outlined text-xl text-slate-600">more_time</span> Extend
@@ -166,48 +168,41 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
           <div className="bg-[#0c0c0c] border border-white/10 rounded-xl p-8 lg:p-10 shadow-2xl hover:border-white/20 transition-all group overflow-hidden relative max-w-md">
             <div className="absolute top-0 right-0 size-48 bg-primary/5 blur-[50px] rounded-xl pointer-events-none translate-x-12 -translate-y-12" />
             
-            {upcomingMeetings.length > 0 ? (
-              upcomingMeetings.slice(0, 1).map((meeting) => {
-                const mStart = parseToDate(meeting.startTime);
-                const diffMs = mStart.getTime() - currentTime.getTime();
-                const diffMins = Math.max(0, Math.floor(diffMs / 60000));
+            {roomStatus.nextMeeting ? (
+              <button
+                onClick={() => onShowMeetingDetails(roomStatus.nextMeeting!.id)}
+                className="w-full flex flex-col text-left"
+              >
+                <span className="text-slate-600 text-[10px] font-black uppercase tracking-[0.6em] mb-4 px-1">UP NEXT</span>
+                <h4 className="text-2xl lg:text-3xl font-black tracking-tight leading-tight truncate text-white group-hover:text-primary transition-colors">
+                  {roomStatus.nextMeeting.title}
+                </h4>
 
-                return (
-                  <button 
-                    key={meeting.id} 
-                    onClick={() => onShowMeetingDetails(meeting.id)}
-                    className="w-full flex flex-col text-left"
-                  >
-                    <span className="text-slate-600 text-[10px] font-black uppercase tracking-[0.6em] mb-4 px-1">UP NEXT</span>
-                    <h4 className="text-2xl lg:text-3xl font-black tracking-tight leading-tight truncate text-slate-600 group-hover:text-primary transition-colors">
-                      {meeting.title}
-                    </h4>
-                    
-                    <div className="flex flex-wrap items-center justify-between w-full border-t border-white/5 mt-6 pt-6 gap-6">
-                      <div className="flex flex-col gap-3 text-slate-600 font-black text-[10px] lg:text-[11px] uppercase tracking-[0.2em] opacity-80">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-lg font-variation-fill">schedule</span>
-                          <span>{meeting.startTime}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-lg font-variation-fill">person</span>
-                          <span className="truncate max-w-[140px]">{meeting.organizer}</span>
-                        </div>
-                      </div>
+                <div className="flex flex-wrap items-center justify-between w-full border-t border-white/5 mt-6 pt-6 gap-6">
+                  <div className="flex flex-col gap-3 text-slate-400 font-black text-[10px] lg:text-[11px] uppercase tracking-[0.2em]">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-lg font-variation-fill">schedule</span>
+                      <span>{roomStatus.nextMeeting.startTime} – {roomStatus.nextMeeting.endTime}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-lg font-variation-fill">person</span>
+                      <span className="truncate max-w-[140px]">{roomStatus.nextMeeting.organizer}</span>
+                    </div>
+                  </div>
 
-                      <div className="flex flex-col items-end shrink-0">
-                        <span className="text-orange-500 text-[9px] font-black uppercase tracking-[0.2em] leading-none mb-1 text-right opacity-80">
-                          STARTING IN
-                        </span>
-                        <div className="flex items-baseline gap-1 text-orange-500">
-                          <span className="text-5xl lg:text-7xl font-black leading-none">{diffMins}</span>
-                          <span className="text-[14px] font-black uppercase tracking-widest">MIN</span>
-                        </div>
+                  {minsUntilNext !== null && (
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className="text-amber-400 text-[9px] font-black uppercase tracking-[0.2em] leading-none mb-1 text-right">
+                        STARTING IN
+                      </span>
+                      <div className="flex items-baseline gap-1 text-amber-400">
+                        <span className="text-5xl lg:text-7xl font-black leading-none">{minsUntilNext}</span>
+                        <span className="text-[14px] font-black uppercase tracking-widest">MIN</span>
                       </div>
                     </div>
-                  </button>
-                );
-              })
+                  )}
+                </div>
+              </button>
             ) : (
               <div className="flex-1 flex items-center justify-center gap-4 text-slate-200 font-black uppercase tracking-[0.4em] text-[12px] py-10">
                 <span className="material-symbols-outlined text-2xl">event_busy</span>

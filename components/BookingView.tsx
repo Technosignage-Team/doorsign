@@ -8,6 +8,7 @@ interface BookingViewProps {
   currentUser: User | null;
   slotPrecision?: 15 | 30;
   roomName?: string;
+  resourceId?: string;
   onBack: () => void;
   onSuccess: () => void;
   onTriggerLogin: () => void;
@@ -31,13 +32,14 @@ const REF_DATE = '2000-01-01';
 
 type ServiceType = 'CATERING' | 'SUPPORT' | 'CLEANING' | null;
 
-const BookingView: React.FC<BookingViewProps> = ({ 
-  initialStartTime, 
-  initialMeetingId, 
+const BookingView: React.FC<BookingViewProps> = ({
+  initialStartTime,
+  initialMeetingId,
   currentUser,
   slotPrecision = 30,
   roomName = 'Conference Room A',
-  onBack, 
+  resourceId,
+  onBack,
   onSuccess,
   onTriggerLogin
 }) => {
@@ -159,41 +161,48 @@ const BookingView: React.FC<BookingViewProps> = ({
     return options;
   }, [slotPrecision]);
 
-  const startOptions = useMemo(() => {
-    return allTimeOptions.filter(t => {
-      if (initialMeetingId) return true;
+  const startOptions = useMemo((): { time: string; disabled: boolean }[] => {
+    const now = new Date();
+    const isSelectedToday = date === new Date().toISOString().split('T')[0];
+    // Build a REF_DATE-based "now" for fair comparison with parseTimeString results
+    const nowRef = new Date(REF_DATE);
+    nowRef.setHours(now.getHours(), now.getMinutes(), 0, 0);
+    return allTimeOptions.map((t: string) => {
       const tDate = parseTimeString(t);
-      const today = new Date().toISOString().split('T')[0];
+      const isPast = isSelectedToday && tDate < nowRef;
       const conflict = meetings.find(m => {
-        if (m.date !== today) return false;
+        if (m.id === initialMeetingId || m.date !== date) return false;
         const mStart = parseTimeString(m.startTime);
         const mEnd = parseTimeString(m.endTime);
         return tDate >= mStart && tDate < mEnd;
       });
-      return !conflict;
+      return { time: t, disabled: isPast || !!conflict };
     });
-  }, [allTimeOptions, meetings, initialMeetingId]);
+  }, [allTimeOptions, meetings, initialMeetingId, date]);
 
-  const availableEndOptions = useMemo(() => {
+  const availableEndOptions = useMemo((): { time: string; disabled: boolean }[] => {
     const sDate = parseTimeString(startTime);
-    const today = new Date().toISOString().split('T')[0];
-    
+
     const nextMeeting = meetings
-      .filter(m => m.id !== initialMeetingId && m.date === today)
+      .filter(m => m.id !== initialMeetingId && m.date === date)
       .filter(m => parseTimeString(m.startTime).getTime() > sDate.getTime())
       .sort((a, b) => parseTimeString(a.startTime).getTime() - parseTimeString(b.startTime).getTime())[0];
 
-    return allTimeOptions.filter(t => {
-      const tDate = parseTimeString(t);
-      return tDate.getTime() > sDate.getTime();
-    });
-  }, [startTime, meetings, allTimeOptions, initialMeetingId]);
+    const cap = nextMeeting ? parseTimeString(nextMeeting.startTime) : null;
+
+    return allTimeOptions
+      .filter((t: string) => parseTimeString(t).getTime() > sDate.getTime())
+      .map((t: string) => ({
+        time: t,
+        disabled: cap ? parseTimeString(t).getTime() > cap.getTime() : false,
+      }));
+  }, [startTime, date, meetings, allTimeOptions, initialMeetingId]);
 
   const availableDurations = useMemo(() => {
     const sDate = parseTimeString(startTime);
     return QUICK_DURATIONS.filter(duration => {
       const targetDate = new Date(sDate.getTime() + duration * 60000);
-      return availableEndOptions.some(opt => parseTimeString(opt).getTime() === targetDate.getTime());
+      return availableEndOptions.some(opt => !opt.disabled && parseTimeString(opt.time).getTime() === targetDate.getTime());
     });
   }, [startTime, availableEndOptions]);
 
@@ -205,14 +214,15 @@ const BookingView: React.FC<BookingViewProps> = ({
   }, [startTime, endTime]);
 
   useEffect(() => {
-    if (availableEndOptions.length > 0) {
+    const enabledOptions = availableEndOptions.filter((o: { time: string; disabled: boolean }) => !o.disabled);
+    if (enabledOptions.length > 0) {
       const sDate = parseTimeString(startTime);
       const eDate = endTime ? parseTimeString(endTime) : null;
-      if (!endTime || !availableEndOptions.includes(endTime) || (eDate && eDate.getTime() <= sDate.getTime())) {
-        const preferredDuration = slotPrecision;
-        const preferredEndDate = new Date(sDate.getTime() + preferredDuration * 60000);
-        const preferredEndTimeStr = availableEndOptions.find(opt => parseTimeString(opt).getTime() === preferredEndDate.getTime());
-        setEndTime(preferredEndTimeStr || availableEndOptions[0]);
+      const endStillValid = endTime && enabledOptions.some((o: { time: string; disabled: boolean }) => o.time === endTime);
+      if (!endStillValid || (eDate && eDate.getTime() <= sDate.getTime())) {
+        const preferredEndDate = new Date(sDate.getTime() + slotPrecision * 60000);
+        const preferred = enabledOptions.find((o: { time: string; disabled: boolean }) => parseTimeString(o.time).getTime() === preferredEndDate.getTime());
+        setEndTime(preferred ? preferred.time : enabledOptions[0].time);
       }
     } else {
       setEndTime('');
@@ -226,53 +236,75 @@ const BookingView: React.FC<BookingViewProps> = ({
     if (matchedOpt) setEndTime(matchedOpt);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const to24h = (timeStr: string) => {
+    const [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!title.trim()) {
-      setError('Please enter a meeting title');
-      return;
-    }
-    if (!organizer.trim()) {
-      setError('Please enter an organizer name');
-      return;
-    }
-    if (!startTime || !endTime) {
-      setError('Please select start and end times');
-      return;
-    }
-    if (isPastMeeting) {
-      setError('Cannot book a meeting in the past');
-      return;
-    }
+    if (!title.trim()) { setError('Please enter a meeting title'); return; }
+    if (!organizer.trim()) { setError('Please enter an organizer name'); return; }
+    if (!startTime || !endTime) { setError('Please select start and end times'); return; }
+    if (isPastMeeting) { setError('Cannot book a meeting in the past'); return; }
 
     setIsSubmitting(true);
-    
-    setTimeout(() => {
-      try {
-        if (initialMeetingId) {
-          db.updateMeeting(initialMeetingId, { 
-            title: title.trim(), organizer: organizer.trim(), startTime, endTime, type,
-            recurrence: isRecurring ? recurrence : 'NONE',
-            recurrenceEndDate: isRecurring ? recurrenceEndDate : undefined
-          }, updateSeries);
-        } else {
-          db.addMeeting({ 
-            title: title.trim(), organizer: organizer.trim(), organizerPhoto, startTime, endTime, date,
-            type, recurrence: isRecurring ? recurrence : 'NONE',
-            recurrenceEndDate: isRecurring ? recurrenceEndDate : undefined,
-            attendees: [{ name: organizer.trim(), photo: organizerPhoto }] 
-          });
-        }
-        setIsSubmitting(false);
+
+    try {
+      if (initialMeetingId) {
+        // Edit: update locally only (no edit API defined yet)
+        db.updateMeeting(initialMeetingId, {
+          title: title.trim(), organizer: organizer.trim(), startTime, endTime, type,
+          recurrence: isRecurring ? recurrence : 'NONE',
+          recurrenceEndDate: isRecurring ? recurrenceEndDate : undefined
+        }, updateSeries);
         onSuccess();
-      } catch (err) {
-        setIsSubmitting(false);
-        setError('Failed to save booking. Please try again.');
-        console.error(err);
+      } else {
+        // New booking — call the API
+        const body: Record<string, unknown> = {
+          ResourceId: resourceId,
+          OrganizerUserId: currentUser?.userId,
+          BookingDate: date,
+          StartTime: to24h(startTime),
+          EndTime: to24h(endTime),
+          Subject: title.trim(),
+        };
+
+        const res = await fetch('https://sb.asasconnect.com/api/Bookings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(currentUser?.token ? { Authorization: `Bearer ${currentUser.token}` } : {}),
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const msg = await res.text().catch(() => '');
+          throw new Error(msg || `API error ${res.status}`);
+        }
+
+        // Also persist locally so the UI reflects it immediately
+        db.addMeeting({
+          title: title.trim(), organizer: organizer.trim(), organizerPhoto, startTime, endTime, date,
+          type, recurrence: isRecurring ? recurrence : 'NONE',
+          recurrenceEndDate: isRecurring ? recurrenceEndDate : undefined,
+          attendees: [{ name: organizer.trim(), photo: organizerPhoto }]
+        });
+
+        onSuccess();
       }
-    }, 600);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save booking. Please try again.');
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDelete = () => {
@@ -502,13 +534,13 @@ const BookingView: React.FC<BookingViewProps> = ({
                 <div className="flex flex-col gap-2">
                   <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Start Time</label>
                   <select disabled={isPastMeeting} value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
-                    {startOptions.map(t => <option key={t} value={t} className="bg-[#111]">{t}</option>)}
+                    {startOptions.map((o: { time: string; disabled: boolean; past?: boolean }) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.disabled ? (o.past ? ' (past)' : ' (booked)') : ''}</option>)}
                   </select>
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">End Time</label>
                   <select disabled={availableEndOptions.length === 0 || isPastMeeting} value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
-                    {availableEndOptions.map(t => <option key={t} value={t} className="bg-[#111]">{t}</option>)}
+                    {availableEndOptions.map((o: { time: string; disabled: boolean }) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.disabled ? ' (booked)' : ''}</option>)}
                   </select>
                 </div>
               </div>

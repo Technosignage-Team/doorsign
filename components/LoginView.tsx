@@ -38,6 +38,9 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
       }
       const data = await res.json();
       const token: string = data.token ?? data.accessToken ?? data.access_token ?? '';
+      const userId: string =
+        data.userId ?? data.id ?? data.user?.id ?? data.user?.userId ??
+        data.employee?.id ?? data.employee?.userId ?? '';
       const rawName =
         data.name ??
         data.fullName ??
@@ -51,6 +54,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
         null;
       const user: User = {
         employeeId,
+        userId,
         name: rawName ?? employeeId,
         role: data.role ?? data.jobTitle ?? data.position ?? data.employee?.jobTitle ?? 'Employee',
         photo: data.photo ?? data.avatar ?? data.profileImage ?? data.employee?.photo ?? `https://i.pravatar.cc/150?u=${employeeId}`,

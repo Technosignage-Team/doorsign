@@ -193,6 +193,7 @@ const App: React.FC = () => {
   const [extendMeetingId, setExtendMeetingId] = useState<string | null>(null);
   const [availableExtensions, setAvailableExtensions] = useState<ExtensionSlot[]>([]);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
+  const [resourceId, setResourceId] = useState<string | null>(null);
 
   useEffect(() => {
     db.init();
@@ -219,6 +220,8 @@ const App: React.FC = () => {
         };
       }) => {
         const resource = data.resource ?? {};
+        const resolvedResourceId = data.resourceId ?? resource.id ?? null;
+        if (resolvedResourceId) setResourceId(resolvedResourceId);
         const locationParts = [resource.buildingName, resource.floorName].filter(Boolean);
         setRoomStatus(prev => ({
           ...prev,
@@ -424,11 +427,12 @@ const App: React.FC = () => {
         );
       case View.SCHEDULE:
         return (
-          <ScheduleView 
-            onUpdate={updateRoomStatus} 
+          <ScheduleView
+            onUpdate={updateRoomStatus}
             onBook={handleBookAtTime}
             onShowMeetingDetails={handleShowMeetingDetails}
             slotPrecision={slotPrecision}
+            resourceId={resourceId ?? undefined}
           />
         );
       case View.DETAILS:
@@ -461,12 +465,13 @@ const App: React.FC = () => {
         }} />;
       case View.BOOKING:
         return (
-          <BookingView 
+          <BookingView
             initialStartTime={selectedStartTime}
             initialMeetingId={selectedMeetingId}
             currentUser={currentUser}
             slotPrecision={slotPrecision}
             roomName={roomStatus.name}
+            resourceId={resourceId ?? undefined}
             onBack={() => {
               setCurrentView(View.DASHBOARD);
               setSelectedStartTime(undefined);

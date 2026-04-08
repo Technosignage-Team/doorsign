@@ -18,6 +18,17 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
   const formattedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const formattedDate = currentTime.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 
+  const minsUntilNext = (() => {
+    if (!roomStatus.nextMeeting) return null;
+    const [time, mod] = roomStatus.nextMeeting.startTime.split(' ');
+    let [h, m] = time.split(':').map(Number);
+    if (mod === 'PM' && h < 12) h += 12;
+    if (mod === 'AM' && h === 12) h = 0;
+    const start = new Date(currentTime);
+    start.setHours(h, m, 0, 0);
+    return Math.max(0, Math.ceil((start.getTime() - currentTime.getTime()) / 60000));
+  })();
+
   return (
     <div className="flex flex-col h-full overflow-hidden pb-24 md:pb-8">
       <div className="flex items-center p-6 lg:p-10 pb-4 justify-between border-b border-white/5 shrink-0">
@@ -150,22 +161,29 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
       {/* Up Next Section at the Bottom */}
       {roomStatus.nextMeeting && (
         <div className="px-4 lg:px-8 pb-4 shrink-0">
-          <button 
-            onClick={() => onBook(undefined, roomStatus.nextMeeting?.id)} 
+          <button
+            onClick={() => onBook(undefined, roomStatus.nextMeeting?.id)}
             className="w-full flex items-center justify-between p-4 lg:p-6 rounded-xl bg-white/[0.03] border border-white/10 group hover:bg-white/[0.05] transition-all text-left shadow-xl"
           >
             <div className="flex items-center gap-6">
               <div className="size-14 lg:size-16 rounded-xl bg-slate-800 flex items-center justify-center text-slate-300 group-hover:scale-105 transition-transform border border-white/5">
-                <span className="material-symbols-outlined text-3xl font-variation-fill">calendar_today</span>
+                <span className="material-symbols-outlined text-3xl font-variation-fill">event_upcoming</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em] mb-1">UP NEXT</span>
-                <p className="text-slate-600 font-black text-sm lg:text-base tracking-tight leading-none">{roomStatus.nextMeeting.title}</p>
-                <p className="text-slate-600 font-bold text-[10px] mt-1">{roomStatus.nextMeeting.startTime} • {roomStatus.nextMeeting.organizer}</p>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em]">UP NEXT</span>
+                <p className="text-white font-black text-sm lg:text-base tracking-tight leading-none">{roomStatus.nextMeeting.title}</p>
+                <p className="text-slate-400 font-bold text-[10px] mt-0.5">
+                  {roomStatus.nextMeeting.startTime} – {roomStatus.nextMeeting.endTime} • {roomStatus.nextMeeting.organizer}
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-4 pr-4">
-              <span className="text-primary text-[10px] font-black uppercase tracking-widest">View Details</span>
+            <div className="flex items-center gap-6 pr-4">
+              {minsUntilNext !== null && (
+                <div className="flex flex-col items-end">
+                  <span className="text-amber-400 text-[9px] font-black uppercase tracking-widest">Starts in</span>
+                  <span className="text-amber-400 text-2xl font-black leading-none">{minsUntilNext}m</span>
+                </div>
+              )}
               <span className="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">chevron_right</span>
             </div>
           </button>

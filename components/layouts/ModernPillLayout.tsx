@@ -1,6 +1,5 @@
 import React from 'react';
 import { RoomStatus } from '../../types';
-import { db } from '../../lib/db';
 
 interface LayoutProps {
   currentTime: Date;
@@ -17,8 +16,17 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
   const formattedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const formattedDate = currentTime.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 
-  const meetings = db.getMeetings();
-  const upcomingMeetings = meetings.filter(m => m.id !== roomStatus.currentMeeting?.id);
+
+  const minsUntilNext = (() => {
+    if (!roomStatus.nextMeeting) return null;
+    const [time, mod] = roomStatus.nextMeeting.startTime.split(' ');
+    let [h, m] = time.split(':').map(Number);
+    if (mod === 'PM' && h < 12) h += 12;
+    if (mod === 'AM' && h === 12) h = 0;
+    const start = new Date(currentTime);
+    start.setHours(h, m, 0, 0);
+    return Math.max(0, Math.ceil((start.getTime() - currentTime.getTime()) / 60000));
+  })();
 
   return (
     <div className="flex flex-col h-full bg-[#050505] items-center justify-start overflow-y-auto custom-scrollbar px-6 py-10 gap-8">
@@ -170,31 +178,30 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
       <div className="w-full max-w-xl flex flex-col gap-6 mb-10 shrink-0">
         <div className="space-y-3">
           <div className="flex flex-col gap-3">
-            {upcomingMeetings.length > 0 ? (
-              upcomingMeetings.slice(0, 1).map((meeting) => (
-                <button 
-                  key={meeting.id} 
-                  onClick={() => onBook(undefined, meeting.id)}
-                  className="w-full bg-[#111] border border-white/5 rounded-xl p-6 flex items-center justify-between group transition-all hover:bg-white/[0.03] text-left shadow-xl"
-                >
-                  <div className="flex items-center gap-6">
-                    <div className="size-16 rounded-xl bg-slate-800/60 flex items-center justify-center text-slate-100 group-hover:scale-105 transition-transform border border-white/5">
-                      <span className="material-symbols-outlined text-3xl font-variation-fill">calendar_today</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em] mb-1">UP NEXT</span>
-                      <p className="text-slate-600 text-sm lg:text-base font-black tracking-tight leading-tight group-hover:text-primary transition-colors">{meeting.title}</p>
-                      <p className="text-slate-600 text-xs font-bold mt-1">
-                        {meeting.startTime} • {meeting.organizer}
-                      </p>
-                    </div>
+            {roomStatus.nextMeeting ? (
+              <button
+                onClick={() => onBook(undefined, roomStatus.nextMeeting!.id)}
+                className="w-full bg-[#111] border border-white/5 rounded-xl p-6 flex items-center justify-between group transition-all hover:bg-white/[0.03] text-left shadow-xl"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="size-16 rounded-xl bg-slate-800/60 flex items-center justify-center text-slate-100 group-hover:scale-105 transition-transform border border-white/5">
+                    <span className="material-symbols-outlined text-3xl font-variation-fill">event_upcoming</span>
                   </div>
-                  <div className="flex flex-col items-center justify-center shrink-0 pr-1">
-                    <span className="text-primary text-[10px] font-black uppercase leading-none mb-0.5">IN</span>
-                    <span className="text-primary text-xl lg:text-2xl font-black leading-none">30M</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em]">UP NEXT</span>
+                    <p className="text-white text-sm lg:text-base font-black tracking-tight leading-tight group-hover:text-primary transition-colors">{roomStatus.nextMeeting.title}</p>
+                    <p className="text-slate-400 text-xs font-bold mt-0.5">
+                      {roomStatus.nextMeeting.startTime} – {roomStatus.nextMeeting.endTime} • {roomStatus.nextMeeting.organizer}
+                    </p>
                   </div>
-                </button>
-              ))
+                </div>
+                {minsUntilNext !== null && (
+                  <div className="flex flex-col items-end shrink-0 pr-1">
+                    <span className="text-amber-400 text-[9px] font-black uppercase leading-none mb-0.5">In</span>
+                    <span className="text-amber-400 text-2xl lg:text-3xl font-black leading-none">{minsUntilNext}m</span>
+                  </div>
+                )}
+              </button>
             ) : (
               <div className="bg-[#111] border border-white/5 rounded-xl p-6 text-center text-slate-100 font-bold uppercase tracking-widest text-xs">
                 No further meetings scheduled today
