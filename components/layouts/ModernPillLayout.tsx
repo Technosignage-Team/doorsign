@@ -67,96 +67,80 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
         </div>
       </div>
 
-      {/* Main Card */}
-      <div className="w-full max-w-xl bg-[#111] rounded-xl border border-white/5 shadow-2xl overflow-hidden relative group shrink-0">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-30 transition-opacity duration-700 bg-white/5"
-          style={roomStatus.imageUrl ? { backgroundImage: `url("${roomStatus.imageUrl}")` } : undefined}
-        />
-        <div className={`absolute inset-0 transition-colors duration-1000 ${
-          roomStatus.isAvailable ? 'bg-emerald-500/30' : 'bg-rose-500/30'
-        }`} />
-        
-        <div className="relative p-8 flex flex-col gap-8">
-          <div className="flex justify-start">
-             <div className={`${roomStatus.isAvailable ? 'bg-status-available shadow-emerald-500/40' : 'bg-status-busy shadow-status-busy/40'} px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2`}>
-               {!roomStatus.isAvailable && <span className="size-1.5 rounded-xl bg-white animate-pulse"></span>}
-               {roomStatus.isAvailable ? 'AVAILABLE' : 'IN USE'}
-             </div>
-          </div>
+      {/* Main Card — only shown when room is busy */}
+      {!roomStatus.isAvailable && roomStatus.currentMeeting && (
+        <div className="w-full max-w-xl bg-[#111] rounded-xl border border-white/5 shadow-2xl overflow-hidden relative group shrink-0">
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-30 transition-opacity duration-700 bg-white/5"
+            style={roomStatus.imageUrl ? { backgroundImage: `url("${roomStatus.imageUrl}")` } : undefined}
+          />
+          <div className="absolute inset-0 bg-rose-500/30 transition-colors duration-1000" />
 
-          <div className="space-y-3 cursor-pointer" onClick={() => !roomStatus.isAvailable && onBook(undefined, roomStatus.currentMeeting?.id)}>
-            <p className="text-primary text-xs font-black uppercase tracking-[0.3em] opacity-80">
-              {roomStatus.isAvailable ? 'ROOM INFO' : 'ONGOING SESSION'}
-            </p>
-            <h2 className="text-white text-4xl lg:text-5xl font-black leading-tight tracking-tight hover:text-primary transition-colors">
-              {roomStatus.currentMeeting?.title || 'Room Ready for Booking'}
-            </h2>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-5">
-              <div className="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-primary">
-                <span className={`material-symbols-outlined text-2xl font-variation-fill ${!roomStatus.isAvailable ? 'text-status-busy' : 'text-primary'}`}>schedule</span>
-              </div>
-              <div className="flex flex-col">
-                <p className="text-slate-100 text-[8px] font-black uppercase tracking-widest">TIME SLOT</p>
-                <p className="text-white text-2xl font-black">
-                  {roomStatus.currentMeeting ? `${roomStatus.currentMeeting.startTime} - ${roomStatus.currentMeeting.endTime}` : 'No current booking'}
-                </p>
+          <div className="relative p-8 flex flex-col gap-8">
+            <div className="flex justify-start">
+              <div className="bg-status-busy shadow-status-busy/40 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2">
+                <span className="size-1.5 rounded-xl bg-white animate-pulse"></span>
+                IN USE
               </div>
             </div>
 
-            <div className="flex items-center gap-5">
-              <div className="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-primary">
-                <span className={`material-symbols-outlined text-2xl font-variation-fill ${!roomStatus.isAvailable ? 'text-status-busy' : 'text-primary'}`}>person</span>
+            <div className="space-y-3 cursor-pointer" onClick={() => onBook(undefined, roomStatus.currentMeeting?.id)}>
+              <p className="text-primary text-xs font-black uppercase tracking-[0.3em] opacity-80">ONGOING SESSION</p>
+              <h2 className="text-white text-4xl lg:text-5xl font-black leading-tight tracking-tight hover:text-primary transition-colors">
+                {roomStatus.currentMeeting.title}
+              </h2>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-5">
+                <div className="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl font-variation-fill text-status-busy">schedule</span>
+                </div>
+                <div className="flex flex-col">
+                  <p className="text-slate-100 text-[8px] font-black uppercase tracking-widest">TIME SLOT</p>
+                  <p className="text-white text-2xl font-black">
+                    {roomStatus.currentMeeting.startTime} - {roomStatus.currentMeeting.endTime}
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <p className="text-slate-100 text-[8px] font-black uppercase tracking-widest">ORGANIZER</p>
-                <p className="text-white text-2xl font-black">
-                  {roomStatus.currentMeeting?.organizer || 'System Available'}
-                </p>
+
+              <div className="flex items-center gap-5">
+                <div className="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl font-variation-fill text-status-busy">person</span>
+                </div>
+                <div className="flex flex-col">
+                  <p className="text-slate-100 text-[8px] font-black uppercase tracking-widest">ORGANIZER</p>
+                  <p className="text-white text-2xl font-black">{roomStatus.currentMeeting.organizer}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex flex-col gap-3 mt-2">
-            {!roomStatus.isAvailable && roomStatus.currentMeeting ? (
-              <>
-                <button 
-                  onClick={() => onExtend(roomStatus.currentMeeting!.id)}
-                  className="w-full bg-white/5 text-slate-600 py-4 rounded-xl text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3"
-                >
-                  <span className="material-symbols-outlined text-2xl font-variation-fill text-slate-600">more_time</span>
-                  EXTEND
-                </button>
-                <button 
-                  onClick={() => onEndNow(roomStatus.currentMeeting!.id)}
-                  className="w-full bg-white/5 text-slate-600 py-4 rounded-xl text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 group"
-                >
-                  <span className="material-symbols-outlined text-2xl text-slate-600 group-hover:scale-110 transition-transform">cancel</span>
-                  END NOW
-                </button>
-                <button 
-                  onClick={onCheckIn}
-                  className="w-full bg-white/5 text-slate-600 py-4 rounded-xl text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 group"
-                >
-                  <span className="material-symbols-outlined text-2xl text-slate-600 group-hover:scale-110 transition-transform">verified_user</span>
-                  CHECK IN
-                </button>
-              </>
-            ) : (
-              <button 
-                onClick={() => onBook()}
-                className="w-full bg-white/95 backdrop-blur-xl text-black py-5 rounded-xl text-2xl font-black shadow-[0_20px_40px_rgba(255,255,255,0.1)] hover:bg-white active:scale-95 transition-all flex items-center justify-center gap-4 border border-white/40"
+            <div className="flex flex-col gap-3 mt-2">
+              <button
+                onClick={() => onExtend(roomStatus.currentMeeting!.id)}
+                className="w-full bg-white/5 text-slate-600 py-4 rounded-xl text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3"
               >
-                <span className="material-symbols-outlined text-3xl">add_circle</span>
-                BOOK
+                <span className="material-symbols-outlined text-2xl font-variation-fill text-slate-600">more_time</span>
+                EXTEND
               </button>
-            )}
+              <button
+                onClick={() => onEndNow(roomStatus.currentMeeting!.id)}
+                className="w-full bg-white/5 text-slate-600 py-4 rounded-xl text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 group"
+              >
+                <span className="material-symbols-outlined text-2xl text-slate-600 group-hover:scale-110 transition-transform">cancel</span>
+                END NOW
+              </button>
+              <button
+                onClick={onCheckIn}
+                className="w-full bg-white/5 text-slate-600 py-4 rounded-xl text-xl font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 group"
+              >
+                <span className="material-symbols-outlined text-2xl text-slate-600 group-hover:scale-110 transition-transform">verified_user</span>
+                CHECK IN
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Quick Booking trigger if available */}
       {roomStatus.isAvailable && (
