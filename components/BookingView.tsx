@@ -302,8 +302,8 @@ const BookingView: React.FC<BookingViewProps> = ({
   const handleSetDuration = (duration: number) => {
     const sDate = parseTimeString(startTime);
     const targetDate = new Date(sDate.getTime() + duration * 60000);
-    const matchedOpt = availableEndOptions.find(opt => parseTimeString(opt).getTime() === targetDate.getTime());
-    if (matchedOpt) setEndTime(matchedOpt);
+    const matchedOpt = availableEndOptions.find(opt => parseTimeString(opt.time).getTime() === targetDate.getTime());
+    if (matchedOpt) setEndTime(matchedOpt.time);
   };
 
   const to24h = (timeStr: string) => {

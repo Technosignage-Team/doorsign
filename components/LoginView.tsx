@@ -41,14 +41,15 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
       const userId: string =
         data.userId ?? data.id ?? data.user?.id ?? data.user?.userId ??
         data.employee?.id ?? data.employee?.userId ?? '';
+      const toStr = (v: unknown) => (v && typeof v === 'string') ? v : null;
       const rawName =
-        data.name ??
-        data.fullName ??
-        data.displayName ??
-        data.employee?.name ??
-        data.employee?.fullName ??
-        data.user?.name ??
-        data.user?.fullName ??
+        toStr(data.name) ??
+        toStr(data.fullName) ??
+        toStr(data.displayName) ??
+        toStr(data.employee?.name) ??
+        toStr(data.employee?.fullName) ??
+        toStr(data.user?.name) ??
+        toStr(data.user?.fullName) ??
         (data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : null) ??
         (data.employee?.firstName && data.employee?.lastName ? `${data.employee.firstName} ${data.employee.lastName}` : null) ??
         null;

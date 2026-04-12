@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">everest-room-booking-dashboard</string>
+    <string name="title_activity_main">everest-room-booking-dashboard</string>
+    <string name="package_name">com.doorsign.app</string>
+    <string name="custom_url_scheme">com.doorsign.app</string>
+</resources>
