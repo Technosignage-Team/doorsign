@@ -42,6 +42,7 @@ export interface Amenity {
 
 export interface Meeting {
   id: string;
+  apiId?: string;
   title: string;
   startTime: string; // HH:MM AM/PM
   endTime: string;   // HH:MM AM/PM

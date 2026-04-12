@@ -25,6 +25,9 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
   const [isInitializing, setIsInitializing] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<any>(null);
   
+  const [isApiLoading, setIsApiLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+
   // Feedback Ratings
   const [ratings, setRatings] = useState({ room: '', event: '' });
 
@@ -79,11 +82,27 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
     setRatings({ room: '', event: '' });
   };
 
-  const onConfirmAction = () => {
-    if (mode === 'CHECK_OUT') {
-      setShowFaceSurvey(true);
-    } else {
-      setShowSuccessModal(true);
+  const onConfirmAction = async () => {
+    setApiError(null);
+    setIsApiLoading(true);
+    const endpoint = mode === 'CHECK_IN'
+      ? `https://sb.asasconnect.com/api/Bookings/attendees/${encodeURIComponent(inputCode)}/checkin`
+      : `https://sb.asasconnect.com/api/Bookings/attendees/${encodeURIComponent(inputCode)}/checkout`;
+    try {
+      const res = await fetch(endpoint, { method: 'POST' });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => '');
+        throw new Error(msg || `API error ${res.status}`);
+      }
+      if (mode === 'CHECK_OUT') {
+        setShowFaceSurvey(true);
+      } else {
+        setShowSuccessModal(true);
+      }
+    } catch (err: unknown) {
+      setApiError(err instanceof Error ? err.message : 'Request failed. Please try again.');
+    } finally {
+      setIsApiLoading(false);
     }
   };
 
@@ -286,18 +305,32 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
                  <div className="flex flex-col gap-4 w-full px-4">
                     <button 
                       onClick={onConfirmAction}
-                      className={`w-full py-8 lg:py-10 rounded-xl text-2xl lg:text-3xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 border-t border-white/20 flex items-center justify-center gap-4 ${
+                      disabled={isApiLoading}
+                      className={`w-full py-8 lg:py-10 rounded-xl text-2xl lg:text-3xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 border-t border-white/20 flex items-center justify-center gap-4 disabled:opacity-60 disabled:cursor-not-allowed ${
                         mode === 'CHECK_IN' ? 'bg-white text-black shadow-white/10' : 'bg-status-busy text-white shadow-status-busy/30'
                       }`}
                     >
-                      <span className="material-symbols-outlined text-4xl">
-                        {mode === 'CHECK_IN' ? 'login' : 'logout'}
-                      </span>
-                      {mode === 'CHECK_IN' ? 'CONFIRM CHECK IN' : 'CONFIRM CHECK OUT'}
+                      {isApiLoading ? (
+                        <span className="size-8 border-4 border-current/30 border-t-current rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-4xl">
+                            {mode === 'CHECK_IN' ? 'login' : 'logout'}
+                          </span>
+                          {mode === 'CHECK_IN' ? 'CONFIRM CHECK IN' : 'CONFIRM CHECK OUT'}
+                        </>
+                      )}
                     </button>
+
+                    {apiError && (
+                      <div className="bg-red-500/15 border border-red-500/30 rounded-xl px-4 py-3 flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <span className="material-symbols-outlined text-red-500 text-base shrink-0">error</span>
+                        <p className="text-red-400 text-[10px] font-bold">{apiError}</p>
+                      </div>
+                    )}
                     
                     <button 
-                      onClick={handleClear}
+                      onClick={() => { handleClear(); setApiError(null); }}
                       className="w-full py-5 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-white/5 transition-all"
                     >
                       Cancel & Start Over

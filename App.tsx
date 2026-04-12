@@ -428,6 +428,7 @@ const App: React.FC = () => {
       case View.SCHEDULE:
         return (
           <ScheduleView
+            key="schedule"
             onUpdate={updateRoomStatus}
             onBook={handleBookAtTime}
             onShowMeetingDetails={handleShowMeetingDetails}

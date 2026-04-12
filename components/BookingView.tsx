@@ -84,10 +84,8 @@ const BookingView: React.FC<BookingViewProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [attendees, setAttendees] = useState<AttendeeUser[]>([]);
-  const [usersList, setUsersList] = useState<AttendeeUser[]>([]);
-  const [isAttendeeOpen, setIsAttendeeOpen] = useState(false);
-  const [usersLoading, setUsersLoading] = useState(false);
+  const [apiId, setApiId] = useState<string | undefined>(undefined);
+  const attendees: AttendeeUser[] = [];
   
   const parseTimeString = (timeStr: string) => {
     const [time, modifier] = timeStr.split(' ');
@@ -131,6 +129,7 @@ const BookingView: React.FC<BookingViewProps> = ({
         setEndTime(existing.endTime);
         setDate(existing.date);
         setType(existing.type);
+        setApiId(existing.apiId);
         if (existing.recurrence && existing.recurrence !== 'NONE') {
           setIsRecurring(true);
           setUpdateSeries(true);
@@ -148,66 +147,6 @@ const BookingView: React.FC<BookingViewProps> = ({
       }
     }
   }, [initialMeetingId, initialStartTime, currentUser]);
-
-  useEffect(() => {
-    if (!currentUser?.token) return;
-    setUsersLoading(true);
-
-    const usersPromise = fetch('https://sb.asasconnect.com/api/Auth/users', {
-      headers: { Authorization: `Bearer ${currentUser.token}` },
-    })
-      .then(r => r.json())
-      .then(data => {
-        const list: any[] = Array.isArray(data) ? data : data.data ?? data.users ?? [];
-        return list.map(u => ({
-          UserId: u.userId ?? u.id ?? u.UserId ?? '',
-          FullName: u.fullName ?? u.name ?? u.FullName ?? '',
-          Email: u.email ?? u.Email ?? '',
-        })) as AttendeeUser[];
-      });
-
-    // When editing, also fetch the booking to get its attendee list
-    const bookingPromise = initialMeetingId
-      ? fetch(`https://sb.asasconnect.com/api/Bookings/${initialMeetingId}`, {
-          headers: { Authorization: `Bearer ${currentUser.token}` },
-        })
-          .then(r => r.ok ? r.json() : null)
-          .catch(() => null)
-      : Promise.resolve(null);
-
-    Promise.all([usersPromise, bookingPromise])
-      .then(([users, booking]) => {
-        setUsersList(users);
-
-        if (initialMeetingId && users.length > 0) {
-          // Try to pre-select from API booking attendeeList
-          const apiAttendees: AttendeeUser[] = (() => {
-            const raw: any[] = booking?.attendeeList ?? booking?.AttendeeList ?? [];
-            return raw
-              .map((a: any) => {
-                const userId = a.userId ?? a.UserId ?? '';
-                return users.find(u => u.UserId === userId) ?? {
-                  UserId: userId,
-                  FullName: a.fullName ?? a.FullName ?? '',
-                  Email: a.email ?? a.Email ?? '',
-                };
-              })
-              .filter(a => a.UserId);
-          })();
-
-          if (apiAttendees.length > 0) {
-            setAttendees(apiAttendees);
-          } else {
-            // Fall back: match local meeting attendees by name
-            const localMeeting = db.getMeetings().find(m => m.id === initialMeetingId);
-            const names = (localMeeting?.attendees ?? []).map(a => a.name.toLowerCase());
-            setAttendees(users.filter(u => names.includes(u.FullName.toLowerCase())));
-          }
-        }
-      })
-      .catch(() => {})
-      .finally(() => setUsersLoading(false));
-  }, [currentUser?.token, initialMeetingId]);
 
   const formatToTimeString = (date: Date) => {
     let hours = date.getHours();
@@ -334,9 +273,9 @@ const BookingView: React.FC<BookingViewProps> = ({
           StartTime: to24h(startTime),
           EndTime: to24h(endTime),
           Subject: title.trim(),
-          AttendeeList: attendees,
+          attendee: attendees,
         };
-        const res = await fetch(`https://sb.asasconnect.com/api/Bookings/${initialMeetingId}`, {
+        const res = await fetch(`https://sb.asasconnect.com/api/Bookings/${apiId ?? initialMeetingId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -363,7 +302,7 @@ const BookingView: React.FC<BookingViewProps> = ({
           StartTime: to24h(startTime),
           EndTime: to24h(endTime),
           Subject: title.trim(),
-          AttendeeList: attendees,
+          attendee: attendees,
         };
 
         const res = await fetch('https://sb.asasconnect.com/api/Bookings', {
@@ -380,12 +319,20 @@ const BookingView: React.FC<BookingViewProps> = ({
           throw new Error(msg || `API error ${res.status}`);
         }
 
+        // Capture the API-assigned booking ID from the response and store it locally
+        const responseData = await res.json().catch(() => null);
+        const newApiId: string | undefined = responseData
+          ? String(responseData?.bookingId ?? responseData?.BookingId ?? responseData?.id ?? responseData?.Id ?? '')
+              .replace(/^undefined$/, '') || undefined
+          : undefined;
+
         // Also persist locally so the UI reflects it immediately
         db.addMeeting({
           title: title.trim(), organizer: organizer.trim(), organizerPhoto, startTime, endTime, date,
           type, recurrence: isRecurring ? recurrence : 'NONE',
           recurrenceEndDate: isRecurring ? recurrenceEndDate : undefined,
-          attendees: [{ name: organizer.trim(), photo: organizerPhoto }]
+          attendees: [{ name: organizer.trim(), photo: organizerPhoto }],
+          apiId: newApiId,
         });
 
         onSuccess();
@@ -570,91 +517,6 @@ const BookingView: React.FC<BookingViewProps> = ({
                     className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark disabled:opacity-50 transition-all"
                   />
                 </div>
-              </div>
-
-              {/* Attendees card */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-xl shadow-2xl overflow-hidden">
-                {/* Toggle header */}
-                <button
-                  type="button"
-                  disabled={isPastMeeting}
-                  onClick={() => setIsAttendeeOpen(o => !o)}
-                  className="w-full flex items-center gap-3 p-4 lg:p-5 hover:bg-white/[0.02] transition-colors"
-                >
-                  <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
-                    <span className="material-symbols-outlined text-base">group</span>
-                  </div>
-                  <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary flex-1 text-left">Attendees</span>
-                  {attendees.length > 0 && (
-                    <span className="bg-primary/20 text-primary text-[9px] font-black px-2 py-0.5 rounded-full border border-primary/30">
-                      {attendees.length}
-                    </span>
-                  )}
-                  {usersLoading
-                    ? <span className="size-3.5 border-2 border-primary/30 border-t-primary rounded-full animate-spin shrink-0" />
-                    : <span className={`material-symbols-outlined text-slate-500 text-base transition-transform duration-200 ${isAttendeeOpen ? 'rotate-180' : ''}`}>expand_more</span>
-                  }
-                </button>
-
-                {/* Expanded panel */}
-                {isAttendeeOpen && (
-                  <div className="border-t border-white/5 flex flex-col">
-                    {/* Selected chips */}
-                    {attendees.length > 0 && (
-                      <div className="flex flex-wrap gap-2 px-4 pt-3 pb-2">
-                        {attendees.map(a => (
-                          <button
-                            key={a.UserId}
-                            type="button"
-                            onClick={() => setAttendees(prev => prev.filter(x => x.UserId !== a.UserId))}
-                            className="flex items-center gap-1.5 bg-primary/10 hover:bg-red-500/10 border border-primary/20 hover:border-red-500/30 rounded-xl pl-1.5 pr-2 py-1 transition-all group"
-                          >
-                            <div className="size-5 rounded-lg bg-primary/40 flex items-center justify-center shrink-0">
-                              <span className="text-white text-[8px] font-black">{a.FullName.charAt(0).toUpperCase()}</span>
-                            </div>
-                            <span className="text-white text-[10px] font-black">{a.FullName.split(' ')[0]}</span>
-                            <span className="material-symbols-outlined text-[10px] text-slate-500 group-hover:text-red-400 transition-colors">close</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Scrollable user list */}
-                    <div className="flex flex-col max-h-56 overflow-y-auto custom-scrollbar px-2 py-2">
-                      {usersList.length === 0 && !usersLoading && (
-                        <p className="text-center text-slate-600 text-[10px] font-black uppercase tracking-widest py-6">No users available</p>
-                      )}
-                      {usersList.map(u => {
-                        const selected = attendees.some(a => a.UserId === u.UserId);
-                        return (
-                          <button
-                            key={u.UserId}
-                            type="button"
-                            onClick={() => setAttendees(prev =>
-                              selected ? prev.filter(x => x.UserId !== u.UserId) : [...prev, u]
-                            )}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
-                              selected ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/[0.04] border border-transparent'
-                            }`}
-                          >
-                            <div className={`size-9 rounded-xl flex items-center justify-center shrink-0 font-black text-sm transition-all ${
-                              selected ? 'bg-primary text-white' : 'bg-white/10 text-slate-300'
-                            }`}>
-                              {selected
-                                ? <span className="material-symbols-outlined text-[18px]">check</span>
-                                : u.FullName.charAt(0).toUpperCase()
-                              }
-                            </div>
-                            <div className="flex flex-col min-w-0 flex-1">
-                              <span className={`text-sm font-black truncate leading-none mb-0.5 ${selected ? 'text-white' : 'text-slate-200'}`}>{u.FullName}</span>
-                              <span className="text-slate-500 text-[10px] truncate">{u.Email}</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Recurring card */}
