@@ -86,7 +86,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
     let [hours, minutes] = time.split(':').map(Number);
     if (modifier === 'PM' && hours < 12) hours += 12;
     if (modifier === 'AM' && hours === 12) hours = 0;
-    const date = new Date();
+    const date = new Date(selectedDate + 'T00:00:00');
     date.setHours(hours, minutes, 0, 0);
     return date;
   };
@@ -164,13 +164,27 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
               <button onClick={handlePrevDay} className="p-3 hover:bg-white/5 rounded-xl text-slate-100 hover:text-white transition-all">
                 <span className="material-symbols-outlined">chevron_left</span>
               </button>
-              <div className="px-4 text-[10px] font-black uppercase tracking-widest text-slate-50">
-                {isToday ? 'Today' : selectedDate}
+              <div className="px-2">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+                  className="bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-50 outline-none cursor-pointer color-scheme-dark"
+                />
               </div>
               <button onClick={handleNextDay} className="p-3 hover:bg-white/5 rounded-xl text-slate-100 hover:text-white transition-all">
                 <span className="material-symbols-outlined">chevron_right</span>
               </button>
             </div>
+
+            {!isToday && (
+              <button
+                onClick={() => setSelectedDate(today)}
+                className="px-4 py-3 bg-primary/10 border border-primary/20 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all"
+              >
+                Today
+              </button>
+            )}
 
             <button
               onClick={() => { db.clear(); if (onUpdate) onUpdate(); }}
