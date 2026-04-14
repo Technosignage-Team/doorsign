@@ -12,6 +12,7 @@ import BottomNav from './components/BottomNav';
 import SettingsModal from './components/SettingsModal';
 import { ROOM_INFO } from './constants';
 import { db } from './lib/db';
+import { useBookingSync } from './lib/useBookingSync';
 
 interface PendingAction {
   startTime?: string;
@@ -187,6 +188,7 @@ const App: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [roomStatus, setRoomStatus] = useState<RoomStatus>(ROOM_INFO);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [scheduleSync, setScheduleSync] = useState(0);
 
   // Interaction Modals State
   const [confirmEndId, setConfirmEndId] = useState<string | null>(null);
@@ -375,6 +377,15 @@ const App: React.FC = () => {
     if (resourceId) syncBookingsFromApi(resourceId);
   }, [resourceId, syncBookingsFromApi]);
 
+  // Real-time sync via SignalR — re-fetch bookings on any create/update/delete
+  useBookingSync(
+    resourceId,
+    useCallback(() => {
+      if (resourceId) syncBookingsFromApi(resourceId);
+      setScheduleSync(k => k + 1);
+    }, [resourceId, syncBookingsFromApi]),
+  );
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -509,6 +520,7 @@ const App: React.FC = () => {
             onShowMeetingDetails={handleShowMeetingDetails}
             slotPrecision={slotPrecision}
             resourceId={resourceId ?? undefined}
+            syncKey={scheduleSync}
           />
         );
       case View.DETAILS:

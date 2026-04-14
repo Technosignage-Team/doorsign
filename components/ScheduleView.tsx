@@ -9,6 +9,7 @@ interface ScheduleViewProps {
   onShowMeetingDetails: (meetingId: string) => void;
   slotPrecision?: 15 | 30;
   resourceId?: string;
+  syncKey?: number;
 }
 
 interface AvailableWindow {
@@ -27,7 +28,7 @@ function parseApiTime(value: string, dateStr: string): Date {
   return d;
 }
 
-const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMeetingDetails, slotPrecision = 30, resourceId }) => {
+const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMeetingDetails, slotPrecision = 30, resourceId, syncKey }) => {
   const [now, setNow] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [availableWindows, setAvailableWindows] = useState<AvailableWindow[] | null>(null);
@@ -41,7 +42,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
     return () => clearInterval(timer);
   }, []);
 
-  // Sync bookings from API for the selected date
+  // Sync bookings from API for the selected date (also re-runs when syncKey bumps)
   useEffect(() => {
     if (!resourceId) {
       setMeetings(db.getMeetings(selectedDate));
@@ -78,9 +79,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
         console.error('Bookings sync error (schedule):', err);
         setMeetings(db.getMeetings(selectedDate));
       });
-  }, [resourceId, selectedDate]);
-
-  // Fetch availability whenever resourceId or selectedDate changes
+  }, [resourceId, selectedDate, syncKey]);
   useEffect(() => {
     if (!resourceId) return;
     setLoadingAvailability(true);
