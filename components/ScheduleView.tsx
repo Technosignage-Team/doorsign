@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { db } from '../lib/db';
+import { Meeting } from '../types';
 
 interface ScheduleViewProps {
   onUpdate?: () => void;
@@ -33,12 +34,51 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
   const [loadingAvailability, setLoadingAvailability] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
-  const meetings = db.getMeetings(selectedDate);
+  const [meetings, setMeetings] = useState<Meeting[]>(() => db.getMeetings(selectedDate));
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 10000);
     return () => clearInterval(timer);
   }, []);
+
+  // Sync bookings from API for the selected date
+  useEffect(() => {
+    if (!resourceId) {
+      setMeetings(db.getMeetings(selectedDate));
+      return;
+    }
+    fetch(`https://sb.asasconnect.com/api/bookings/by-date?date=${selectedDate}&resourceId=${resourceId}`)
+      .then(r => { if (!r.ok) throw new Error(`Bookings API ${r.status}`); return r.json(); })
+      .then((data: unknown) => {
+        const list: any[] = Array.isArray(data) ? data : (data as any)?.items ?? (data as any)?.data ?? (data as any)?.bookings ?? [];
+        const existing = db.getMeetings();
+        const apiMeetings: Meeting[] = list.map((b: any) => {
+          const apiId = String(b.id ?? b.bookingId ?? b.BookingId ?? b.Id ?? '');
+          const local = existing.find(m => m.apiId === apiId);
+          return {
+            id: local?.id ?? Math.random().toString(36).substr(2, 9),
+            apiId,
+            title: b.title ?? b.subject ?? b.Subject ?? 'Meeting',
+            organizer: b.organizer ?? b.organizerName ?? b.OrganizerName ?? '',
+            organizerPhoto: b.organizerPhoto ?? b.OrganizerPhoto ?? local?.organizerPhoto,
+            startTime: b.startTime,
+            endTime: b.endTime,
+            date: b.date ?? selectedDate,
+            type: (b.type ?? local?.type ?? 'INTERNAL') as 'INTERNAL' | 'CLIENT',
+            attendees: b.attendees ?? [],
+            recurrence: 'NONE' as const,
+          } as Meeting;
+        });
+        const otherDates = existing.filter(m => m.date !== selectedDate);
+        const thisDateLocal = existing.filter(m => m.date === selectedDate && !m.apiId);
+        localStorage.setItem('everest_meetings_db', JSON.stringify([...otherDates, ...thisDateLocal, ...apiMeetings]));
+        setMeetings([...thisDateLocal, ...apiMeetings]);
+      })
+      .catch(err => {
+        console.error('Bookings sync error (schedule):', err);
+        setMeetings(db.getMeetings(selectedDate));
+      });
+  }, [resourceId, selectedDate]);
 
   // Fetch availability whenever resourceId or selectedDate changes
   useEffect(() => {
@@ -186,12 +226,6 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
               </button>
             )}
 
-            <button
-              onClick={() => { db.clear(); if (onUpdate) onUpdate(); }}
-              className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all text-slate-100 hover:text-white"
-            >
-              Reset Room Data
-            </button>
           </div>
         </div>
 

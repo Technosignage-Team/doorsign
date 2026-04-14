@@ -95,6 +95,11 @@ export const db = {
     localStorage.setItem(DB_KEY, JSON.stringify(filtered));
   },
 
+  getEmployee: (_code: string): { name: string } | null => {
+    // Employee lookup via badge/code is not implemented; always returns null
+    return null;
+  },
+
   clear: () => {
     localStorage.removeItem(DB_KEY);
     localStorage.setItem(DB_KEY, JSON.stringify([]));

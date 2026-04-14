@@ -259,10 +259,10 @@ const App: React.FC = () => {
     let [hours, minutes] = time.split(':').map(Number);
     if (modifier === 'PM' && hours < 12) hours += 12;
     if (modifier === 'AM' && hours === 12) hours = 0;
-    const date = new Date(currentTime);
+    const date = new Date();
     date.setHours(hours, minutes, 0, 0);
     return date;
-  }, [currentTime]);
+  }, []);
 
   const formatToTimeString = (date: Date) => {
     let hours = date.getHours();
@@ -273,69 +273,60 @@ const App: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
   };
 
-  // Convert "HH:MM:SS" or "HH:MM" (24h) to "HH:MM AM/PM"
+  // Extract time portion from either "HH:MM:SS", "HH:MM", or "YYYY-MM-DDTHH:MM:SS"
+  const extractTime = (val: string): string => {
+    if (!val) return '00:00';
+    const t = val.includes('T') ? val.split('T')[1] : val;
+    return t.substring(0, 5); // "HH:MM"
+  };
+
+  // Extract date portion from "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM:SS".
+  // Returns fallback for time-only strings like "14:30:00".
+  const extractDate = (val: string, fallback: string): string => {
+    if (!val) return fallback;
+    if (val.includes('T')) return val.split('T')[0];
+    if (/^\d{4}-\d{2}-\d{2}/.test(val)) return val.substring(0, 10);
+    return fallback; // time-only string — use fallback
+  };
+
+  // Convert "HH:MM" (24h) to "HH:MM AM/PM"
   const to12h = (t: string): string => {
     const [hStr, mStr] = t.split(':');
     let h = parseInt(hStr, 10);
     const m = parseInt(mStr, 10);
+    if (isNaN(h) || isNaN(m)) return '12:00 AM';
     const ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12 || 12;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
   };
 
-  const syncBookingsFromApi = useCallback((resId: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    fetch(`https://sb.asasconnect.com/api/Bookings/resource/${resId}?startDate=${today}&endDate=${today}`)
-      .then(r => { if (!r.ok) throw new Error(`Bookings API ${r.status}`); return r.json(); })
-      .then((data: unknown) => {
-        const list: any[] = Array.isArray(data) ? data : (data as any)?.data ?? (data as any)?.bookings ?? [];
-        // Replace today's meetings in local db with what the API returns
-        const existing = db.getMeetings();
-        const otherDays = existing.filter(m => m.date !== today);
-        const apiMeetings: Meeting[] = list.map((b: any) => {
-          const apiId = String(b.bookingId ?? b.BookingId ?? b.id ?? b.Id ?? '');
-          // keep existing local entry if same apiId so local-only fields survive
-          const local = existing.find(m => m.apiId === apiId && m.date === today);
-          return {
-            id: local?.id ?? Math.random().toString(36).substr(2, 9),
-            apiId,
-            title: b.subject ?? b.Subject ?? b.title ?? 'Meeting',
-            organizer: b.organizerName ?? b.OrganizerName ?? b.organizer ?? '',
-            organizerPhoto: b.organizerPhoto ?? b.OrganizerPhoto ?? local?.organizerPhoto,
-            startTime: to12h(b.startTime ?? b.StartTime ?? '00:00'),
-            endTime: to12h(b.endTime ?? b.EndTime ?? '00:00'),
-            date: today,
-            type: (b.type ?? b.Type ?? local?.type ?? 'INTERNAL') as 'INTERNAL' | 'CLIENT',
-            recurrence: 'NONE' as const,
-          };
-        });
-        localStorage.setItem('everest_meetings_db', JSON.stringify([...otherDays, ...apiMeetings]));
-        updateRoomStatus();
-      })
-      .catch(err => console.error('Bookings sync error:', err));
-  }, [updateRoomStatus]);
-
-  // Sync bookings from API whenever resourceId becomes available
-  useEffect(() => {
-    if (resourceId) syncBookingsFromApi(resourceId);
-  }, [resourceId, syncBookingsFromApi]);
-
   const updateRoomStatus = useCallback(() => {
     setIsSyncing(true);
     const today = new Date().toISOString().split('T')[0];
-    const meetings = db.getMeetings(today);
-    
+    const todayMeetings = db.getMeetings(today);
+    const allMeetings = db.getMeetings();
+
     setTimeout(() => {
       const now = new Date();
-      const currentMeeting = meetings.find(m => {
+
+      const currentMeeting = todayMeetings.find(m => {
         const start = parseTimeString(m.startTime);
         const end = parseTimeString(m.endTime);
         return now >= start && now < end;
       });
-      const nextMeeting = meetings
-        .filter(m => parseTimeString(m.startTime) >= now)
+
+      // Look across all dates for the next upcoming meeting
+      const nextMeeting = allMeetings
         .filter(m => m.id !== currentMeeting?.id)
-        .sort((a, b) => parseTimeString(a.startTime).getTime() - parseTimeString(b.startTime).getTime())[0];
+        .filter(m => {
+          if (m.date > today) return true;
+          if (m.date === today) return parseTimeString(m.startTime) > now;
+          return false;
+        })
+        .sort((a, b) => {
+          if (a.date !== b.date) return a.date.localeCompare(b.date);
+          return parseTimeString(a.startTime).getTime() - parseTimeString(b.startTime).getTime();
+        })[0];
 
       setRoomStatus(prev => ({
         ...prev,
@@ -346,6 +337,43 @@ const App: React.FC = () => {
       setIsSyncing(false);
     }, 300);
   }, [parseTimeString]);
+
+  const syncBookingsFromApi = useCallback((resId: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    fetch(`https://sb.asasconnect.com/api/bookings/by-date?date=${today}&resourceId=${resId}`)
+      .then(r => { if (!r.ok) throw new Error(`Bookings API ${r.status}`); return r.json(); })
+      .then((data: unknown) => {
+        const list: any[] = Array.isArray(data) ? data : (data as any)?.items ?? (data as any)?.data ?? (data as any)?.bookings ?? [];
+        const existing = db.getMeetings();
+        // Keep only locally-created meetings (no apiId); API is the source of truth for all API meetings
+        const localOnly = existing.filter(m => !m.apiId);
+        const apiMeetings: Meeting[] = list.map((b: any) => {
+          const apiId = String(b.id ?? b.bookingId ?? b.BookingId ?? b.Id ?? '');
+          const local = existing.find(m => m.apiId === apiId);
+          return {
+            id: local?.id ?? Math.random().toString(36).substr(2, 9),
+            apiId,
+            title: b.title ?? b.subject ?? b.Subject ?? 'Meeting',
+            organizer: b.organizer ?? b.organizerName ?? b.OrganizerName ?? '',
+            organizerPhoto: b.organizerPhoto ?? b.OrganizerPhoto ?? local?.organizerPhoto,
+            startTime: b.startTime,
+            endTime: b.endTime,
+            date: b.date ?? today,
+            type: (b.type ?? local?.type ?? 'INTERNAL') as 'INTERNAL' | 'CLIENT',
+            attendees: b.attendees ?? [],
+            recurrence: 'NONE' as const,
+          };
+        });
+        localStorage.setItem('everest_meetings_db', JSON.stringify([...localOnly, ...apiMeetings]));
+        updateRoomStatus();
+      })
+      .catch(err => console.error('Bookings sync error:', err));
+  }, [updateRoomStatus]);
+
+  // Sync bookings from API whenever resourceId becomes available
+  useEffect(() => {
+    if (resourceId) syncBookingsFromApi(resourceId);
+  }, [resourceId, syncBookingsFromApi]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -546,7 +574,7 @@ const App: React.FC = () => {
     <div className="flex h-screen w-full bg-[#050505] relative overflow-hidden font-display selection:bg-primary/30 text-white">
       <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/15 blur-[120px] rounded-full pointer-events-none" />
       <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/15 blur-[120px] rounded-full pointer-events-none" />
-      
+
       <div className="flex flex-row flex-1 w-full h-full relative z-10 transition-all duration-500">
         <div className="flex-1 h-full overflow-hidden">
           {renderView()}
