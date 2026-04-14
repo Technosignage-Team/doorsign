@@ -205,28 +205,25 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
                       <h4 className="text-slate-100 text-[9px] font-black uppercase tracking-[0.4em]">Attendees List</h4>
                       <span className="text-[8px] font-black bg-white/5 px-1.5 py-0.5 rounded-xl border border-white/10">{meeting.attendees?.length || 1} Total</span>
                    </div>
-                   <div className="flex flex-wrap gap-3">
+                   <div className="flex flex-col gap-2 w-full">
                       {meeting.attendees && meeting.attendees.length > 0 ? (
                         meeting.attendees.map((person, i) => (
-                          <div key={i} className="flex flex-col items-center gap-1.5 group">
-                             <div className="relative">
-                                <div className={`absolute inset-0 bg-primary/20 blur-md rounded-xl opacity-0 group-hover:opacity-100 transition-opacity`}></div>
-                                <div className={`size-10 rounded-xl border border-white/10 bg-white/5 p-0.5 relative z-10 overflow-hidden group-hover:border-primary transition-all ${meeting.isCancelled ? 'grayscale opacity-40' : ''}`}>
-                                   {person.photo ? (
-                                     <img 
-                                        src={person.photo} 
-                                        alt={person.name} 
-                                        className="size-full rounded-xl object-cover" 
-                                        referrerPolicy="no-referrer"
-                                      />
-                                   ) : (
-                                     <div className="size-full rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm">
-                                        {person.name.charAt(0)}
-                                     </div>
-                                   )}
-                                </div>
+                          <div key={i} className="flex items-center gap-3 group bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2 hover:bg-white/[0.06] hover:border-white/10 transition-all">
+                             <div className={`size-8 shrink-0 rounded-lg border border-white/10 bg-white/5 overflow-hidden ${meeting.isCancelled ? 'grayscale opacity-40' : ''}`}>
+                                {person.photo ? (
+                                  <img 
+                                     src={person.photo} 
+                                     alt={person.fullName ?? ''} 
+                                     className="size-full object-cover" 
+                                     referrerPolicy="no-referrer"
+                                   />
+                                ) : (
+                                  <div className="size-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
+                                     {person.fullName?.charAt(0) ?? '?'}
+                                  </div>
+                                )}
                              </div>
-                             <span className="text-[8px] font-black text-slate-100 uppercase tracking-widest group-hover:text-white transition-colors">{person.name}</span>
+                             <span className="text-sm font-semibold text-white group-hover:text-primary transition-colors truncate">{person.fullName ?? 'Unknown'}</span>
                           </div>
                         ))
                       ) : (

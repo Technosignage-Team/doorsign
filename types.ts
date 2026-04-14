@@ -25,7 +25,7 @@ export interface User {
 }
 
 export interface Attendee {
-  name: string;
+  fullName: string;
   photo?: string;
 }
 

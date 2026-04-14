@@ -57,7 +57,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
           const apiId = String(b.id ?? b.bookingId ?? b.BookingId ?? b.Id ?? '');
           const local = existing.find(m => m.apiId === apiId);
           return {
-            id: local?.id ?? Math.random().toString(36).substr(2, 9),
+            id: apiId,
             apiId,
             title: b.title ?? b.subject ?? b.Subject ?? 'Meeting',
             organizer: b.organizer ?? b.organizerName ?? b.OrganizerName ?? '',
