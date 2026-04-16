@@ -86,6 +86,13 @@ const BookingView: React.FC<BookingViewProps> = ({
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [apiId, setApiId] = useState<string | undefined>(undefined);
   const attendees: AttendeeUser[] = [];
+
+  // Ticks every minute so past-slot detection stays current while the form is open
+  const [nowTick, setNowTick] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNowTick(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
   
   const parseTimeString = (timeStr: string) => {
     const [time, modifier] = timeStr.split(' ');
@@ -139,7 +146,53 @@ const BookingView: React.FC<BookingViewProps> = ({
       }
     } else {
       if (initialStartTime) {
-        setStartTime(initialStartTime);
+        // If the provided start time is in the past (today), snap to first available future slot
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const isToday = new Date().toISOString().split('T')[0] === today;
+        const nowRef = new Date(REF_DATE);
+        nowRef.setHours(now.getHours(), now.getMinutes(), 0, 0);
+        const initialParsed = (() => {
+          const [time, modifier] = initialStartTime.split(' ');
+          let [hours, minutes] = time.split(':').map(Number);
+          if (modifier === 'PM' && hours < 12) hours += 12;
+          if (modifier === 'AM' && hours === 12) hours = 0;
+          const d = new Date(REF_DATE); d.setHours(hours, minutes, 0, 0);
+          return d;
+        })();
+        if (isToday && initialParsed <= nowRef) {
+          // Find first non-past, non-conflicting slot
+          const intervals = slotPrecision === 15 ? ['00', '15', '30', '45'] : ['00', '30'];
+          const allOpts: string[] = [];
+          for (let h = 0; h < 24; h++) {
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            let hour12 = h % 12; if (hour12 === 0) hour12 = 12;
+            const hStr = hour12.toString().padStart(2, '0');
+            intervals.forEach(m => allOpts.push(`${hStr}:${m} ${ampm}`));
+          }
+          const firstAvailable = allOpts.find(t => {
+            const [tm, mod] = t.split(' ');
+            let [hh, mm] = tm.split(':').map(Number);
+            if (mod === 'PM' && hh < 12) hh += 12;
+            if (mod === 'AM' && hh === 12) hh = 0;
+            const d = new Date(REF_DATE); d.setHours(hh, mm, 0, 0);
+            if (d <= nowRef) return false;
+            const conflict = loadedMeetings.find(m => {
+              if (m.date !== today) return false;
+              const [st, sm] = m.startTime.split(' '); let [sh, smin] = st.split(':').map(Number);
+              if (sm === 'PM' && sh < 12) sh += 12; if (sm === 'AM' && sh === 12) sh = 0;
+              const [et, em] = m.endTime.split(' '); let [eh, emin] = et.split(':').map(Number);
+              if (em === 'PM' && eh < 12) eh += 12; if (em === 'AM' && eh === 12) eh = 0;
+              const mS = new Date(REF_DATE); mS.setHours(sh, smin, 0, 0);
+              const mE = new Date(REF_DATE); mE.setHours(eh, emin, 0, 0);
+              return d >= mS && d < mE;
+            });
+            return !conflict;
+          });
+          setStartTime(firstAvailable || initialStartTime);
+        } else {
+          setStartTime(initialStartTime);
+        }
       }
       if (currentUser) {
         setOrganizer(currentUser.name);
@@ -170,24 +223,37 @@ const BookingView: React.FC<BookingViewProps> = ({
     return options;
   }, [slotPrecision]);
 
-  const startOptions = useMemo((): { time: string; disabled: boolean }[] => {
-    const now = new Date();
-    const isSelectedToday = date === new Date().toISOString().split('T')[0];
-    // Build a REF_DATE-based "now" for fair comparison with parseTimeString results
+  const startOptions = useMemo((): { time: string; disabled: boolean; reason?: 'past' | 'booked' }[] => {
+    const isSelectedToday = date === nowTick.toISOString().split('T')[0];
     const nowRef = new Date(REF_DATE);
-    nowRef.setHours(now.getHours(), now.getMinutes(), 0, 0);
+    nowRef.setHours(nowTick.getHours(), nowTick.getMinutes(), 0, 0);
     return allTimeOptions.map((t: string) => {
       const tDate = parseTimeString(t);
-      const isPast = isSelectedToday && tDate < nowRef;
+      const isPast = isSelectedToday && tDate <= nowRef;
       const conflict = meetings.find(m => {
         if (m.id === initialMeetingId || m.date !== date) return false;
         const mStart = parseTimeString(m.startTime);
         const mEnd = parseTimeString(m.endTime);
         return tDate >= mStart && tDate < mEnd;
       });
-      return { time: t, disabled: isPast || !!conflict };
+      const reason: 'past' | 'booked' | undefined = isPast ? 'past' : conflict ? 'booked' : undefined;
+      return { time: t, disabled: isPast || !!conflict, reason };
     });
-  }, [allTimeOptions, meetings, initialMeetingId, date]);
+  }, [allTimeOptions, meetings, initialMeetingId, date, nowTick]);
+
+  // Auto-snap startTime forward if it becomes past while the form sits idle
+  useEffect(() => {
+    if (initialMeetingId) return; // don't snap when editing existing booking
+    const isSelectedToday = date === nowTick.toISOString().split('T')[0];
+    if (!isSelectedToday) return;
+    const nowRef = new Date(REF_DATE);
+    nowRef.setHours(nowTick.getHours(), nowTick.getMinutes(), 0, 0);
+    const currentStartParsed = parseTimeString(startTime);
+    if (currentStartParsed <= nowRef) {
+      const firstAvailable = startOptions.find(o => !o.disabled);
+      if (firstAvailable) setStartTime(firstAvailable.time);
+    }
+  }, [nowTick, date, startTime, startOptions, initialMeetingId]);
 
   const availableEndOptions = useMemo((): { time: string; disabled: boolean }[] => {
     const sDate = parseTimeString(startTime);
@@ -262,6 +328,19 @@ const BookingView: React.FC<BookingViewProps> = ({
     if (!startTime || !endTime) { setError('Please select start and end times'); return; }
     if (isPastMeeting) { setError('Cannot book a meeting in the past'); return; }
 
+    // Guard: prevent booking a past start time on today
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    if (!initialMeetingId && date === today) {
+      const nowRef = new Date(REF_DATE);
+      nowRef.setHours(now.getHours(), now.getMinutes(), 0, 0);
+      const startParsed = parseTimeString(startTime);
+      if (startParsed <= nowRef) {
+        setError('Start time is in the past. Please select a future time slot.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -331,7 +410,7 @@ const BookingView: React.FC<BookingViewProps> = ({
           title: title.trim(), organizer: organizer.trim(), organizerPhoto, startTime, endTime, date,
           type, recurrence: isRecurring ? recurrence : 'NONE',
           recurrenceEndDate: isRecurring ? recurrenceEndDate : undefined,
-          attendees: [{ name: organizer.trim(), photo: organizerPhoto }],
+          attendees: [{ fullName: organizer.trim(), photo: organizerPhoto }],
           apiId: newApiId,
         });
 
@@ -573,7 +652,7 @@ const BookingView: React.FC<BookingViewProps> = ({
                 <div className="flex flex-col gap-2">
                   <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Start Time</label>
                   <select disabled={isPastMeeting} value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
-                    {startOptions.map((o: { time: string; disabled: boolean; past?: boolean }) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.disabled ? (o.past ? ' (past)' : ' (booked)') : ''}</option>)}
+                    {startOptions.map((o) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.reason === 'past' ? ' (past)' : o.reason === 'booked' ? ' (booked)' : ''}</option>)}
                   </select>
                 </div>
                 <div className="flex flex-col gap-2">

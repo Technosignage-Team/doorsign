@@ -493,6 +493,35 @@ const App: React.FC = () => {
     setCurrentView(View.DASHBOARD);
   };
 
+  // Idle redirect — return to dashboard after 1 minute of no interaction
+  useEffect(() => {
+    if (currentView === View.DASHBOARD) return;
+    const IDLE_MS = 60_000;
+    // Use an object ref so reset() and cleanup always share the same timer id
+    const t = { id: undefined as ReturnType<typeof setTimeout> | undefined };
+
+    const goHome = () => {
+      setCurrentUser(null);
+      setPendingAction(null);
+      setCurrentView(View.DASHBOARD);
+    };
+
+    const reset = () => {
+      clearTimeout(t.id);
+      t.id = setTimeout(goHome, IDLE_MS);
+    };
+
+    reset(); // start the initial timer
+
+    const events = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'click'] as const;
+    events.forEach(e => window.addEventListener(e, reset, { passive: true }));
+
+    return () => {
+      clearTimeout(t.id);
+      events.forEach(e => window.removeEventListener(e, reset));
+    };
+  }, [currentView]);
+
   const renderView = () => {
     switch (currentView) {
       case View.DASHBOARD:
