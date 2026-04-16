@@ -70,6 +70,13 @@ const BookingView: React.FC<BookingViewProps> = ({
     d.setMonth(d.getMonth() + 1);
     return d.toISOString().split('T')[0];
   });
+  // Days of week for weekly recurrence: 1=Mon … 7=Sun
+  const [selectedDays, setSelectedDays] = useState<number[]>(() => {
+    const d = new Date().getDay(); // 0=Sun … 6=Sat
+    return [d === 0 ? 7 : d]; // convert to 1-7
+  });
+  const toggleDay = (day: number) =>
+    setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort((a, b) => a - b));
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
@@ -373,16 +380,59 @@ const BookingView: React.FC<BookingViewProps> = ({
         }, updateSeries);
         onSuccess();
       } else {
-        // New booking — call the API
-        const body: Record<string, unknown> = {
-          ResourceId: resourceId,
-          OrganizerUserId: currentUser?.userId,
-          BookingDate: date,
-          StartTime: to24h(startTime),
-          EndTime: to24h(endTime),
-          Subject: title.trim(),
-          attendee: attendees,
-        };
+        // New booking — call the correct API based on recurrence
+        if (isRecurring) {
+          const to24hShort = (t: string) => {
+            const [time, modifier] = t.split(' ');
+            let [hours, minutes] = time.split(':').map(Number);
+            if (modifier === 'PM' && hours < 12) hours += 12;
+            if (modifier === 'AM' && hours === 12) hours = 0;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+          };
+          const recurringBody: Record<string, unknown> = {
+            resourceId,
+            userId: currentUser?.userId,
+            startTime: to24hShort(startTime),
+            endTime: to24hShort(endTime),
+            subject: title.trim(),
+            recurrencePattern: recurrence.toLowerCase(),
+            interval: 1,
+            daysOfWeek: recurrence === 'WEEKLY' ? selectedDays.join(',') : null,
+            dayOfMonth: recurrence === 'MONTHLY' ? new Date(date).getDate() : null,
+            startDate: date,
+            endDate: recurrenceEndDate || null,
+            occurrences: null,
+          };
+          const res = await fetch('https://sb.asasconnect.com/api/recurringbookings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(currentUser?.token ? { Authorization: `Bearer ${currentUser.token}` } : {}),
+            },
+            body: JSON.stringify(recurringBody),
+          });
+          if (!res.ok) {
+            const msg = await res.text().catch(() => '');
+            throw new Error(msg || `API error ${res.status}`);
+          }
+          db.addMeeting({
+            title: title.trim(), organizer: organizer.trim(), organizerPhoto, startTime, endTime, date,
+            type, recurrence,
+            recurrenceEndDate: recurrenceEndDate || undefined,
+            attendees: [{ fullName: organizer.trim(), photo: organizerPhoto }],
+          });
+          onSuccess();
+        } else {
+          // One-time booking
+          const body: Record<string, unknown> = {
+            ResourceId: resourceId,
+            OrganizerUserId: currentUser?.userId,
+            BookingDate: date,
+            StartTime: to24h(startTime),
+            EndTime: to24h(endTime),
+            Subject: title.trim(),
+            attendee: attendees,
+          };
 
         const res = await fetch('https://sb.asasconnect.com/api/Bookings', {
           method: 'POST',
@@ -408,13 +458,13 @@ const BookingView: React.FC<BookingViewProps> = ({
         // Also persist locally so the UI reflects it immediately
         db.addMeeting({
           title: title.trim(), organizer: organizer.trim(), organizerPhoto, startTime, endTime, date,
-          type, recurrence: isRecurring ? recurrence : 'NONE',
-          recurrenceEndDate: isRecurring ? recurrenceEndDate : undefined,
+          type, recurrence: 'NONE',
           attendees: [{ fullName: organizer.trim(), photo: organizerPhoto }],
           apiId: newApiId,
         });
 
         onSuccess();
+        } // end else (one-time booking)
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save booking. Please try again.');
@@ -620,6 +670,20 @@ const BookingView: React.FC<BookingViewProps> = ({
                           className={`py-2 rounded-xl text-[9px] font-black transition-all border uppercase tracking-widest ${recurrence === f ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>{f}</button>
                       ))}
                     </div>
+                    {recurrence === 'WEEKLY' && (
+                      <div className="flex flex-col gap-2">
+                        <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Days of Week</label>
+                        <div className="grid grid-cols-7 gap-1">
+                          {[{n:'Mo',v:1},{n:'Tu',v:2},{n:'We',v:3},{n:'Th',v:4},{n:'Fr',v:5},{n:'Sa',v:6},{n:'Su',v:7}].map(({n,v}) => (
+                            <button key={v} type="button" onClick={() => toggleDay(v)}
+                              className={`py-2 rounded-xl text-[9px] font-black transition-all border ${
+                                selectedDays.includes(v) ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'
+                              }`}>{n}</button>
+                          ))}
+                        </div>
+                        {selectedDays.length === 0 && <p className="text-red-400 text-[8px] font-black uppercase tracking-widest">Select at least one day</p>}
+                      </div>
+                    )}
                     <div className="flex flex-col gap-2">
                       <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">End Date</label>
                       <input type="date" value={recurrenceEndDate} onChange={(e) => setRecurrenceEndDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark transition-all" />
