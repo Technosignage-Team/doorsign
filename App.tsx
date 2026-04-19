@@ -306,7 +306,6 @@ const App: React.FC = () => {
     setIsSyncing(true);
     const today = new Date().toISOString().split('T')[0];
     const todayMeetings = db.getMeetings(today);
-    const allMeetings = db.getMeetings();
 
     setTimeout(() => {
       const now = new Date();
@@ -317,18 +316,11 @@ const App: React.FC = () => {
         return now >= start && now < end;
       });
 
-      // Look across all dates for the next upcoming meeting
-      const nextMeeting = allMeetings
+      // Look only at today's meetings for the next upcoming one
+      const nextMeeting = todayMeetings
         .filter(m => m.id !== currentMeeting?.id)
-        .filter(m => {
-          if (m.date > today) return true;
-          if (m.date === today) return parseTimeString(m.startTime) > now;
-          return false;
-        })
-        .sort((a, b) => {
-          if (a.date !== b.date) return a.date.localeCompare(b.date);
-          return parseTimeString(a.startTime).getTime() - parseTimeString(b.startTime).getTime();
-        })[0];
+        .filter(m => parseTimeString(m.startTime) > now)
+        .sort((a, b) => parseTimeString(a.startTime).getTime() - parseTimeString(b.startTime).getTime())[0];
 
       setRoomStatus(prev => ({
         ...prev,
