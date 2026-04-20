@@ -5,6 +5,7 @@ import { Meeting } from '../types';
 
 interface ScheduleViewProps {
   onUpdate?: () => void;
+  onBack?: () => void;
   onBook: (startTime?: string, meetingId?: string) => void;
   onShowMeetingDetails: (meetingId: string) => void;
   slotPrecision?: 15 | 30;
@@ -28,7 +29,7 @@ function parseApiTime(value: string, dateStr: string): Date {
   return d;
 }
 
-const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMeetingDetails, slotPrecision = 30, resourceId, syncKey }) => {
+const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, onShowMeetingDetails, slotPrecision = 30, resourceId, syncKey }) => {
   const [now, setNow] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [availableWindows, setAvailableWindows] = useState<AvailableWindow[] | null>(null);
@@ -180,7 +181,13 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
     <div className="flex flex-col h-full overflow-y-auto pb-24 custom-scrollbar bg-background-dark text-white">
       <header className="sticky top-0 z-50 bg-background-dark/95 backdrop-blur-xl border-b border-white/5">
         <div className="flex items-center p-8 justify-between w-full">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            {onBack && (
+              <button onClick={onBack} className="flex size-12 items-center justify-center hover:bg-white/5 text-white rounded-xl transition-all">
+                <span className="material-symbols-outlined text-3xl">arrow_back</span>
+              </button>
+            )}
+            <div className="flex items-center gap-6">
             <div className="size-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
               <span className="material-symbols-outlined text-4xl font-variation-fill">calendar_view_day</span>
             </div>
@@ -196,9 +203,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBook, onShowMee
                 )}
               </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-4">
+            </div>
             <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1">
               <button onClick={handlePrevDay} className="p-3 hover:bg-white/5 rounded-xl text-slate-100 hover:text-white transition-all">
                 <span className="material-symbols-outlined">chevron_left</span>

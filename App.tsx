@@ -604,6 +604,7 @@ const App: React.FC = () => {
           <ScheduleView
             key="schedule"
             onUpdate={updateRoomStatus}
+            onBack={() => setCurrentView(View.DASHBOARD)}
             onBook={handleBookAtTime}
             onShowMeetingDetails={handleShowMeetingDetails}
             slotPrecision={slotPrecision}
