@@ -91,8 +91,9 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
     try {
       const res = await fetch(endpoint, { method: 'POST' });
       if (!res.ok) {
-        const msg = await res.text().catch(() => '');
-        throw new Error(msg || `API error ${res.status}`);
+        const raw = await res.text().catch(() => '');
+        const msg = raw.replace(/[{}"\[\]]/g, '').trim();
+        throw new Error(msg || 'The code could not be verified. Please check and try again.');
       }
       if (mode === 'CHECK_OUT') {
         setShowFaceSurvey(true);
@@ -100,7 +101,9 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
         setShowSuccessModal(true);
       }
     } catch (err: unknown) {
-      setApiError(err instanceof Error ? err.message : 'Request failed. Please try again.');
+      const raw = err instanceof Error ? err.message : '';
+      const clean = raw.replace(/[{}"\[\]]/g, '').trim();
+      setApiError(clean || 'Something went wrong. Please try again.');
     } finally {
       setIsApiLoading(false);
     }

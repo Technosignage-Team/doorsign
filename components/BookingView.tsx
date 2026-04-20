@@ -370,8 +370,9 @@ const BookingView: React.FC<BookingViewProps> = ({
           body: JSON.stringify(body),
         });
         if (!res.ok) {
-          const msg = await res.text().catch(() => '');
-          throw new Error(msg || `API error ${res.status}`);
+          const raw = await res.text().catch(() => '');
+          const msg = raw.replace(/[{}"\[\]]/g, '').trim();
+          throw new Error(msg || 'Unable to update the booking. Please try again.');
         }
         db.updateMeeting(initialMeetingId, {
           title: title.trim(), organizer: organizer.trim(), startTime, endTime, type,
@@ -412,8 +413,9 @@ const BookingView: React.FC<BookingViewProps> = ({
             body: JSON.stringify(recurringBody),
           });
           if (!res.ok) {
-            const msg = await res.text().catch(() => '');
-            throw new Error(msg || `API error ${res.status}`);
+            const raw = await res.text().catch(() => '');
+            const msg = raw.replace(/[{}"\[\]]/g, '').trim();
+            throw new Error(msg || 'Unable to save the recurring booking. Please try again.');
           }
           db.addMeeting({
             title: title.trim(), organizer: organizer.trim(), organizerPhoto, startTime, endTime, date,
@@ -444,8 +446,9 @@ const BookingView: React.FC<BookingViewProps> = ({
         });
 
         if (!res.ok) {
-          const msg = await res.text().catch(() => '');
-          throw new Error(msg || `API error ${res.status}`);
+          const raw = await res.text().catch(() => '');
+          const msg = raw.replace(/[{}"\[\]]/g, '').trim();
+          throw new Error(msg || 'Unable to create the booking. Please try again.');
         }
 
         // Capture the API-assigned booking ID from the response and store it locally
@@ -467,7 +470,9 @@ const BookingView: React.FC<BookingViewProps> = ({
         } // end else (one-time booking)
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to save booking. Please try again.');
+      const raw = err instanceof Error ? err.message : '';
+      const clean = raw.replace(/[{}"\[\]]/g, '').trim();
+      setError(clean || 'Something went wrong. Please try again.');
       console.error(err);
     } finally {
       setIsSubmitting(false);
