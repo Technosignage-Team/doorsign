@@ -194,6 +194,8 @@ const App: React.FC = () => {
   const [confirmEndId, setConfirmEndId] = useState<string | null>(null);
   const [pendingEndId, setPendingEndId] = useState<string | null>(null);
   const [extendMeetingId, setExtendMeetingId] = useState<string | null>(null);
+  const [pendingExtendId, setPendingExtendId] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
   const [availableExtensions, setAvailableExtensions] = useState<ExtensionSlot[]>([]);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [resourceId, setResourceId] = useState<string | null>(null);
@@ -459,14 +461,14 @@ const App: React.FC = () => {
     handleLogout();
   };
 
-  const onExtendRequested = (id: string) => {
+  const computeExtendSlots = (id: string) => {
     const meetings = db.getMeetings();
     const meeting = meetings.find(m => m.id === id);
     if (!meeting) return;
 
     const currentEnd = parseTimeString(meeting.endTime);
     const today = new Date().toISOString().split('T')[0];
-    
+
     const nextMeeting = meetings
       .filter(m => m.id !== id && m.date === today && parseTimeString(m.startTime) >= currentEnd)
       .sort((a, b) => parseTimeString(a.startTime).getTime() - parseTimeString(b.startTime).getTime())[0];
@@ -474,31 +476,30 @@ const App: React.FC = () => {
     const endOfDay = new Date(currentTime);
     endOfDay.setHours(23, 59, 0, 0);
 
-    const maxExtensionTime = nextMeeting 
-      ? parseTimeString(nextMeeting.startTime) 
+    const maxExtensionTime = nextMeeting
+      ? parseTimeString(nextMeeting.startTime)
       : endOfDay;
 
     const diffMs = maxExtensionTime.getTime() - currentEnd.getTime();
     const maxMins = Math.floor(diffMs / 60000);
-    
-    // Generate extension slots in increments of global slotPrecision
+
     const increment = slotPrecision;
     const slots: ExtensionSlot[] = [];
-    
-    // We offer up to 4 potential slot extensions based on precision
     for (let i = 1; i <= 4; i++) {
       const mins = increment * i;
       if (mins <= maxMins) {
         const slotEnd = new Date(currentEnd.getTime() + mins * 60000);
-        slots.push({
-          minutes: mins,
-          endTime: formatToTimeString(slotEnd)
-        });
+        slots.push({ minutes: mins, endTime: formatToTimeString(slotEnd) });
       }
     }
-    
     setAvailableExtensions(slots);
     setExtendMeetingId(id);
+  };
+
+  const onExtendRequested = (id: string) => {
+    setCurrentUser(null);
+    setPendingExtendId(id);
+    setCurrentView(View.LOGIN);
   };
 
   const confirmExtendMeeting = (minutes: number) => {
@@ -509,8 +510,38 @@ const App: React.FC = () => {
 
     const currentEnd = parseTimeString(meeting.endTime);
     const newEnd = new Date(currentEnd.getTime() + minutes * 60000);
-    
-    db.updateMeeting(extendMeetingId, { endTime: formatToTimeString(newEnd) });
+    const newEndFormatted = formatToTimeString(newEnd);
+    const h = newEnd.getHours().toString().padStart(2, '0');
+    const m = newEnd.getMinutes().toString().padStart(2, '0');
+    const endTime24 = `${h}:${m}`;
+
+    if (meeting.apiId) {
+      const to24h = (t: string) => {
+        const [time, mod] = t.split(' ');
+        let [hh, mm] = time.split(':').map(Number);
+        if (mod === 'PM' && hh < 12) hh += 12;
+        if (mod === 'AM' && hh === 12) hh = 0;
+        return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
+      };
+      fetch(`https://sb.asasconnect.com/api/Bookings/${meeting.apiId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(currentUser?.token ? { Authorization: `Bearer ${currentUser.token}` } : {}),
+        },
+        body: JSON.stringify({
+          ResourceId: resourceId,
+          OrganizerUserId: currentUser?.userId,
+          BookingDate: meeting.date,
+          StartTime: to24h(meeting.startTime),
+          EndTime: endTime24,
+          Subject: meeting.title,
+          attendee: meeting.attendees ?? [],
+        }),
+      }).catch(err => console.error('Extend meeting API error:', err));
+    }
+
+    db.updateMeeting(extendMeetingId, { endTime: newEndFormatted });
     setExtendMeetingId(null);
     updateRoomStatus();
     handleLogout();
@@ -599,15 +630,52 @@ const App: React.FC = () => {
       case View.LOGIN:
         return <LoginView onBack={() => setCurrentView(View.DASHBOARD)} onLogin={(user) => {
           setCurrentUser(user);
+          const isAdmin = user.role?.toLowerCase() === 'admin';
           if (pendingEndId) {
-            setConfirmEndId(pendingEndId);
-            setPendingEndId(null);
+            const meeting = db.getMeetings().find(m => m.id === pendingEndId);
+            const isOrganizer = !!(meeting && user.name.toLowerCase() === meeting.organizer.toLowerCase());
+            if (!isOrganizer && !isAdmin) {
+              setPendingEndId(null);
+              setPermissionError('You cannot end this meeting because you are not the organizer and do not have admin permissions.');
+            } else {
+              setConfirmEndId(pendingEndId);
+              setPendingEndId(null);
+            }
             setCurrentView(View.DASHBOARD);
+          } else if (pendingExtendId) {
+            const meeting = db.getMeetings().find(m => m.id === pendingExtendId);
+            const isOrganizer = !!(meeting && user.name.toLowerCase() === meeting.organizer.toLowerCase());
+            if (!isOrganizer && !isAdmin) {
+              setPendingExtendId(null);
+              setPermissionError('You cannot extend this meeting because you are not the organizer and do not have admin permissions.');
+              setCurrentView(View.DASHBOARD);
+            } else {
+              const id = pendingExtendId;
+              setPendingExtendId(null);
+              computeExtendSlots(id);
+              setCurrentView(View.DASHBOARD);
+            }
           } else if (pendingAction) {
-            setSelectedStartTime(pendingAction.startTime);
-            setSelectedMeetingId(pendingAction.meetingId);
-            setPendingAction(null);
-            setCurrentView(View.BOOKING);
+            if (pendingAction.meetingId) {
+              // Edit mode — check organizer or admin
+              const meeting = db.getMeetings().find(m => m.id === pendingAction.meetingId);
+              const isOrganizer = !!(meeting && user.name.toLowerCase() === meeting.organizer.toLowerCase());
+              if (!isOrganizer && !isAdmin) {
+                setPendingAction(null);
+                setPermissionError('You cannot edit this meeting because you are not the organizer and do not have admin permissions.');
+                setCurrentView(View.DASHBOARD);
+              } else {
+                setSelectedStartTime(pendingAction.startTime);
+                setSelectedMeetingId(pendingAction.meetingId);
+                setPendingAction(null);
+                setCurrentView(View.BOOKING);
+              }
+            } else {
+              setSelectedStartTime(pendingAction.startTime);
+              setSelectedMeetingId(pendingAction.meetingId);
+              setPendingAction(null);
+              setCurrentView(View.BOOKING);
+            }
           } else {
             setCurrentView(View.DASHBOARD);
           }
@@ -734,6 +802,28 @@ const App: React.FC = () => {
              >
                Dismiss Selection
              </button>
+          </div>
+        </div>
+      )}
+
+      {/* Permission Error Modal */}
+      {permissionError && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={() => setPermissionError(null)} />
+          <div className="relative w-full max-w-md bg-card-dark rounded-xl border border-white/10 shadow-2xl p-10 flex flex-col items-center text-center gap-6 animate-in zoom-in-95 duration-300">
+            <div className="size-20 rounded-xl bg-yellow-500/20 border-4 border-yellow-500/30 flex items-center justify-center text-yellow-400 mb-2">
+              <span className="material-symbols-outlined text-4xl font-bold">lock</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <h3 className="text-3xl font-black text-white tracking-tight uppercase">Not Authorized</h3>
+              <p className="text-slate-300 font-medium leading-relaxed">{permissionError}</p>
+            </div>
+            <button
+              onClick={() => setPermissionError(null)}
+              className="w-full bg-white/5 text-slate-300 py-5 rounded-xl text-lg font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
+            >
+              Dismiss
+            </button>
           </div>
         </div>
       )}

@@ -431,15 +431,15 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
       {showFaceSurvey && (
         <div className="fixed inset-0 z-[150] bg-black/95 backdrop-blur-[120px] flex items-center justify-center p-8 animate-in fade-in duration-700">
            <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
-           <div className="w-full max-w-4xl bg-[#0b1a2d] border border-white/10 rounded-xl p-12 lg:p-20 flex flex-col items-center shadow-[0_0_150px_rgba(0,0,0,1)] relative overflow-hidden">
+           <div className="w-full max-w-4xl bg-[#0b1a2d] border border-white/10 rounded-xl p-8 lg:p-12 flex flex-col items-center shadow-[0_0_150px_rgba(0,0,0,1)] relative overflow-y-auto max-h-full">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary/40 via-primary to-primary/40" />
               
-              <div className="flex flex-col items-center mb-16">
+              <div className="flex flex-col items-center mb-8">
                  <h2 className="text-5xl lg:text-7xl font-black text-white tracking-tighter mb-4 uppercase text-center leading-none">Session Insight</h2>
                  <p className="text-slate-500 text-center text-lg lg:text-2xl font-bold uppercase tracking-[0.3em] opacity-80">Final Verification Details</p>
               </div>
 
-              <div className="flex flex-col gap-16 w-full max-w-2xl">
+              <div className="flex flex-col gap-8 w-full max-w-2xl">
                 {/* Category 1: Room Condition */}
                 <div className="flex flex-col gap-6">
                   <div className="flex items-center justify-between px-2">
@@ -507,7 +507,7 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
                 </div>
               </div>
 
-              <div className="mt-16 w-full max-w-sm flex flex-col gap-6">
+              <div className="mt-8 w-full max-w-sm flex flex-col gap-6">
                  <button 
                   onClick={submitFeedback}
                   className="w-full bg-white text-black py-6 lg:py-8 rounded-xl text-xl font-black shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-[0.2em] border-t border-white/20"
