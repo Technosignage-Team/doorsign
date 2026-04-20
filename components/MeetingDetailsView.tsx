@@ -9,12 +9,13 @@ interface MeetingDetailsViewProps {
   onExtend: (id: string) => void;
   onEndNow: (id: string) => void;
   roomName?: string;
+  capacity?: number;
   amenities?: Amenity[];
 }
 
 type ServiceType = 'CATERING' | 'SUPPORT' | 'CLEANING' | null;
 
-const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBack, onEdit, onExtend, onEndNow, roomName = 'Conference Room A', amenities = [] }) => {
+const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBack, onEdit, onExtend, onEndNow, roomName = 'Conference Room A', capacity, amenities = [] }) => {
   const [isAmenitiesOpen, setIsAmenitiesOpen] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [requestStatus, setRequestStatus] = useState<'IDLE' | 'PENDING' | 'SUCCESS'>('IDLE');
@@ -276,7 +277,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-             <InfoCard icon="groups" label="Room Capacity" value="12 Persons" />
+             <InfoCard icon="groups" label="Room Capacity" value={capacity != null ? `${capacity} Persons` : '—'} />
              <InfoCard icon="security" label="Privacy Level" value="Internal Only" />
              <button onClick={() => setIsAmenitiesOpen(true)} className="group text-left">
                <InfoCard icon="inventory_2" label="Equipment" value="Room Amenities" clickable />

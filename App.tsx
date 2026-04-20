@@ -624,6 +624,7 @@ const App: React.FC = () => {
             onExtend={onExtendRequested}
             onEndNow={onEndNowRequested}
             roomName={roomStatus.name}
+            capacity={roomStatus.capacity}
             amenities={amenities}
           />
         );
