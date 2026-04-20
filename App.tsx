@@ -192,6 +192,7 @@ const App: React.FC = () => {
 
   // Interaction Modals State
   const [confirmEndId, setConfirmEndId] = useState<string | null>(null);
+  const [pendingEndId, setPendingEndId] = useState<string | null>(null);
   const [extendMeetingId, setExtendMeetingId] = useState<string | null>(null);
   const [availableExtensions, setAvailableExtensions] = useState<ExtensionSlot[]>([]);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
@@ -410,13 +411,48 @@ const App: React.FC = () => {
   };
 
   const onEndNowRequested = (id: string) => {
-    setConfirmEndId(id);
+    // Require login so token is available for the edit API call
+    setCurrentUser(null);
+    setPendingEndId(id);
+    setCurrentView(View.LOGIN);
   };
 
   const confirmEndMeeting = () => {
     if (!confirmEndId) return;
     const now = new Date();
     const formattedEnd = formatToTimeString(now);
+    const h = now.getHours().toString().padStart(2, '0');
+    const m = now.getMinutes().toString().padStart(2, '0');
+    const endTime24 = `${h}:${m}`;
+
+    const meeting = db.getMeetings().find(mt => mt.id === confirmEndId);
+    if (meeting?.apiId) {
+      const to24h = (t: string) => {
+        const [time, mod] = t.split(' ');
+        let [hh, mm] = time.split(':').map(Number);
+        if (mod === 'PM' && hh < 12) hh += 12;
+        if (mod === 'AM' && hh === 12) hh = 0;
+        return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
+      };
+      const body = {
+        ResourceId: resourceId,
+        OrganizerUserId: currentUser?.userId,
+        BookingDate: meeting.date,
+        StartTime: to24h(meeting.startTime),
+        EndTime: endTime24,
+        Subject: meeting.title,
+        attendee: meeting.attendees ?? [],
+      };
+      fetch(`https://sb.asasconnect.com/api/Bookings/${meeting.apiId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(currentUser?.token ? { Authorization: `Bearer ${currentUser.token}` } : {}),
+        },
+        body: JSON.stringify(body),
+      }).catch(err => console.error('End meeting API error:', err));
+    }
+
     db.updateMeeting(confirmEndId, { endTime: formattedEnd });
     setConfirmEndId(null);
     updateRoomStatus();
@@ -563,7 +599,11 @@ const App: React.FC = () => {
       case View.LOGIN:
         return <LoginView onBack={() => setCurrentView(View.DASHBOARD)} onLogin={(user) => {
           setCurrentUser(user);
-          if (pendingAction) {
+          if (pendingEndId) {
+            setConfirmEndId(pendingEndId);
+            setPendingEndId(null);
+            setCurrentView(View.DASHBOARD);
+          } else if (pendingAction) {
             setSelectedStartTime(pendingAction.startTime);
             setSelectedMeetingId(pendingAction.meetingId);
             setPendingAction(null);
