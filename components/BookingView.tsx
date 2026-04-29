@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../lib/db';
+import { doorSignFetch } from '../lib/doorSignFetch';
 import { Meeting, User } from '../types';
 
 interface BookingViewProps {
@@ -361,7 +362,7 @@ const BookingView: React.FC<BookingViewProps> = ({
           Subject: title.trim(),
           attendee: attendees,
         };
-        const res = await fetch(`https://sb.asasconnect.com/api/Bookings/${apiId ?? initialMeetingId}`, {
+        const res = await doorSignFetch(`https://sb.asasconnect.com/api/Bookings/${apiId ?? initialMeetingId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -404,7 +405,7 @@ const BookingView: React.FC<BookingViewProps> = ({
             endDate: recurrenceEndDate || null,
             occurrences: null,
           };
-          const res = await fetch('https://sb.asasconnect.com/api/recurringbookings', {
+          const res = await doorSignFetch('https://sb.asasconnect.com/api/recurringbookings', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -436,7 +437,7 @@ const BookingView: React.FC<BookingViewProps> = ({
             attendee: attendees,
           };
 
-        const res = await fetch('https://sb.asasconnect.com/api/Bookings', {
+        const res = await doorSignFetch('https://sb.asasconnect.com/api/Bookings', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

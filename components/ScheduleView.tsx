@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { db } from '../lib/db';
 import { Meeting } from '../types';
+import { doorSignFetch } from '../lib/doorSignFetch';
 
 interface ScheduleViewProps {
   onUpdate?: () => void;
@@ -49,7 +50,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
       setMeetings(db.getMeetings(selectedDate));
       return;
     }
-    fetch(`https://sb.asasconnect.com/api/bookings/by-date?date=${selectedDate}&resourceId=${resourceId}`)
+    doorSignFetch(`https://sb.asasconnect.com/api/bookings/by-date?date=${selectedDate}&resourceId=${resourceId}`)
       .then(r => { if (!r.ok) throw new Error(`Bookings API ${r.status}`); return r.json(); })
       .then((data: unknown) => {
         const list: any[] = Array.isArray(data) ? data : (data as any)?.items ?? (data as any)?.data ?? (data as any)?.bookings ?? [];
@@ -85,7 +86,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
     if (!resourceId) return;
     setLoadingAvailability(true);
     setAvailableWindows(null);
-    fetch(`https://sb.asasconnect.com/api/resources/${resourceId}/availability?date=${selectedDate}`)
+    doorSignFetch(`https://sb.asasconnect.com/api/resources/${resourceId}/availability?date=${selectedDate}`)
       .then(r => {
         if (!r.ok) throw new Error(`Availability API ${r.status}`);
         return r.json();

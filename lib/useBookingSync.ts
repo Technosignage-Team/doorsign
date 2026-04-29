@@ -12,10 +12,18 @@ const connection = new signalR.HubConnectionBuilder()
 export function useBookingSync(
   resourceId: string | null,
   onSync: () => void,
+  onResourceUpdated?: (event: { id: string; label: string; capacity: number; [key: string]: unknown }) => void,
+  onAmenitiesUpdated?: (event: { resourceId: string }) => void,
 ) {
   // Keep a stable ref so the effect doesn't re-run when onSync identity changes
   const onSyncRef = useRef(onSync);
   useEffect(() => { onSyncRef.current = onSync; }, [onSync]);
+
+  const onResourceUpdatedRef = useRef(onResourceUpdated);
+  useEffect(() => { onResourceUpdatedRef.current = onResourceUpdated; }, [onResourceUpdated]);
+
+  const onAmenitiesUpdatedRef = useRef(onAmenitiesUpdated);
+  useEffect(() => { onAmenitiesUpdatedRef.current = onAmenitiesUpdated; }, [onAmenitiesUpdated]);
 
   useEffect(() => {
     if (!resourceId) return;
@@ -40,6 +48,17 @@ export function useBookingSync(
     connection.on('BookingUpdated', handleUpdated);
     connection.on('BookingDeleted', handleDeleted);
 
+    const handleResourceUpdated = (event: any) => {
+      console.log('[SignalR] ResourceUpdated', event);
+      onResourceUpdatedRef.current?.(event);
+    };
+    const handleAmenitiesUpdated = (event: any) => {
+      console.log('[SignalR] ResourceAmenitiesUpdated', event);
+      onAmenitiesUpdatedRef.current?.(event);
+    };
+    connection.on('ResourceUpdated', handleResourceUpdated);
+    connection.on('ResourceAmenitiesUpdated', handleAmenitiesUpdated);
+
     if (
       connection.state === signalR.HubConnectionState.Disconnected
     ) {
@@ -52,6 +71,8 @@ export function useBookingSync(
       connection.off('BookingCreated', handleCreated);
       connection.off('BookingUpdated', handleUpdated);
       connection.off('BookingDeleted', handleDeleted);
+      connection.off('ResourceUpdated', handleResourceUpdated);
+      connection.off('ResourceAmenitiesUpdated', handleAmenitiesUpdated);
     };
   }, [resourceId]);
 }

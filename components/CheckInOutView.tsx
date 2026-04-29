@@ -427,101 +427,78 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
         </div>
       </main>
 
-      {/* Enhanced Multi-Row Face Feedback Survey Modal */}
+      {/* Face Feedback Survey Modal */}
       {showFaceSurvey && (
-        <div className="fixed inset-0 z-[150] bg-black/95 backdrop-blur-[120px] flex items-center justify-center p-8 animate-in fade-in duration-700">
-           <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
-           <div className="w-full max-w-4xl bg-[#0b1a2d] border border-white/10 rounded-xl p-8 lg:p-12 flex flex-col items-center shadow-[0_0_150px_rgba(0,0,0,1)] relative overflow-y-auto max-h-full">
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary/40 via-primary to-primary/40" />
-              
-              <div className="flex flex-col items-center mb-8">
-                 <h2 className="text-5xl lg:text-7xl font-black text-white tracking-tighter mb-4 uppercase text-center leading-none">Session Insight</h2>
-                 <p className="text-slate-500 text-center text-lg lg:text-2xl font-bold uppercase tracking-[0.3em] opacity-80">Final Verification Details</p>
+        <div className="fixed inset-0 z-[150] bg-black/90 backdrop-blur-2xl flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="w-full max-w-lg bg-[#0d1117] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="px-8 pt-8 pb-6 border-b border-white/5 flex flex-col items-center gap-1">
+              <div className="size-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-2">
+                <span className="material-symbols-outlined text-2xl">reviews</span>
               </div>
+              <h2 className="text-2xl font-black text-white tracking-tight uppercase">Quick Feedback</h2>
+              <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em]">How was your session?</p>
+            </div>
 
-              <div className="flex flex-col gap-8 w-full max-w-2xl">
-                {/* Category 1: Room Condition */}
-                <div className="flex flex-col gap-6">
-                  <div className="flex items-center justify-between px-2">
-                    <span className="text-white font-black uppercase tracking-[0.4em] text-[11px] lg:text-[13px]">1. Room Infrastructure</span>
-                    {ratings.room && (
-                       <span className="text-primary text-[10px] font-black uppercase tracking-widest animate-pulse">Selected</span>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-center bg-white/[0.02] border border-white/5 p-8 rounded-xl">
-                    <FaceButton 
-                      icon="sentiment_very_satisfied" 
-                      color="text-emerald-500" 
-                      label="Excellent" 
-                      active={ratings.room === 'EXCELLENT'}
-                      onClick={() => setRatings(prev => ({ ...prev, room: 'EXCELLENT' }))} 
-                    />
-                    <FaceButton 
-                      icon="sentiment_neutral" 
-                      color="text-amber-500" 
-                      label="Acceptable" 
-                      active={ratings.room === 'NEUTRAL'}
-                      onClick={() => setRatings(prev => ({ ...prev, room: 'NEUTRAL' }))} 
-                    />
-                    <FaceButton 
-                      icon="sentiment_very_dissatisfied" 
-                      color="text-red-500" 
-                      label="Subpar" 
-                      active={ratings.room === 'POOR'}
-                      onClick={() => setRatings(prev => ({ ...prev, room: 'POOR' }))} 
-                    />
-                  </div>
+            {/* Ratings */}
+            <div className="flex flex-col divide-y divide-white/5">
+              {/* Row 1 */}
+              <div className="flex items-center px-8 py-5 gap-4">
+                <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                  <span className="text-white font-black text-xs uppercase tracking-widest">Room Condition</span>
+                  <span className="text-slate-500 text-[10px] font-medium">Infrastructure & cleanliness</span>
                 </div>
-
-                {/* Category 2: Event Experience */}
-                <div className="flex flex-col gap-6">
-                  <div className="flex items-center justify-between px-2">
-                    <span className="text-white font-black uppercase tracking-[0.4em] text-[11px] lg:text-[13px]">2. Event Experience</span>
-                    {ratings.event && (
-                       <span className="text-primary text-[10px] font-black uppercase tracking-widest animate-pulse">Selected</span>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-center bg-white/[0.02] border border-white/5 p-8 rounded-xl">
-                    <FaceButton 
-                      icon="rocket_launch" 
-                      color="text-emerald-500" 
-                      label="Productive" 
-                      active={ratings.event === 'PRODUCTIVE'}
-                      onClick={() => setRatings(prev => ({ ...prev, event: 'PRODUCTIVE' }))} 
-                    />
-                    <FaceButton 
-                      icon="meeting_room" 
-                      color="text-amber-500" 
-                      label="Ordinary" 
-                      active={ratings.event === 'NEUTRAL'}
-                      onClick={() => setRatings(prev => ({ ...prev, event: 'NEUTRAL' }))} 
-                    />
-                    <FaceButton 
-                      icon="error" 
-                      color="text-red-500" 
-                      label="Difficult" 
-                      active={ratings.event === 'POOR'}
-                      onClick={() => setRatings(prev => ({ ...prev, event: 'POOR' }))} 
-                    />
-                  </div>
+                <div className="flex items-center gap-2">
+                  {([
+                    { v: 'EXCELLENT', icon: 'sentiment_very_satisfied', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/30' },
+                    { v: 'NEUTRAL',   icon: 'sentiment_neutral',         color: 'text-amber-400',  bg: 'bg-amber-400/10 border-amber-400/30' },
+                    { v: 'POOR',      icon: 'sentiment_very_dissatisfied',color: 'text-red-400',   bg: 'bg-red-400/10 border-red-400/30' },
+                  ] as const).map(({ v, icon, color, bg }) => (
+                    <button key={v} onClick={() => setRatings(prev => ({ ...prev, room: v }))}
+                      className={`size-12 rounded-xl border flex items-center justify-center transition-all active:scale-95 ${
+                        ratings.room === v ? `${bg} ${color}` : 'bg-white/5 border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20'
+                      }`}>
+                      <span className="material-symbols-outlined text-2xl font-variation-fill">{icon}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className="mt-8 w-full max-w-sm flex flex-col gap-6">
-                 <button 
-                  onClick={submitFeedback}
-                  className="w-full bg-white text-black py-6 lg:py-8 rounded-xl text-xl font-black shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-[0.2em] border-t border-white/20"
-                 >
-                   Confirm & Finish
-                 </button>
-                 <button 
-                  onClick={submitFeedback}
-                  className="text-slate-600 font-black uppercase tracking-[0.4em] text-[10px] hover:text-white transition-colors text-center"
-                 >
-                   Skip Feedback
-                 </button>
+              {/* Row 2 */}
+              <div className="flex items-center px-8 py-5 gap-4">
+                <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                  <span className="text-white font-black text-xs uppercase tracking-widest">Event Experience</span>
+                  <span className="text-slate-500 text-[10px] font-medium">Productivity & overall feel</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {([
+                    { v: 'PRODUCTIVE', icon: 'rocket_launch',  color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/30' },
+                    { v: 'NEUTRAL',    icon: 'meeting_room',   color: 'text-amber-400',  bg: 'bg-amber-400/10 border-amber-400/30' },
+                    { v: 'POOR',       icon: 'error',          color: 'text-red-400',    bg: 'bg-red-400/10 border-red-400/30' },
+                  ] as const).map(({ v, icon, color, bg }) => (
+                    <button key={v} onClick={() => setRatings(prev => ({ ...prev, event: v }))}
+                      className={`size-12 rounded-xl border flex items-center justify-center transition-all active:scale-95 ${
+                        ratings.event === v ? `${bg} ${color}` : 'bg-white/5 border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20'
+                      }`}>
+                      <span className="material-symbols-outlined text-2xl font-variation-fill">{icon}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-           </div>
+            </div>
+
+            {/* Actions */}
+            <div className="px-8 py-6 flex flex-col gap-3 border-t border-white/5">
+              <button onClick={submitFeedback}
+                className="w-full bg-primary text-white py-4 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all">
+                Confirm &amp; Finish
+              </button>
+              <button onClick={submitFeedback}
+                className="w-full text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] hover:text-slate-300 transition-colors py-1">
+                Skip Feedback
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

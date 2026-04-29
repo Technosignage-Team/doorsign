@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import ActivationKeyPrompt from './components/ActivationKeyPrompt';
+import { getActivationKey } from './lib/activationKey';
 import { View, RoomStatus, HomeLayout, User, Meeting, Amenity } from './types';
 import DashboardView from './components/DashboardView';
 import ScheduleView from './components/ScheduleView';
@@ -13,6 +15,7 @@ import SettingsModal from './components/SettingsModal';
 import { ROOM_INFO } from './constants';
 import { db } from './lib/db';
 import { useBookingSync } from './lib/useBookingSync';
+import { doorSignFetch } from './lib/doorSignFetch';
 
 interface PendingAction {
   startTime?: string;
@@ -166,7 +169,12 @@ function mapIcon(apiIcon: string): string {
   return LUCIDE_TO_MATERIAL[key] ?? apiIcon.toLowerCase();
 }
 
-const App: React.FC = () => {
+interface AppProps {
+  initialResourceData?: any;
+}
+
+const App: React.FC<AppProps> = ({ initialResourceData }) => {
+  const [resourceBootData, setResourceBootData] = useState<any>(initialResourceData ?? null);
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [selectedStartTime, setSelectedStartTime] = useState<string | undefined>(undefined);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | undefined>(undefined);
@@ -204,40 +212,73 @@ const App: React.FC = () => {
     db.init();
   }, []);
 
-  useEffect(() => {
-    fetch(`https://sb.asasconnect.com/api/DigitalSigns/${DIGITAL_SIGN_ID}`)
+  const applyDigitalSignData = useCallback((data: {
+    signName?: string;
+    resourceId?: string;
+    resource?: {
+      id?: string;
+      label?: string;
+      floorName?: string;
+      buildingName?: string;
+      capacity?: number;
+      description?: string;
+      imageUrl?: string;
+      amenities?: Array<{ id: string; name: string; description: string | null; icon: string; imageUrl: string | null }>;
+    };
+  }) => {
+    const resource = data.resource ?? {};
+    const resolvedResourceId = data.resourceId ?? resource.id ?? null;
+    if (resolvedResourceId) setResourceId(resolvedResourceId);
+    const locationParts = [resource.buildingName, resource.floorName].filter(Boolean);
+    setRoomStatus(prev => ({
+      ...prev,
+      name: resource.label ?? prev.name,
+      location: locationParts.length > 0 ? locationParts.join(' • ') : prev.location,
+      ...(resource.capacity != null && { capacity: resource.capacity }),
+      ...(resource.description && { description: resource.description }),
+      ...(resource.imageUrl && { imageUrl: resource.imageUrl }),
+    }));
+    if (resource.amenities?.length) {
+      setAmenities(resource.amenities.map(a => ({
+        id: a.id,
+        title: a.name,
+        subtitle: a.description ?? '',
+        description: a.description ?? '',
+        icon: mapIcon(a.icon),
+        img: a.imageUrl ?? '',
+        status: 'Operational',
+      })));
+    }
+  }, []);
+
+  const fetchDigitalSign = useCallback(() => {
+    doorSignFetch(`https://sb.asasconnect.com/api/DigitalSigns/${DIGITAL_SIGN_ID}`, { cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error(`Failed to load digital sign: ${res.status}`);
         return res.json();
       })
-      .then((data: {
-        signName: string;
-        resourceId?: string;
-        resource?: {
-          id?: string;
-          label?: string;
-          floorName?: string;
-          buildingName?: string;
-          capacity?: number;
-          description?: string;
-          imageUrl?: string;
-          amenities?: Array<{ id: string; name: string; description: string | null; icon: string; imageUrl: string | null }>;
-        };
-      }) => {
-        const resource = data.resource ?? {};
-        const resolvedResourceId = data.resourceId ?? resource.id ?? null;
-        if (resolvedResourceId) setResourceId(resolvedResourceId);
-        const locationParts = [resource.buildingName, resource.floorName].filter(Boolean);
-        setRoomStatus(prev => ({
-          ...prev,
-          name: resource.label ?? prev.name,
-          location: locationParts.length > 0 ? locationParts.join(' • ') : prev.location,
-          ...(resource.capacity != null && { capacity: resource.capacity }),
-          ...(resource.description && { description: resource.description }),
-          ...(resource.imageUrl && { imageUrl: resource.imageUrl }),
-        }));
-        if (resource.amenities?.length) {
-          setAmenities(resource.amenities.map(a => ({
+      .then(applyDigitalSignData)
+      .catch(err => console.error('DigitalSigns API error:', err));
+  }, [applyDigitalSignData]);
+
+  const fetchActivationResource = useCallback(async () => {
+    const key = await getActivationKey();
+    if (!key) return;
+    doorSignFetch(`https://sb.asasconnect.com/api/digitalsigns/activate/${key}`, { cache: 'no-store' })
+      .then(res => {
+        if (!res.ok) throw new Error(`Activation refresh failed: ${res.status}`);
+        return res.json();
+      })
+      .then(applyDigitalSignData)
+      .catch(err => console.error('Activation refresh error:', err));
+  }, [applyDigitalSignData]);
+
+  const fetchAmenities = useCallback((resId: string) => {
+    doorSignFetch(`https://sb.asasconnect.com/api/Resources/${resId}/amenities`, { cache: 'no-store' })
+      .then(res => { if (!res.ok) throw new Error(`Amenities API ${res.status}`); return res.json(); })
+      .then((list: Array<{ id: string; name: string; description: string | null; icon: string; imageUrl: string | null }>) => {
+        if (Array.isArray(list)) {
+          setAmenities(list.map(a => ({
             id: a.id,
             title: a.name,
             subtitle: a.description ?? '',
@@ -248,7 +289,19 @@ const App: React.FC = () => {
           })));
         }
       })
-      .catch(err => console.error('DigitalSigns API error:', err));
+      .catch(() => fetchDigitalSign()); // fallback: re-fetch full sign data
+  }, [fetchDigitalSign]);
+
+  useEffect(() => {
+    if (resourceBootData) {
+      // Use the activation response passed from the activation prompt
+      applyDigitalSignData(resourceBootData);
+    } else {
+      // On reload: re-fetch resource via the activation endpoint using stored key
+      fetchActivationResource();
+    }
+    // Intentionally run only once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -337,7 +390,14 @@ const App: React.FC = () => {
 
   const syncBookingsFromApi = useCallback((resId: string) => {
     const today = new Date().toISOString().split('T')[0];
-    fetch(`https://sb.asasconnect.com/api/bookings/by-date?date=${today}&resourceId=${resId}`)
+
+    // Immediately wipe stale API meetings so old data never shows on reload
+    const stale = db.getMeetings();
+    const localOnly = stale.filter(m => !m.apiId);
+    localStorage.setItem('everest_meetings_db', JSON.stringify(localOnly));
+    updateRoomStatus();
+
+    doorSignFetch(`https://sb.asasconnect.com/api/bookings/by-date?date=${today}&resourceId=${resId}`, { cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error(`Bookings API ${r.status}`); return r.json(); })
       .then((data: unknown) => {
         const list: any[] = Array.isArray(data) ? data : (data as any)?.items ?? (data as any)?.data ?? (data as any)?.bookings ?? [];
@@ -379,6 +439,14 @@ const App: React.FC = () => {
       if (resourceId) syncBookingsFromApi(resourceId);
       setScheduleSync(k => k + 1);
     }, [resourceId, syncBookingsFromApi]),
+    useCallback((_event: { id: string; label: string; capacity: number; [key: string]: unknown }) => {
+      // Resource updated — re-fetch via the activation endpoint to get latest data
+      fetchActivationResource();
+    }, [fetchActivationResource]),
+    useCallback((_event: { resourceId: string }) => {
+      // Amenities updated — re-fetch them
+      if (resourceId) fetchAmenities(resourceId);
+    }, [resourceId, fetchAmenities]),
   );
 
   useEffect(() => {
@@ -445,7 +513,7 @@ const App: React.FC = () => {
         Subject: meeting.title,
         attendee: meeting.attendees ?? [],
       };
-      fetch(`https://sb.asasconnect.com/api/Bookings/${meeting.apiId}`, {
+      doorSignFetch(`https://sb.asasconnect.com/api/Bookings/${meeting.apiId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -523,7 +591,7 @@ const App: React.FC = () => {
         if (mod === 'AM' && hh === 12) hh = 0;
         return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
       };
-      fetch(`https://sb.asasconnect.com/api/Bookings/${meeting.apiId}`, {
+      doorSignFetch(`https://sb.asasconnect.com/api/Bookings/${meeting.apiId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -842,4 +910,31 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+const AppGate: React.FC = () => {
+  const [activationChecked, setActivationChecked] = useState(false);
+  const [hasActivationKey, setHasActivationKey] = useState(false);
+  const [resourceBootData, setResourceBootData] = useState<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      const key = await getActivationKey();
+      setHasActivationKey(!!key);
+      setActivationChecked(true);
+    })();
+  }, []);
+
+  if (!activationChecked) return null;
+  if (!hasActivationKey) {
+    return (
+      <ActivationKeyPrompt
+        onActivated={(resourceData) => {
+          setResourceBootData(resourceData);
+          setHasActivationKey(true);
+        }}
+      />
+    );
+  }
+  return <App initialResourceData={resourceBootData} />;
+};
+
+export default AppGate;
