@@ -14,6 +14,7 @@ export function useBookingSync(
   onSync: () => void,
   onResourceUpdated?: (event: { id: string; label: string; capacity: number; [key: string]: unknown }) => void,
   onAmenitiesUpdated?: (event: { resourceId: string }) => void,
+  onAmenityChanged?: (event: unknown) => void,
 ) {
   // Keep a stable ref so the effect doesn't re-run when onSync identity changes
   const onSyncRef = useRef(onSync);
@@ -24,6 +25,9 @@ export function useBookingSync(
 
   const onAmenitiesUpdatedRef = useRef(onAmenitiesUpdated);
   useEffect(() => { onAmenitiesUpdatedRef.current = onAmenitiesUpdated; }, [onAmenitiesUpdated]);
+
+  const onAmenityChangedRef = useRef(onAmenityChanged);
+  useEffect(() => { onAmenityChangedRef.current = onAmenityChanged; }, [onAmenityChanged]);
 
   useEffect(() => {
     if (!resourceId) return;
@@ -59,6 +63,16 @@ export function useBookingSync(
     connection.on('ResourceUpdated', handleResourceUpdated);
     connection.on('ResourceAmenitiesUpdated', handleAmenitiesUpdated);
 
+    // Global amenity catalog events (no resourceId payload) — reload current
+    // resource so its amenity list reflects the change.
+    const handleAmenityChanged = (event: any) => {
+      console.log('[SignalR] AmenityChanged', event);
+      onAmenityChangedRef.current?.(event);
+    };
+    connection.on('AmenityCreated', handleAmenityChanged);
+    connection.on('AmenityUpdated', handleAmenityChanged);
+    connection.on('AmenityDeleted', handleAmenityChanged);
+
     if (
       connection.state === signalR.HubConnectionState.Disconnected
     ) {
@@ -73,6 +87,9 @@ export function useBookingSync(
       connection.off('BookingDeleted', handleDeleted);
       connection.off('ResourceUpdated', handleResourceUpdated);
       connection.off('ResourceAmenitiesUpdated', handleAmenitiesUpdated);
+      connection.off('AmenityCreated', handleAmenityChanged);
+      connection.off('AmenityUpdated', handleAmenityChanged);
+      connection.off('AmenityDeleted', handleAmenityChanged);
     };
   }, [resourceId]);
 }

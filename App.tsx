@@ -238,7 +238,7 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
       ...(resource.description && { description: resource.description }),
       ...(resource.imageUrl && { imageUrl: resource.imageUrl }),
     }));
-    if (resource.amenities?.length) {
+    if (Array.isArray(resource.amenities)) {
       setAmenities(resource.amenities.map(a => ({
         id: a.id,
         title: a.name,
@@ -274,10 +274,14 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
   }, [applyDigitalSignData]);
 
   const fetchAmenities = useCallback((resId: string) => {
-    doorSignFetch(`https://sb.asasconnect.com/api/Resources/${resId}/amenities`, { cache: 'no-store' })
+    // Cache-bust to defeat any intermediary cache that might serve stale data
+    // immediately after a SignalR amenity-change event.
+    const url = `https://sb.asasconnect.com/api/Resources/${resId}/amenities?_=${Date.now()}`;
+    doorSignFetch(url, { cache: 'no-store' })
       .then(res => { if (!res.ok) throw new Error(`Amenities API ${res.status}`); return res.json(); })
       .then((list: Array<{ id: string; name: string; description: string | null; icon: string; imageUrl: string | null }>) => {
         if (Array.isArray(list)) {
+          console.log('[Amenities] refreshed', list.length, 'items for resource', resId);
           setAmenities(list.map(a => ({
             id: a.id,
             title: a.name,
@@ -289,8 +293,12 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
           })));
         }
       })
-      .catch(() => fetchDigitalSign()); // fallback: re-fetch full sign data
-  }, [fetchDigitalSign]);
+      .catch(err => {
+        // Fallback: reload via the activation key (the right resource for this sign).
+        console.warn('[Amenities] direct fetch failed, falling back to activation refresh:', err);
+        fetchActivationResource();
+      });
+  }, [fetchActivationResource]);
 
   useEffect(() => {
     if (resourceBootData) {
@@ -432,6 +440,11 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
     if (resourceId) syncBookingsFromApi(resourceId);
   }, [resourceId, syncBookingsFromApi]);
 
+  // Always pull the canonical amenity list once we know the resource id
+  useEffect(() => {
+    if (resourceId) fetchAmenities(resourceId);
+  }, [resourceId, fetchAmenities]);
+
   // Real-time sync via SignalR — re-fetch bookings on any create/update/delete
   useBookingSync(
     resourceId,
@@ -447,6 +460,14 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
       // Amenities updated — re-fetch them
       if (resourceId) fetchAmenities(resourceId);
     }, [resourceId, fetchAmenities]),
+    useCallback(() => {
+      // Global amenity catalog changed (created/updated/deleted) — reload
+      // the per-resource amenity list (canonical source) and also refresh the
+      // resource via the activation key so all room info fields stay in sync.
+      console.log('[Amenities] global amenity change received — refreshing');
+      if (resourceId) fetchAmenities(resourceId);
+      fetchActivationResource();
+    }, [resourceId, fetchActivationResource, fetchAmenities]),
   );
 
   useEffect(() => {
