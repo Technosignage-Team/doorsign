@@ -3,7 +3,10 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.doorsign.app',
   appName: 'everest-room-booking-dashboard',
-  webDir: 'dist'
+  webDir: 'dist',
+  server: {
+    androidScheme: 'https',
+  },
 };
 
 export default config;
