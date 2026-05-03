@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import ActivationKeyPrompt from './components/ActivationKeyPrompt';
 import { getActivationKey } from './lib/activationKey';
 import { View, RoomStatus, HomeLayout, User, Meeting, Amenity } from './types';
 import DashboardView from './components/DashboardView';
@@ -16,6 +15,8 @@ import { ROOM_INFO } from './constants';
 import { db } from './lib/db';
 import { useBookingSync } from './lib/useBookingSync';
 import { doorSignFetch } from './lib/doorSignFetch';
+import { getBaseUrl, loadHostUrl } from './lib/hostUrl';
+import SetupWizard from './components/SetupWizard';
 
 interface PendingAction {
   startTime?: string;
@@ -252,7 +253,7 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
   }, []);
 
   const fetchDigitalSign = useCallback(() => {
-    doorSignFetch(`https://sb.asasconnect.com/api/DigitalSigns/${DIGITAL_SIGN_ID}`, { cache: 'no-store' })
+    doorSignFetch(`${getBaseUrl()}/api/DigitalSigns/${DIGITAL_SIGN_ID}`, { cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error(`Failed to load digital sign: ${res.status}`);
         return res.json();
@@ -264,7 +265,7 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
   const fetchActivationResource = useCallback(async () => {
     const key = await getActivationKey();
     if (!key) return;
-    doorSignFetch(`https://sb.asasconnect.com/api/digitalsigns/activate/${key}`, { cache: 'no-store' })
+    doorSignFetch(`${getBaseUrl()}/api/digitalsigns/activate/${key}`, { cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error(`Activation refresh failed: ${res.status}`);
         return res.json();
@@ -276,7 +277,7 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
   const fetchAmenities = useCallback((resId: string) => {
     // Cache-bust to defeat any intermediary cache that might serve stale data
     // immediately after a SignalR amenity-change event.
-    const url = `https://sb.asasconnect.com/api/Resources/${resId}/amenities?_=${Date.now()}`;
+    const url = `${getBaseUrl()}/api/Resources/${resId}/amenities?_=${Date.now()}`;
     doorSignFetch(url, { cache: 'no-store' })
       .then(res => { if (!res.ok) throw new Error(`Amenities API ${res.status}`); return res.json(); })
       .then((list: Array<{ id: string; name: string; description: string | null; icon: string; imageUrl: string | null }>) => {
@@ -405,7 +406,7 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
     localStorage.setItem('everest_meetings_db', JSON.stringify(localOnly));
     updateRoomStatus();
 
-    doorSignFetch(`https://sb.asasconnect.com/api/bookings/by-date?date=${today}&resourceId=${resId}`, { cache: 'no-store' })
+    doorSignFetch(`${getBaseUrl()}/api/bookings/by-date?date=${today}&resourceId=${resId}`, { cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error(`Bookings API ${r.status}`); return r.json(); })
       .then((data: unknown) => {
         const list: any[] = Array.isArray(data) ? data : (data as any)?.items ?? (data as any)?.data ?? (data as any)?.bookings ?? [];
@@ -534,7 +535,7 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
         Subject: meeting.title,
         attendee: meeting.attendees ?? [],
       };
-      doorSignFetch(`https://sb.asasconnect.com/api/Bookings/${meeting.apiId}`, {
+      doorSignFetch(`${getBaseUrl()}/api/Bookings/${meeting.apiId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -612,7 +613,7 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
         if (mod === 'AM' && hh === 12) hh = 0;
         return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
       };
-      doorSignFetch(`https://sb.asasconnect.com/api/Bookings/${meeting.apiId}`, {
+      doorSignFetch(`${getBaseUrl()}/api/Bookings/${meeting.apiId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -932,25 +933,25 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
 };
 
 const AppGate: React.FC = () => {
-  const [activationChecked, setActivationChecked] = useState(false);
-  const [hasActivationKey, setHasActivationKey] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const [isSetup, setIsSetup] = useState(false);
   const [resourceBootData, setResourceBootData] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
-      const key = await getActivationKey();
-      setHasActivationKey(!!key);
-      setActivationChecked(true);
+      const [hostUrl, key] = await Promise.all([loadHostUrl(), getActivationKey()]);
+      setIsSetup(!!hostUrl && !!key);
+      setChecked(true);
     })();
   }, []);
 
-  if (!activationChecked) return null;
-  if (!hasActivationKey) {
+  if (!checked) return null;
+  if (!isSetup) {
     return (
-      <ActivationKeyPrompt
-        onActivated={(resourceData) => {
+      <SetupWizard
+        onComplete={(resourceData) => {
           setResourceBootData(resourceData);
-          setHasActivationKey(true);
+          setIsSetup(true);
         }}
       />
     );

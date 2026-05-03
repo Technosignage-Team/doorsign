@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User } from '../types';
 import { doorSignFetch } from '../lib/doorSignFetch';
+import { getBaseUrl } from '../lib/hostUrl';
 
 interface LoginViewProps {
   onBack: () => void;
@@ -27,7 +28,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await doorSignFetch('https://sb.asasconnect.com/api/Auth/login/employee', {
+      const res = await doorSignFetch(`${getBaseUrl()}/api/Auth/login/employee`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ EmployeeNumber: employeeId, pinCode: employeeId }),

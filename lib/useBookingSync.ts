@@ -1,13 +1,19 @@
 import * as signalR from '@microsoft/signalr';
 import { useEffect, useRef } from 'react';
+import { getBaseUrl } from './hostUrl';
 
-const connection = new signalR.HubConnectionBuilder()
-  .withUrl('https://sb.asasconnect.com/hubs/bookings', {
-    withCredentials: true,
-  })
-  .withAutomaticReconnect()
-  .configureLogging(signalR.LogLevel.Warning)
-  .build();
+let _connection: signalR.HubConnection | null = null;
+
+function getConnection(): signalR.HubConnection {
+  if (!_connection) {
+    _connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${getBaseUrl()}/hubs/bookings`, { withCredentials: true })
+      .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Warning)
+      .build();
+  }
+  return _connection;
+}
 
 export function useBookingSync(
   resourceId: string | null,
@@ -32,6 +38,8 @@ export function useBookingSync(
   useEffect(() => {
     if (!resourceId) return;
 
+    const conn = getConnection();
+
     const handleCreated = (booking: any) => {
       if (booking?.resourceId === resourceId || booking?.ResourceId === resourceId) {
         onSyncRef.current();
@@ -48,9 +56,9 @@ export function useBookingSync(
       }
     };
 
-    connection.on('BookingCreated', handleCreated);
-    connection.on('BookingUpdated', handleUpdated);
-    connection.on('BookingDeleted', handleDeleted);
+    conn.on('BookingCreated', handleCreated);
+    conn.on('BookingUpdated', handleUpdated);
+    conn.on('BookingDeleted', handleDeleted);
 
     const handleResourceUpdated = (event: any) => {
       console.log('[SignalR] ResourceUpdated', event);
@@ -60,8 +68,8 @@ export function useBookingSync(
       console.log('[SignalR] ResourceAmenitiesUpdated', event);
       onAmenitiesUpdatedRef.current?.(event);
     };
-    connection.on('ResourceUpdated', handleResourceUpdated);
-    connection.on('ResourceAmenitiesUpdated', handleAmenitiesUpdated);
+    conn.on('ResourceUpdated', handleResourceUpdated);
+    conn.on('ResourceAmenitiesUpdated', handleAmenitiesUpdated);
 
     // Global amenity catalog events (no resourceId payload) — reload current
     // resource so its amenity list reflects the change.
@@ -69,27 +77,27 @@ export function useBookingSync(
       console.log('[SignalR] AmenityChanged', event);
       onAmenityChangedRef.current?.(event);
     };
-    connection.on('AmenityCreated', handleAmenityChanged);
-    connection.on('AmenityUpdated', handleAmenityChanged);
-    connection.on('AmenityDeleted', handleAmenityChanged);
+    conn.on('AmenityCreated', handleAmenityChanged);
+    conn.on('AmenityUpdated', handleAmenityChanged);
+    conn.on('AmenityDeleted', handleAmenityChanged);
 
     if (
-      connection.state === signalR.HubConnectionState.Disconnected
+      conn.state === signalR.HubConnectionState.Disconnected
     ) {
-      connection.start().catch(err =>
+      conn.start().catch(err =>
         console.error('SignalR connection error:', err),
       );
     }
 
     return () => {
-      connection.off('BookingCreated', handleCreated);
-      connection.off('BookingUpdated', handleUpdated);
-      connection.off('BookingDeleted', handleDeleted);
-      connection.off('ResourceUpdated', handleResourceUpdated);
-      connection.off('ResourceAmenitiesUpdated', handleAmenitiesUpdated);
-      connection.off('AmenityCreated', handleAmenityChanged);
-      connection.off('AmenityUpdated', handleAmenityChanged);
-      connection.off('AmenityDeleted', handleAmenityChanged);
+      conn.off('BookingCreated', handleCreated);
+      conn.off('BookingUpdated', handleUpdated);
+      conn.off('BookingDeleted', handleDeleted);
+      conn.off('ResourceUpdated', handleResourceUpdated);
+      conn.off('ResourceAmenitiesUpdated', handleAmenitiesUpdated);
+      conn.off('AmenityCreated', handleAmenityChanged);
+      conn.off('AmenityUpdated', handleAmenityChanged);
+      conn.off('AmenityDeleted', handleAmenityChanged);
     };
   }, [resourceId]);
 }

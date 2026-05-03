@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { getBaseUrl } from '../lib/hostUrl';
 import jsQR from 'jsqr';
 import { db } from '../lib/db';
 import { RoomStatus } from '../types';
@@ -86,8 +87,8 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
     setApiError(null);
     setIsApiLoading(true);
     const endpoint = mode === 'CHECK_IN'
-      ? `https://sb.asasconnect.com/api/Bookings/attendees/${encodeURIComponent(inputCode)}/checkin`
-      : `https://sb.asasconnect.com/api/Bookings/attendees/${encodeURIComponent(inputCode)}/checkout`;
+      ? `${getBaseUrl()}/api/Bookings/attendees/${encodeURIComponent(inputCode)}/checkin`
+      : `${getBaseUrl()}/api/Bookings/attendees/${encodeURIComponent(inputCode)}/checkout`;
     try {
       const res = await fetch(endpoint, { method: 'POST' });
       if (!res.ok) {

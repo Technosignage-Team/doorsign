@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { setActivationKey } from '../lib/activationKey';
+import { getBaseUrl } from '../lib/hostUrl';
 
 interface ActivationKeyPromptProps {
   onActivated: (resourceData: any) => void;
@@ -16,7 +17,7 @@ const ActivationKeyPrompt: React.FC<ActivationKeyPromptProps> = ({ onActivated }
     setError(null);
     try {
       // Validate key by calling activation API
-      const res = await fetch(`https://sb.asasconnect.com/api/digitalsigns/activate/${key}`, {
+      const res = await fetch(`${getBaseUrl()}/api/digitalsigns/activate/${key}`, {
         headers: { 'ActivationKey': key }
       });
       if (!res.ok) throw new Error('Invalid activation key');
