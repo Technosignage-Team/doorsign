@@ -9,6 +9,7 @@ import CheckInOutView from './components/CheckInOutView';
 import BookingView from './components/BookingView';
 import LoginView from './components/LoginView';
 import MeetingDetailsView from './components/MeetingDetailsView';
+import ConfigurationView from './components/ConfigurationView';
 import BottomNav from './components/BottomNav';
 import SettingsModal from './components/SettingsModal';
 import { ROOM_INFO } from './constants';
@@ -796,6 +797,16 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
             onTriggerLogin={() => setCurrentView(View.LOGIN)}
           />
         );
+      case View.CONFIGURATION:
+        return (
+          <ConfigurationView
+            onBack={() => setCurrentView(View.DASHBOARD)}
+            onConnectionChanged={(resourceData) => {
+              applyDigitalSignData(resourceData);
+              setCurrentView(View.DASHBOARD);
+            }}
+          />
+        );
       default:
         return <DashboardView currentTime={currentTime} roomStatus={roomStatus} isSyncing={isSyncing} layout={homeLayout} onBook={handleBookAtTime} onShowMeetingDetails={handleShowMeetingDetails} onCheckIn={() => setCurrentView(View.CHECKIN)} onExtend={onExtendRequested} onEndNow={onEndNowRequested} onShowDetails={() => setCurrentView(View.DETAILS)} slotPrecision={slotPrecision} />;
     }
@@ -920,13 +931,14 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
         </div>
       )}
 
-      <SettingsModal 
-        isOpen={isSettingsOpen} 
-        onClose={() => setIsSettingsOpen(false)} 
-        currentLayout={homeLayout} 
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        currentLayout={homeLayout}
         onSelectLayout={setHomeLayout}
         currentSlotPrecision={slotPrecision}
         onSelectSlotPrecision={setSlotPrecision}
+        onOpenConfiguration={() => { setIsSettingsOpen(false); setCurrentView(View.CONFIGURATION); }}
       />
     </div>
   );

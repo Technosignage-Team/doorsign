@@ -8,6 +8,54 @@ interface SetupWizardProps {
 }
 
 type Step = 'welcome' | 'host' | 'activate';
+const STEPS: Step[] = ['welcome', 'host', 'activate'];
+const STEP_INDEX: Record<Step, number> = { welcome: 0, host: 1, activate: 2 };
+
+const Logo: React.FC<{ size?: 'sm' | 'lg' }> = ({ size = 'sm' }) => {
+  const isLg = size === 'lg';
+  return (
+    <div className={`flex items-center gap-3 ${isLg ? 'flex-col' : ''}`}>
+      <div className={`${isLg ? 'w-20 h-20 rounded-2xl text-3xl' : 'w-10 h-10 rounded-xl text-base'} bg-primary flex items-center justify-center shadow-lg shadow-primary/40 font-black text-white select-none tracking-tight flex-shrink-0`}>
+        SW
+      </div>
+      <div className={isLg ? 'text-center' : ''}>
+        <p className={`font-black text-white leading-none ${isLg ? 'text-3xl mt-2' : 'text-base'}`}>Sharewinds</p>
+        {isLg && <p className="text-slate-400 text-sm mt-1.5 font-medium">Door Sign Management System</p>}
+      </div>
+    </div>
+  );
+};
+
+const StepBar: React.FC<{ current: Step }> = ({ current }) => {
+  const idx = STEP_INDEX[current];
+  const labels = ['Welcome', 'Connection', 'Activate'];
+  return (
+    <div className="flex items-center w-full gap-0">
+      {[0, 1, 2].map(i => {
+        const done = i < idx;
+        const active = i === idx;
+        return (
+          <React.Fragment key={i}>
+            <div className="flex flex-col items-center gap-1.5">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border-2 transition-all duration-300
+                ${done ? 'bg-primary border-primary text-white' : active ? 'bg-primary/15 border-primary text-primary' : 'bg-white/5 border-white/15 text-slate-500'}`}>
+                {done
+                  ? <span className="material-symbols-outlined text-sm" style={{ fontSize: '16px' }}>check</span>
+                  : i + 1}
+              </div>
+              <span className={`text-[10px] font-bold tracking-wide ${active ? 'text-primary' : done ? 'text-slate-400' : 'text-slate-600'}`}>
+                {labels[i]}
+              </span>
+            </div>
+            {i < 2 && (
+              <div className={`flex-1 h-0.5 mx-1 mb-5 rounded-full transition-all duration-500 ${i < idx ? 'bg-primary' : 'bg-white/10'}`} />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+};
 
 const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const [step, setStep] = useState<Step>('welcome');
@@ -46,185 +94,228 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     }
   };
 
-  const stepDots = (
-    <div className="flex gap-2 mb-8">
-      {(['welcome', 'host', 'activate'] as Step[]).map((s, i) => (
-        <div
-          key={s}
-          className={`h-1.5 rounded-full transition-all duration-300 ${
-            step === s ? 'w-6 bg-primary' : i < ['welcome', 'host', 'activate'].indexOf(step) ? 'w-1.5 bg-primary/50' : 'w-1.5 bg-white/20'
-          }`}
-        />
-      ))}
-    </div>
+  const glow = (
+    <>
+      <div className="fixed top-[-15%] left-[-10%] w-[50%] h-[50%] bg-primary/8 blur-[140px] rounded-full pointer-events-none" />
+      <div className="fixed bottom-[-15%] right-[-10%] w-[45%] h-[45%] bg-primary/8 blur-[140px] rounded-full pointer-events-none" />
+    </>
   );
 
+  // ── WELCOME ──────────────────────────────────────────────────────────────
   if (step === 'welcome') {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
-        <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
+        {glow}
+        <div className="relative flex flex-col items-center w-full max-w-sm">
 
-        <div className="relative flex flex-col items-center gap-8 w-full max-w-sm">
-          {/* Logo */}
-          <div className="w-28 h-28 rounded-3xl bg-primary flex items-center justify-center shadow-2xl shadow-primary/40">
-            <span className="text-white font-black text-4xl tracking-tight select-none">SW</span>
+          {/* Card */}
+          <div className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-8 flex flex-col items-center gap-7 shadow-2xl">
+            <Logo size="lg" />
+
+            <div className="w-full h-px bg-white/8" />
+
+            <div className="flex flex-col items-center gap-2 text-center">
+              <p className="text-slate-300 text-sm leading-relaxed">
+                Welcome to the Sharewinds Door Sign setup.<br />
+                This will take less than a minute.
+              </p>
+            </div>
+
+            <div className="w-full">
+              <StepBar current="welcome" />
+            </div>
+
+            <button
+              onClick={() => setStep('host')}
+              className="w-full bg-primary text-white font-black py-4 rounded-2xl text-base shadow-xl shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            >
+              Get Started
+              <span className="material-symbols-outlined text-xl" style={{ fontSize: '20px' }}>arrow_forward</span>
+            </button>
           </div>
 
-          {/* Brand text */}
-          <div className="text-center">
-            <h1 className="text-4xl font-black tracking-tight">Sharewinds</h1>
-            <p className="text-slate-400 font-medium mt-2 text-base">Door Sign Management System</p>
-          </div>
-
-          {stepDots}
-
-          <button
-            onClick={() => setStep('host')}
-            className="w-full bg-primary text-white font-black py-5 rounded-2xl text-lg shadow-2xl shadow-primary/30 hover:brightness-110 active:scale-95 transition-all"
-          >
-            Get Started
-          </button>
-
-          <p className="text-slate-600 text-xs text-center">
-            Initial setup — takes less than a minute
+          <p className="text-slate-600 text-xs text-center mt-5">
+            Powered by Sharewinds © {new Date().getFullYear()}
           </p>
         </div>
       </div>
     );
   }
 
+  // ── HOST URL ─────────────────────────────────────────────────────────────
   if (step === 'host') {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
-        <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
+        {glow}
+        <div className="relative w-full max-w-sm">
 
-        <form onSubmit={handleHostSubmit} className="relative w-full max-w-sm flex flex-col gap-6">
-          {/* Header */}
-          <div className="flex flex-col items-center gap-4 mb-2">
-            <div className="w-16 h-16 rounded-2xl bg-white/8 border border-white/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-3xl text-primary">dns</span>
+          {/* Top logo strip */}
+          <div className="flex items-center justify-between mb-5 px-1">
+            <Logo size="sm" />
+            <span className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Setup</span>
+          </div>
+
+          {/* Card */}
+          <form onSubmit={handleHostSubmit} className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
+
+            {/* Step bar */}
+            <StepBar current="host" />
+
+            {/* Section header */}
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-primary" style={{ fontSize: '22px' }}>dns</span>
+              </div>
+              <div>
+                <h2 className="text-lg font-black leading-tight">Connection Setup</h2>
+                <p className="text-slate-500 text-xs mt-0.5">Your ASAS Connect address</p>
+              </div>
             </div>
-            <div className="text-center">
-              <h2 className="text-2xl font-black">Server Setup</h2>
-              <p className="text-slate-400 text-sm mt-1">Step 1 of 2 — Configure your server</p>
+
+            <div className="w-full h-px bg-white/6" />
+
+            {/* Input */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                Host URL or IP Address
+              </label>
+              <input
+                type="url"
+                value={hostUrl}
+                onChange={e => { setHostUrlLocal(e.target.value); setError(null); }}
+                className="w-full p-4 rounded-xl bg-[#111518] border border-white/12 text-white font-mono text-sm outline-none focus:border-primary transition-colors placeholder-slate-600"
+                style={{ colorScheme: 'dark' }}
+                placeholder="https://your-server.com"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                required
+              />
+              <div className="flex flex-col gap-1 mt-0.5">
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  e.g. <span className="text-slate-500 font-mono">https://192.168.1.100</span>
+                </p>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  or &nbsp;<span className="text-slate-500 font-mono">https://asas.mycompany.com</span>
+                </p>
+              </div>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/8 border border-red-500/15 px-4 py-3 rounded-xl">
+                <span className="material-symbols-outlined text-base flex-shrink-0" style={{ fontSize: '18px' }}>error</span>
+                {error}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setStep('welcome'); setError(null); }}
+                className="flex-1 py-3.5 rounded-xl font-black text-sm border border-white/10 text-slate-400 hover:bg-white/5 hover:text-white active:scale-[0.98] transition-all"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                className="flex-[2] py-3.5 rounded-xl font-black text-sm bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                Next
+                <span className="material-symbols-outlined text-base" style={{ fontSize: '18px' }}>arrow_forward</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ── ACTIVATE ─────────────────────────────────────────────────────────────
+  return (
+    <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
+      {glow}
+      <div className="relative w-full max-w-sm">
+
+        {/* Top logo strip */}
+        <div className="flex items-center justify-between mb-5 px-1">
+          <Logo size="sm" />
+          <span className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Setup</span>
+        </div>
+
+        {/* Card */}
+        <form onSubmit={handleActivate} className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
+
+          {/* Step bar */}
+          <StepBar current="activate" />
+
+          {/* Section header */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-primary" style={{ fontSize: '22px' }}>vpn_key</span>
+            </div>
+            <div>
+              <h2 className="text-lg font-black leading-tight">Activate Display</h2>
+              <p className="text-slate-500 text-xs mt-0.5">Enter your door sign activation key</p>
             </div>
           </div>
 
-          {stepDots}
+          <div className="w-full h-px bg-white/6" />
 
           {/* Input */}
           <div className="flex flex-col gap-2">
             <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">
-              Host URL or IP Address
+              Activation Key
             </label>
             <input
-              type="url"
-              value={hostUrl}
-              onChange={e => { setHostUrlLocal(e.target.value); setError(null); }}
-              className="p-4 rounded-xl bg-[#111518] border border-white/15 text-white font-mono text-sm outline-none focus:border-primary transition-colors placeholder-slate-600"
+              type="text"
+              value={activationKey}
+              onChange={e => { setActivationKeyLocal(e.target.value); setError(null); }}
+              className="w-full p-4 rounded-xl bg-[#111518] border border-white/12 text-white font-mono text-sm outline-none focus:border-primary transition-colors placeholder-slate-600 tracking-widest"
               style={{ colorScheme: 'dark' }}
-              placeholder="https://your-server.com"
+              placeholder="XXXX-XXXX-XXXX-XXXX"
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
               required
             />
-            <p className="text-[11px] text-slate-500 leading-relaxed">
-              e.g. <span className="text-slate-400 font-mono">https://192.168.1.100</span> or <span className="text-slate-400 font-mono">https://asas.mycompany.com</span>
+            <p className="text-[11px] text-slate-600 mt-0.5">
+              Provided by your Sharewinds administrator
             </p>
           </div>
 
           {error && (
-            <div className="text-red-400 font-bold text-sm bg-red-500/10 border border-red-500/20 px-4 py-3 rounded-xl">
+            <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/8 border border-red-500/15 px-4 py-3 rounded-xl">
+              <span className="material-symbols-outlined text-base flex-shrink-0" style={{ fontSize: '18px' }}>error</span>
               {error}
             </div>
           )}
 
+          {/* Actions */}
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => { setStep('welcome'); setError(null); }}
-              className="flex-1 py-4 rounded-xl font-black border border-white/10 text-slate-300 hover:bg-white/5 active:scale-95 transition-all"
+              onClick={() => { setStep('host'); setError(null); }}
+              className="flex-1 py-3.5 rounded-xl font-black text-sm border border-white/10 text-slate-400 hover:bg-white/5 hover:text-white active:scale-[0.98] transition-all"
             >
               Back
             </button>
             <button
               type="submit"
-              className="flex-1 py-4 rounded-xl font-black bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all"
+              disabled={loading || !activationKey.trim()}
+              className="flex-[2] py-3.5 rounded-xl font-black text-sm bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-2"
             >
-              Continue
+              {loading
+                ? <><span className="material-symbols-outlined animate-spin text-base" style={{ fontSize: '18px' }}>progress_activity</span> Activating…</>
+                : <><span className="material-symbols-outlined text-base" style={{ fontSize: '18px' }}>verified</span> Activate</>}
             </button>
           </div>
         </form>
+
+        <p className="text-slate-600 text-xs text-center mt-5">
+          Powered by Sharewinds © {new Date().getFullYear()}
+        </p>
       </div>
-    );
-  }
-
-  // step === 'activate'
-  return (
-    <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
-      <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
-
-      <form onSubmit={handleActivate} className="relative w-full max-w-sm flex flex-col gap-6">
-        {/* Header */}
-        <div className="flex flex-col items-center gap-4 mb-2">
-          <div className="w-16 h-16 rounded-2xl bg-white/8 border border-white/10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl text-primary">vpn_key</span>
-          </div>
-          <div className="text-center">
-            <h2 className="text-2xl font-black">Activate Display</h2>
-            <p className="text-slate-400 text-sm mt-1">Step 2 of 2 — Enter your activation key</p>
-          </div>
-        </div>
-
-        {stepDots}
-
-        {/* Input */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">
-            Activation Key
-          </label>
-          <input
-            type="text"
-            value={activationKey}
-            onChange={e => { setActivationKeyLocal(e.target.value); setError(null); }}
-            className="p-4 rounded-xl bg-[#111518] border border-white/15 text-white font-mono text-sm outline-none focus:border-primary transition-colors placeholder-slate-600 tracking-widest"
-            style={{ colorScheme: 'dark' }}
-            placeholder="XXXX-XXXX-XXXX-XXXX"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            required
-          />
-          <p className="text-[11px] text-slate-500">
-            Provided by your Sharewinds administrator
-          </p>
-        </div>
-
-        {error && (
-          <div className="text-red-400 font-bold text-sm bg-red-500/10 border border-red-500/20 px-4 py-3 rounded-xl">
-            {error}
-          </div>
-        )}
-
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => { setStep('host'); setError(null); }}
-            className="flex-1 py-4 rounded-xl font-black border border-white/10 text-slate-300 hover:bg-white/5 active:scale-95 transition-all"
-          >
-            Back
-          </button>
-          <button
-            type="submit"
-            disabled={loading || !activationKey.trim()}
-            className="flex-1 py-4 rounded-xl font-black bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-40"
-          >
-            {loading ? 'Activating...' : 'Activate'}
-          </button>
-        </div>
-      </form>
     </div>
   );
 };

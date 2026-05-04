@@ -100,15 +100,15 @@ const BottomNav: React.FC<BottomNavProps> = ({
 
         {/* Bottom Actions */}
         <div className="mt-auto px-6 w-full flex flex-col gap-6">
-          <NavButton 
-            icon="settings" 
+          <NavButton
+            icon="settings"
             label="Settings"
-            active={false} 
+            active={false}
             isExpanded={isExpanded}
             onClick={() => {
               onOpenSettings();
               setIsExpanded(false);
-            }} 
+            }}
           />
         </div>
       </nav>
