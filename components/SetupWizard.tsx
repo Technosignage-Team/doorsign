@@ -1,320 +1,638 @@
 import React, { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { CapacitorHttp } from '@capacitor/core';
 import { setHostUrl, getBaseUrl } from '../lib/hostUrl';
 import { setActivationKey } from '../lib/activationKey';
+import { setLicense, getDeviceId, LicenseInfo } from '../lib/license';
 import { doorSignFetch } from '../lib/doorSignFetch';
+
+const LICENSE_API = 'https://sw-subscription-1.onrender.com/api/license/activate';
+
+const OFFLINE_MSG = 'No internet connection. Please check your network and try again.';
+const SERVER_UNREACHABLE_MSG = 'Cannot reach the server. Check your internet connection and try again.';
+
+function isNetworkError(err: unknown): boolean {
+  if (!navigator.onLine) return true;
+  if (err instanceof TypeError) return true;
+  if (err instanceof Error) {
+    const m = err.message.toLowerCase();
+    return (
+      m.includes('failed to resolve') ||
+      m.includes('unable to resolve') ||
+      m.includes('network') ||
+      m.includes('unreachable') ||
+      m.includes('connection refused') ||
+      m.includes('name not resolved') ||
+      m.includes('err_name') ||
+      m.includes('no address') ||
+      m.includes('could not connect') ||
+      m.includes('hostname') ||
+      m.includes('host lookup') ||
+      m.includes('enotfound') ||
+      m.includes('econnrefused')
+    );
+  }
+  return false;
+}
 
 interface SetupWizardProps {
   onComplete: (resourceData: any) => void;
 }
 
-type Step = 'welcome' | 'host' | 'activate';
-const STEPS: Step[] = ['welcome', 'host', 'activate'];
-const STEP_INDEX: Record<Step, number> = { welcome: 0, host: 1, activate: 2 };
+interface SignItem {
+  id: string;
+  name: string;
+  activationKey: string;
+  location?: string;
+  [key: string]: unknown;
+}
+
+type Step = 'welcome' | 'host' | 'sign' | 'license';
+type ConnStatus = 'idle' | 'testing' | 'ok' | 'fail';
+
+const BAR_STEPS = ['host', 'sign', 'license'] as const;
+const BAR_LABELS = ['Connection', 'Sign', 'Licence'];
+const barIndex = (s: Step) => BAR_STEPS.indexOf(s as any);
+
+// ── Shared ────────────────────────────────────────────────────────────────
 
 const Logo: React.FC<{ size?: 'sm' | 'lg' }> = ({ size = 'sm' }) => {
-  const isLg = size === 'lg';
+  const lg = size === 'lg';
   return (
-    <div className={`flex items-center gap-3 ${isLg ? 'flex-col' : ''}`}>
-      <div className={`${isLg ? 'w-20 h-20 rounded-2xl text-3xl' : 'w-10 h-10 rounded-xl text-base'} bg-primary flex items-center justify-center shadow-lg shadow-primary/40 font-black text-white select-none tracking-tight flex-shrink-0`}>
+    <div className={`flex items-center gap-3 ${lg ? 'flex-col' : ''}`}>
+      <div className={`${lg ? 'w-20 h-20 rounded-2xl text-3xl' : 'w-10 h-10 rounded-xl text-base'} bg-primary flex items-center justify-center shadow-lg shadow-primary/40 font-black text-white select-none tracking-tight flex-shrink-0`}>
         SW
       </div>
-      <div className={isLg ? 'text-center' : ''}>
-        <p className={`font-black text-white leading-none ${isLg ? 'text-3xl mt-2' : 'text-base'}`}>Sharewinds</p>
-        {isLg && <p className="text-slate-400 text-sm mt-1.5 font-medium">Door Sign Management System</p>}
+      <div className={lg ? 'text-center' : ''}>
+        <p className={`font-black text-white leading-none ${lg ? 'text-3xl mt-2' : 'text-base'}`}>Sharewinds</p>
+        {lg && <p className="text-slate-400 text-sm mt-1.5 font-medium">Door Sign Management System</p>}
       </div>
     </div>
   );
 };
 
 const StepBar: React.FC<{ current: Step }> = ({ current }) => {
-  const idx = STEP_INDEX[current];
-  const labels = ['Welcome', 'Connection', 'Activate'];
+  const idx = barIndex(current);
   return (
-    <div className="flex items-center w-full gap-0">
-      {[0, 1, 2].map(i => {
-        const done = i < idx;
-        const active = i === idx;
-        return (
-          <React.Fragment key={i}>
-            <div className="flex flex-col items-center gap-1.5">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border-2 transition-all duration-300
-                ${done ? 'bg-primary border-primary text-white' : active ? 'bg-primary/15 border-primary text-primary' : 'bg-white/5 border-white/15 text-slate-500'}`}>
-                {done
-                  ? <span className="material-symbols-outlined text-sm" style={{ fontSize: '16px' }}>check</span>
-                  : i + 1}
-              </div>
-              <span className={`text-[10px] font-bold tracking-wide ${active ? 'text-primary' : done ? 'text-slate-400' : 'text-slate-600'}`}>
-                {labels[i]}
-              </span>
+    <div className="flex items-center w-full">
+      {BAR_STEPS.map((_, i) => (
+        <React.Fragment key={i}>
+          <div className="flex flex-col items-center gap-1.5">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border-2 transition-all duration-300
+              ${i < idx ? 'bg-primary border-primary text-white'
+                : i === idx ? 'bg-primary/15 border-primary text-primary'
+                : 'bg-white/5 border-white/15 text-slate-500'}`}>
+              {i < idx
+                ? <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check</span>
+                : i + 1}
             </div>
-            {i < 2 && (
-              <div className={`flex-1 h-0.5 mx-1 mb-5 rounded-full transition-all duration-500 ${i < idx ? 'bg-primary' : 'bg-white/10'}`} />
-            )}
-          </React.Fragment>
-        );
-      })}
+            <span className={`text-[10px] font-bold tracking-wide ${i === idx ? 'text-primary' : i < idx ? 'text-slate-400' : 'text-slate-600'}`}>
+              {BAR_LABELS[i]}
+            </span>
+          </div>
+          {i < BAR_STEPS.length - 1 && (
+            <div className={`flex-1 h-0.5 mx-1 mb-5 rounded-full transition-all duration-500 ${i < idx ? 'bg-primary' : 'bg-white/10'}`} />
+          )}
+        </React.Fragment>
+      ))}
     </div>
   );
 };
 
+const Glow = () => (
+  <>
+    <div className="fixed top-[-15%] left-[-10%] w-[50%] h-[50%] bg-primary/8 blur-[140px] rounded-full pointer-events-none" />
+    <div className="fixed bottom-[-15%] right-[-10%] w-[45%] h-[45%] bg-primary/8 blur-[140px] rounded-full pointer-events-none" />
+  </>
+);
+
+const ErrorBox: React.FC<{ msg: string }> = ({ msg }) => (
+  <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/8 border border-red-500/15 px-4 py-3 rounded-xl">
+    <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px' }}>error</span>
+    {msg}
+  </div>
+);
+
+const TopBar: React.FC = () => (
+  <div className="flex items-center justify-between mb-5 px-1">
+    <Logo size="sm" />
+    <span className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Setup</span>
+  </div>
+);
+
+// ── Main ──────────────────────────────────────────────────────────────────
+
 const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const [step, setStep] = useState<Step>('welcome');
-  const [hostUrl, setHostUrlLocal] = useState('');
-  const [activationKey, setActivationKeyLocal] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  const handleHostSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const trimmed = hostUrl.trim().replace(/\/+$/, '');
+  // Host
+  const [hostInput, setHostInput] = useState('');
+  const [connStatus, setConnStatus] = useState<ConnStatus>('idle');
+  const [hostError, setHostError] = useState<string | null>(null);
+
+  // Sign picker
+  const [tenantId, setTenantId] = useState('');
+  const [signsLoading, setSignsLoading] = useState(false);
+  const [signs, setSigns] = useState<SignItem[]>([]);
+  const [signsError, setSignsError] = useState<string | null>(null);
+  const [selectedSign, setSelectedSign] = useState<SignItem | null>(null);
+
+  // Licence
+  const [licenceInput, setLicenceInput] = useState('');
+  const [licenceLoading, setLicenceLoading] = useState(false);
+  const [licenceError, setLicenceError] = useState<string | null>(null);
+  const [licenceInUse, setLicenceInUse] = useState(false);
+
+  const go = (s: Step) => {
+    setHostError(null);
+    setSignsError(null);
+    setLicenceError(null);
+    setLicenceInUse(false);
+    setStep(s);
+  };
+
+  // ── Connection test ───────────────────────────────────────────────────────
+
+  const testAndProceed = async () => {
+    const trimmed = hostInput.trim().replace(/\/+$/, '');
     if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-      setError('URL must start with http:// or https://');
+      setHostError('URL must start with http:// or https://');
       return;
     }
-    await setHostUrl(trimmed);
-    setStep('activate');
-  };
-
-  const handleActivate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
+    if (!navigator.onLine) {
+      setConnStatus('fail');
+      setHostError('No internet connection. Please check your network and try again.');
+      return;
+    }
+    setHostError(null);
+    setConnStatus('testing');
     try {
-      const key = activationKey.trim();
-      const res = await doorSignFetch(`${getBaseUrl()}/api/digitalsigns/activate/${key}`);
-      if (!res.ok) throw new Error('Invalid key');
-      await setActivationKey(key);
-      const resourceData = await res.json();
-      onComplete(resourceData);
-    } catch {
-      setError('Invalid activation key. Please check and try again.');
-    } finally {
-      setLoading(false);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      await fetch(`${trimmed}/api/DigitalSigns`, { method: 'GET', signal: controller.signal, cache: 'no-store' });
+      clearTimeout(timer);
+      setConnStatus('ok');
+      await setHostUrl(trimmed);
+      setTimeout(() => go('sign'), 800);
+    } catch (err) {
+      setConnStatus('fail');
+      if (!navigator.onLine) {
+        // Internet is down — nothing to do with the URL
+        setHostError(OFFLINE_MSG);
+      } else if (err instanceof DOMException && err.name === 'AbortError') {
+        setHostError('Connection timed out. The server took too long to respond — the URL may be incorrect.');
+      } else {
+        // Online but server not reached — URL is likely wrong
+        setHostError('Failed to connect. The host URL may be incorrect — please check and try again.');
+      }
     }
   };
 
-  const glow = (
-    <>
-      <div className="fixed top-[-15%] left-[-10%] w-[50%] h-[50%] bg-primary/8 blur-[140px] rounded-full pointer-events-none" />
-      <div className="fixed bottom-[-15%] right-[-10%] w-[45%] h-[45%] bg-primary/8 blur-[140px] rounded-full pointer-events-none" />
-    </>
-  );
+  // ── Load signs ────────────────────────────────────────────────────────────
 
-  // ── WELCOME ──────────────────────────────────────────────────────────────
+  const loadSigns = async () => {
+    if (!tenantId.trim()) {
+      setSignsError('Please enter your account name.');
+      return;
+    }
+    if (!navigator.onLine) {
+      setSignsError('No internet connection. Please check your network and try again.');
+      return;
+    }
+    setSignsLoading(true);
+    setSignsError(null);
+    setSigns([]);
+    setSelectedSign(null);
+    try {
+      // Plain fetch — no ActivationKey header; tenant is identified via query param only
+      const res = await fetch(
+        `${getBaseUrl()}/api/subscription/unused-signs?tenant=${encodeURIComponent(tenantId.trim())}`,
+        { method: 'GET', cache: 'no-store' }
+      );
+
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          setSignsError('Account not found or not authorised. Check your account name and try again.');
+        } else if (res.status === 404) {
+          setSignsError('No signs found for this account. Contact your administrator.');
+        } else if (res.status >= 500) {
+          setSignsError('Server error. Please try again later.');
+        } else {
+          setSignsError(`Failed to load signs (${res.status}). Please try again.`);
+        }
+        return;
+      }
+
+      const raw = await res.json();
+
+      // API returns { count: N, items: [...] }
+      const count: number = raw.count ?? 0;
+      const list: any[] = Array.isArray(raw.items) ? raw.items : [];
+
+      console.log('[Signs] count:', count, 'items:', list);
+
+      if (count === 0 || list.length === 0) {
+        setSignsError('No available signs found for this account. All signs may already be assigned.');
+        return;
+      }
+
+      setSigns(list.map((s: any) => ({
+        id: String(s.id ?? s.signId ?? s._id ?? ''),
+        name: s.sign_name ?? s.name ?? s.signName ?? 'Unnamed Sign',
+        activationKey: s.activation_key ?? s.activationKey ?? s.ActivationKey ?? '',
+        location: s.location ?? s.floorName ?? s.buildingName ?? undefined,
+      })));
+    } catch (err) {
+      setSignsError(isNetworkError(err) ? SERVER_UNREACHABLE_MSG : 'Unexpected error. Please try again.');
+    } finally {
+      setSignsLoading(false);
+    }
+  };
+
+  const confirmSign = async (sign: SignItem) => {
+    setSelectedSign(sign);
+    if (!sign.activationKey) {
+      setSignsError('This sign does not have an activation key. Contact your administrator.');
+      return;
+    }
+    await setActivationKey(sign.activationKey);
+    go('license');
+  };
+
+  // ── Licence ───────────────────────────────────────────────────────────────
+
+  const handleLicence = async () => {
+    if (!navigator.onLine) {
+      setLicenceError('No internet connection. Please check your network and try again.');
+      return;
+    }
+    setLicenceLoading(true);
+    setLicenceError(null);
+    setLicenceInUse(false);
+    try {
+      const deviceInfo = await getDeviceId();
+      const body = { licenseKey: licenceInput.trim(), deviceInfo };
+
+      let ok: boolean;
+      let status: number;
+      let data: any;
+
+      if (Capacitor.isNativePlatform()) {
+        const response = await CapacitorHttp.post({
+          url: LICENSE_API,
+          headers: { 'Content-Type': 'application/json' },
+          data: body,
+        });
+        ok = response.status >= 200 && response.status < 300;
+        status = response.status;
+        data = response.data;
+      } else {
+        const res = await fetch(LICENSE_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        ok = res.ok;
+        status = res.status;
+        data = await res.json();
+      }
+
+      if (!ok || !data.success) {
+        if (status === 404) setLicenceError('Licence key not found. Please check the key and try again.');
+        else if (status === 403) setLicenceError('This licence is not authorised for this product. Contact your administrator.');
+        else if (status >= 500) setLicenceError('The licence server is currently unavailable. Please try again later.');
+        else setLicenceError(data.message ?? 'Invalid licence key. Please check and try again.');
+        return;
+      }
+
+      if (data.alreadyActivated) {
+        setLicenceInUse(true);
+        return;
+      }
+
+      await setLicense(data.license as LicenseInfo);
+
+      // Activate the door sign with the key obtained from sign selection
+      const res = await doorSignFetch(`${getBaseUrl()}/api/digitalsigns/activate/${(await import('../lib/activationKey')).getActivationKey()}`);
+      const resourceData = res.ok ? await res.json() : null;
+      onComplete(resourceData);
+    } catch (err) {
+      console.error('[Licence]', err);
+      if (isNetworkError(err)) {
+        setLicenceError(!Capacitor.isNativePlatform()
+          ? 'Browser CORS restriction — build the APK and test on a device.'
+          : OFFLINE_MSG);
+      } else {
+        setLicenceError('Unexpected error. Please try again.');
+      }
+    } finally {
+      setLicenceLoading(false);
+    }
+  };
+
+  // ── WELCOME ───────────────────────────────────────────────────────────────
+
   if (step === 'welcome') {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
-        {glow}
+        <Glow />
         <div className="relative flex flex-col items-center w-full max-w-sm">
-
-          {/* Card */}
           <div className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-8 flex flex-col items-center gap-7 shadow-2xl">
             <Logo size="lg" />
-
             <div className="w-full h-px bg-white/8" />
-
-            <div className="flex flex-col items-center gap-2 text-center">
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Welcome to the Sharewinds Door Sign setup.<br />
-                This will take less than a minute.
-              </p>
-            </div>
-
+            <p className="text-slate-300 text-sm leading-relaxed text-center">
+              Welcome to the Sharewinds Door Sign setup.<br />This will take less than a minute.
+            </p>
             <div className="w-full">
-              <StepBar current="welcome" />
+              <StepBar current="host" />
             </div>
-
             <button
-              onClick={() => setStep('host')}
+              onClick={() => go('host')}
               className="w-full bg-primary text-white font-black py-4 rounded-2xl text-base shadow-xl shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
               Get Started
-              <span className="material-symbols-outlined text-xl" style={{ fontSize: '20px' }}>arrow_forward</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>arrow_forward</span>
             </button>
           </div>
-
-          <p className="text-slate-600 text-xs text-center mt-5">
-            Powered by Sharewinds © {new Date().getFullYear()}
-          </p>
+          <p className="text-slate-600 text-xs text-center mt-5">Powered by Sharewinds © {new Date().getFullYear()}</p>
         </div>
       </div>
     );
   }
 
-  // ── HOST URL ─────────────────────────────────────────────────────────────
+  // ── HOST ──────────────────────────────────────────────────────────────────
+
   if (step === 'host') {
+    const isTesting = connStatus === 'testing';
+    const isOk = connStatus === 'ok';
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
-        {glow}
+        <Glow />
         <div className="relative w-full max-w-sm">
-
-          {/* Top logo strip */}
-          <div className="flex items-center justify-between mb-5 px-1">
-            <Logo size="sm" />
-            <span className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Setup</span>
-          </div>
-
-          {/* Card */}
-          <form onSubmit={handleHostSubmit} className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
-
-            {/* Step bar */}
+          <TopBar />
+          <div className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
             <StepBar current="host" />
-
-            {/* Section header */}
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
                 <span className="material-symbols-outlined text-primary" style={{ fontSize: '22px' }}>dns</span>
               </div>
               <div>
                 <h2 className="text-lg font-black leading-tight">Connection Setup</h2>
-                <p className="text-slate-500 text-xs mt-0.5">Your ASAS Connect address</p>
+                <p className="text-slate-500 text-xs mt-0.5">Enter your ASAS Connect server address</p>
               </div>
             </div>
-
             <div className="w-full h-px bg-white/6" />
-
-            {/* Input */}
             <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">
-                Host URL or IP Address
-              </label>
+              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">Host URL or IP Address</label>
               <input
                 type="url"
-                value={hostUrl}
-                onChange={e => { setHostUrlLocal(e.target.value); setError(null); }}
-                className="w-full p-4 rounded-xl bg-[#111518] border border-white/12 text-white font-mono text-sm outline-none focus:border-primary transition-colors placeholder-slate-600"
+                value={hostInput}
+                onChange={e => { setHostInput(e.target.value); setConnStatus('idle'); setHostError(null); }}
+                className={`w-full p-4 rounded-xl bg-[#111518] border text-white font-mono text-sm outline-none transition-colors placeholder-slate-600 ${
+                  isOk ? 'border-status-available' : connStatus === 'fail' ? 'border-red-500/50' : 'border-white/12 focus:border-primary'
+                }`}
                 style={{ colorScheme: 'dark' }}
                 placeholder="https://your-server.com"
                 autoCapitalize="off"
                 autoCorrect="off"
                 spellCheck={false}
-                required
               />
-              <div className="flex flex-col gap-1 mt-0.5">
-                <p className="text-[11px] text-slate-600 leading-relaxed">
-                  e.g. <span className="text-slate-500 font-mono">https://192.168.1.100</span>
-                </p>
-                <p className="text-[11px] text-slate-600 leading-relaxed">
-                  or &nbsp;<span className="text-slate-500 font-mono">https://asas.mycompany.com</span>
-                </p>
-              </div>
+              {isTesting && (
+                <div className="flex items-center gap-2 text-slate-400 text-xs px-1">
+                  <span className="material-symbols-outlined animate-spin" style={{ fontSize: '14px' }}>progress_activity</span>
+                  Testing connection…
+                </div>
+              )}
+              {isOk && (
+                <div className="flex items-center gap-2 text-status-available text-xs font-black px-1">
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
+                  Connected successfully
+                </div>
+              )}
+              {connStatus === 'fail' && (
+                <div className="flex items-center gap-2 text-red-400 text-xs font-black px-1">
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>cancel</span>
+                  Failed to connect
+                </div>
+              )}
+              {connStatus === 'idle' && (
+                <div className="flex flex-col gap-1 mt-0.5">
+                  <p className="text-[11px] text-slate-600">e.g. <span className="text-slate-500 font-mono">https://192.168.1.100</span></p>
+                  <p className="text-[11px] text-slate-600">or &nbsp;<span className="text-slate-500 font-mono">https://asas.mycompany.com</span></p>
+                </div>
+              )}
             </div>
-
-            {error && (
-              <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/8 border border-red-500/15 px-4 py-3 rounded-xl">
-                <span className="material-symbols-outlined text-base flex-shrink-0" style={{ fontSize: '18px' }}>error</span>
-                {error}
-              </div>
-            )}
-
-            {/* Actions */}
+            {hostError && <ErrorBox msg={hostError} />}
             <div className="flex gap-3">
+              <button type="button" onClick={() => go('welcome')} className="flex-1 py-3.5 rounded-xl font-black text-sm border border-white/10 text-slate-400 hover:bg-white/5 hover:text-white active:scale-[0.98] transition-all">Back</button>
               <button
-                type="button"
-                onClick={() => { setStep('welcome'); setError(null); }}
-                className="flex-1 py-3.5 rounded-xl font-black text-sm border border-white/10 text-slate-400 hover:bg-white/5 hover:text-white active:scale-[0.98] transition-all"
+                onClick={testAndProceed}
+                disabled={isTesting || isOk || !hostInput.trim()}
+                className="flex-[2] py-3.5 rounded-xl font-black text-sm bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-2"
               >
-                Back
-              </button>
-              <button
-                type="submit"
-                className="flex-[2] py-3.5 rounded-xl font-black text-sm bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-              >
-                Next
-                <span className="material-symbols-outlined text-base" style={{ fontSize: '18px' }}>arrow_forward</span>
+                {isTesting ? <><span className="material-symbols-outlined animate-spin" style={{ fontSize: '18px' }}>progress_activity</span> Testing…</>
+                  : isOk ? <><span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check</span> Connected</>
+                  : <>Test &amp; Next <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span></>}
               </button>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     );
   }
 
-  // ── ACTIVATE ─────────────────────────────────────────────────────────────
+  // ── SIGN PICKER ───────────────────────────────────────────────────────────
+
+  if (step === 'sign') {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
+        <Glow />
+        <div className="relative w-full max-w-sm">
+          <TopBar />
+          <div className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
+
+            <StepBar current="sign" />
+
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-primary" style={{ fontSize: '22px' }}>meeting_room</span>
+              </div>
+              <div>
+                <h2 className="text-lg font-black leading-tight">Select Sign</h2>
+                <p className="text-slate-500 text-xs mt-0.5">Enter your account name to load available signs</p>
+              </div>
+            </div>
+
+            <div className="w-full h-px bg-white/6" />
+
+            {/* Account name input */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">Account Name</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={tenantId}
+                  onChange={e => { setTenantId(e.target.value); setSignsError(null); setSigns([]); setSelectedSign(null); }}
+                  className="flex-1 p-4 rounded-xl bg-[#111518] border border-white/12 text-white font-mono text-sm outline-none focus:border-primary transition-colors placeholder-slate-600"
+                  style={{ colorScheme: 'dark' }}
+                  placeholder="your-account"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+                <button
+                  onClick={loadSigns}
+                  disabled={signsLoading || !tenantId.trim()}
+                  className="px-4 rounded-xl font-black text-sm bg-primary/15 border border-primary/30 text-primary hover:bg-primary/25 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-1 flex-shrink-0"
+                >
+                  {signsLoading
+                    ? <span className="material-symbols-outlined animate-spin" style={{ fontSize: '18px' }}>progress_activity</span>
+                    : <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>search</span>}
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-600">This will be sent as your tenant identifier</p>
+            </div>
+
+            {/* Signs list */}
+            {signs.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                  Available Signs <span className="text-primary">({signs.length})</span>
+                </p>
+                <div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                  {signs.map(sign => (
+                    <button
+                      key={sign.id}
+                      onClick={() => confirmSign(sign)}
+                      className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border text-left transition-all active:scale-[0.98] group ${
+                        selectedSign?.id === sign.id
+                          ? 'bg-primary/10 border-primary'
+                          : 'bg-white/4 border-white/8 hover:border-primary/40 hover:bg-primary/5'
+                      }`}
+                    >
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+                        selectedSign?.id === sign.id ? 'bg-primary text-white' : 'bg-white/8 text-slate-400 group-hover:text-primary'
+                      }`}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>door_front</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-black truncate ${selectedSign?.id === sign.id ? 'text-white' : 'text-slate-200'}`}>
+                          {sign.name}
+                        </p>
+                        <p className="text-[11px] font-mono text-slate-500 truncate mt-0.5">
+                          {sign.activationKey || '—'}
+                        </p>
+                      </div>
+                      {selectedSign?.id === sign.id && (
+                        <span className="material-symbols-outlined text-primary flex-shrink-0" style={{ fontSize: '18px' }}>check_circle</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {signsError && <ErrorBox msg={signsError} />}
+
+            <div className="flex gap-3">
+              <button type="button" onClick={() => go('host')} className="flex-1 py-3.5 rounded-xl font-black text-sm border border-white/10 text-slate-400 hover:bg-white/5 hover:text-white active:scale-[0.98] transition-all">Back</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── LICENCE ───────────────────────────────────────────────────────────────
+
+  if (licenceInUse) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
+        <Glow />
+        <div className="relative w-full max-w-sm">
+          <TopBar />
+          <div className="w-full bg-[#0d1117] border border-amber-500/20 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center">
+                <span className="material-symbols-outlined text-amber-400" style={{ fontSize: '32px' }}>warning</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white">Licence Already in Use</h2>
+                <p className="text-slate-400 text-xs mt-1">This licence key is active on another device</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-500/8 border border-amber-500/15">
+              <span className="material-symbols-outlined text-amber-400 flex-shrink-0 mt-0.5" style={{ fontSize: '16px' }}>info</span>
+              <p className="text-amber-300/80 text-xs leading-relaxed">
+                Please contact your Sharewinds administrator to revoke the licence from the other device before activating here.
+              </p>
+            </div>
+            <button
+              onClick={() => { setLicenceInUse(false); setLicenceInput(''); }}
+              className="w-full py-4 rounded-2xl font-black text-sm bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_back</span>
+              Use a Different Key
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
-      {glow}
+      <Glow />
       <div className="relative w-full max-w-sm">
+        <TopBar />
+        <div className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
 
-        {/* Top logo strip */}
-        <div className="flex items-center justify-between mb-5 px-1">
-          <Logo size="sm" />
-          <span className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Setup</span>
-        </div>
+          <StepBar current="license" />
 
-        {/* Card */}
-        <form onSubmit={handleActivate} className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
-
-          {/* Step bar */}
-          <StepBar current="activate" />
-
-          {/* Section header */}
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-primary" style={{ fontSize: '22px' }}>vpn_key</span>
+              <span className="material-symbols-outlined text-primary" style={{ fontSize: '22px' }}>workspace_premium</span>
             </div>
             <div>
-              <h2 className="text-lg font-black leading-tight">Activate Display</h2>
-              <p className="text-slate-500 text-xs mt-0.5">Enter your door sign activation key</p>
+              <h2 className="text-lg font-black leading-tight">Licence Activation</h2>
+              <p className="text-slate-500 text-xs mt-0.5">Enter your Sharewinds licence key</p>
             </div>
           </div>
 
           <div className="w-full h-px bg-white/6" />
 
-          {/* Input */}
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">
-              Activation Key
-            </label>
+            <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">Licence Key</label>
             <input
               type="text"
-              value={activationKey}
-              onChange={e => { setActivationKeyLocal(e.target.value); setError(null); }}
+              value={licenceInput}
+              onChange={e => { setLicenceInput(e.target.value.toUpperCase()); setLicenceError(null); }}
               className="w-full p-4 rounded-xl bg-[#111518] border border-white/12 text-white font-mono text-sm outline-none focus:border-primary transition-colors placeholder-slate-600 tracking-widest"
               style={{ colorScheme: 'dark' }}
-              placeholder="XXXX-XXXX-XXXX-XXXX"
-              autoCapitalize="off"
+              placeholder="SW-XXXXXX-XXXXXX-XXXXXX"
+              autoCapitalize="characters"
               autoCorrect="off"
               spellCheck={false}
-              required
             />
-            <p className="text-[11px] text-slate-600 mt-0.5">
-              Provided by your Sharewinds administrator
-            </p>
+            <p className="text-[11px] text-slate-600 mt-0.5">Provided in your Sharewinds purchase confirmation</p>
           </div>
 
-          {error && (
-            <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/8 border border-red-500/15 px-4 py-3 rounded-xl">
-              <span className="material-symbols-outlined text-base flex-shrink-0" style={{ fontSize: '18px' }}>error</span>
-              {error}
-            </div>
-          )}
+          {licenceError && <ErrorBox msg={licenceError} />}
 
-          {/* Actions */}
           <div className="flex gap-3">
+            <button type="button" onClick={() => go('sign')} className="flex-1 py-3.5 rounded-xl font-black text-sm border border-white/10 text-slate-400 hover:bg-white/5 hover:text-white active:scale-[0.98] transition-all">Back</button>
             <button
-              type="button"
-              onClick={() => { setStep('host'); setError(null); }}
-              className="flex-1 py-3.5 rounded-xl font-black text-sm border border-white/10 text-slate-400 hover:bg-white/5 hover:text-white active:scale-[0.98] transition-all"
-            >
-              Back
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !activationKey.trim()}
+              onClick={handleLicence}
+              disabled={licenceLoading || !licenceInput.trim()}
               className="flex-[2] py-3.5 rounded-xl font-black text-sm bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-2"
             >
-              {loading
-                ? <><span className="material-symbols-outlined animate-spin text-base" style={{ fontSize: '18px' }}>progress_activity</span> Activating…</>
-                : <><span className="material-symbols-outlined text-base" style={{ fontSize: '18px' }}>verified</span> Activate</>}
+              {licenceLoading
+                ? <><span className="material-symbols-outlined animate-spin" style={{ fontSize: '18px' }}>progress_activity</span> Checking…</>
+                : <><span className="material-symbols-outlined" style={{ fontSize: '18px' }}>verified</span> Activate</>}
             </button>
           </div>
-        </form>
-
-        <p className="text-slate-600 text-xs text-center mt-5">
-          Powered by Sharewinds © {new Date().getFullYear()}
-        </p>
+        </div>
+        <p className="text-slate-600 text-xs text-center mt-5">Powered by Sharewinds © {new Date().getFullYear()}</p>
       </div>
     </div>
   );

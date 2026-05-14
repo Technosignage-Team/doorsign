@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { getBaseUrl } from '../lib/hostUrl';
+import { doorSignFetch } from '../lib/doorSignFetch';
 import jsQR from 'jsqr';
 import { db } from '../lib/db';
 import { RoomStatus } from '../types';
@@ -90,7 +91,7 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
       ? `${getBaseUrl()}/api/Bookings/attendees/${encodeURIComponent(inputCode)}/checkin`
       : `${getBaseUrl()}/api/Bookings/attendees/${encodeURIComponent(inputCode)}/checkout`;
     try {
-      const res = await fetch(endpoint, { method: 'POST' });
+      const res = await doorSignFetch(endpoint, { method: 'POST' });
       if (!res.ok) {
         const raw = await res.text().catch(() => '');
         const msg = raw.replace(/[{}"\[\]]/g, '').trim();

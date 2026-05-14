@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { CapacitorHttp } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
 import { getBaseUrl, setHostUrl, loadHostUrl } from '../lib/hostUrl';
 import { getActivationKey, setActivationKey } from '../lib/activationKey';
+import { getLicense } from '../lib/license';
 import { doorSignFetch } from '../lib/doorSignFetch';
+import LoginView from './LoginView';
+
+const INACTIVATE_API = 'https://sw-subscription-1.onrender.com/api/license/inactivate';
 
 interface ConfigurationViewProps {
   onBack: () => void;
   onConnectionChanged: (resourceData: any) => void;
+  onUnlinked?: () => void;
 }
 
-const ConfigurationView: React.FC<ConfigurationViewProps> = ({ onBack, onConnectionChanged }) => {
+const ConfigurationView: React.FC<ConfigurationViewProps> = ({ onBack, onConnectionChanged, onUnlinked }) => {
   const [hostInput, setHostInput] = useState('');
   const [editingHost, setEditingHost] = useState(false);
   const [hostError, setHostError] = useState<string | null>(null);
@@ -20,6 +28,17 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({ onBack, onConnect
   const [keyError, setKeyError] = useState<string | null>(null);
   const [keySaving, setKeySaving] = useState(false);
   const [keyMasked, setKeyMasked] = useState('');
+
+  // Unlink flow: idle → auth → confirm → (unlinking)
+  type UnlinkStage = 'idle' | 'auth' | 'confirm' | 'done';
+  const [unlinkStage, setUnlinkStage] = useState<UnlinkStage>('idle');
+  const [unlinking, setUnlinking] = useState(false);
+  const [unlinkError, setUnlinkError] = useState<string | null>(null);
+
+  const resetUnlink = () => {
+    setUnlinkStage('idle');
+    setUnlinkError(null);
+  };
 
   useEffect(() => {
     loadHostUrl().then(url => setHostInput(url));
@@ -66,7 +85,130 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({ onBack, onConnect
     }
   };
 
+  const handleUnlink = async () => {
+    setUnlinking(true);
+    setUnlinkError(null);
+    try {
+      const licence = await getLicense();
+      if (!licence?.licenseKey) throw new Error('NO_KEY');
+
+      const body = { licenseKey: licence.licenseKey };
+
+      if (Capacitor.isNativePlatform()) {
+        await CapacitorHttp.post({
+          url: INACTIVATE_API,
+          headers: { 'Content-Type': 'application/json' },
+          data: body,
+        });
+      } else {
+        await fetch(INACTIVATE_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      }
+
+      // Clear all stored setup data
+      await Promise.all([
+        Preferences.remove({ key: 'sw_license' }),
+        Preferences.remove({ key: 'activation_key' }),
+        Preferences.remove({ key: 'host_url' }),
+      ]);
+
+      setUnlinkStage('done');
+      setTimeout(() => onUnlinked?.(), 2000);
+    } catch (err) {
+      setUnlinkError('Failed to unlink. Please try again.');
+    } finally {
+      setUnlinking(false);
+    }
+  };
+
   return (
+    <>
+    {/* Auth overlay — full LoginView */}
+    {unlinkStage === 'auth' && (
+      <div className="fixed inset-0 z-[200]">
+        <LoginView
+          onBack={resetUnlink}
+          onLogin={(user) => {
+            const role = (user.role ?? '').toLowerCase().trim();
+            const isAdmin = role === 'admin' || role === 'administrator' || role.includes('admin');
+            if (!isAdmin) {
+              setUnlinkError('Access denied. Only administrators can unlink a sign.');
+              setUnlinkStage('idle');
+              return;
+            }
+            setUnlinkStage('confirm');
+          }}
+        />
+      </div>
+    )}
+
+    {/* Confirm overlay */}
+    {unlinkStage === 'confirm' && (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center px-6 bg-black/80 backdrop-blur-xl">
+        <div className="w-full max-w-sm bg-[#0d1117] border border-red-500/20 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center">
+              <span className="material-symbols-outlined text-red-400" style={{ fontSize: '32px' }}>link_off</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-white">Unlink This Sign?</h2>
+              <p className="text-slate-400 text-xs mt-1">This action requires confirmation</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-red-500/8 border border-red-500/15">
+            <span className="material-symbols-outlined text-red-400 flex-shrink-0 mt-0.5" style={{ fontSize: '14px' }}>warning</span>
+            <p className="text-red-300/80 text-xs leading-relaxed">
+              This will release the licence and return the sign to the setup wizard. You will need to re-enter all details to use it again.
+            </p>
+          </div>
+          {unlinkError && (
+            <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/8 border border-red-500/15 px-3 py-2.5 rounded-xl">
+              <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '14px' }}>error</span>
+              {unlinkError}
+            </div>
+          )}
+          <div className="flex gap-3">
+            <button
+              onClick={resetUnlink}
+              disabled={unlinking}
+              className="flex-1 py-4 rounded-2xl font-black text-sm border border-white/10 text-slate-400 hover:bg-white/5 active:scale-[0.98] transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUnlink}
+              disabled={unlinking}
+              className="flex-[2] py-4 rounded-2xl font-black text-sm bg-red-500 text-white hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {unlinking
+                ? <><span className="material-symbols-outlined animate-spin" style={{ fontSize: '18px' }}>progress_activity</span> Unlinking…</>
+                : <><span className="material-symbols-outlined" style={{ fontSize: '18px' }}>link_off</span> Confirm Unlink</>}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Done overlay */}
+    {unlinkStage === 'done' && (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center px-6 bg-black/80 backdrop-blur-xl">
+        <div className="w-full max-w-sm bg-[#0d1117] border border-status-available/20 rounded-3xl p-8 flex flex-col items-center gap-5 shadow-2xl text-center">
+          <div className="w-16 h-16 rounded-2xl bg-status-available/10 border border-status-available/25 flex items-center justify-center">
+            <span className="material-symbols-outlined text-status-available" style={{ fontSize: '32px' }}>check_circle</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-white">Sign Unlinked</h2>
+            <p className="text-slate-400 text-sm mt-1">Returning to setup wizard…</p>
+          </div>
+          <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-full bg-status-available rounded-full animate-[grow_2s_linear_forwards]" style={{ width: '100%', transformOrigin: 'left', animation: 'none', transition: 'none' }} />
+          </div>
+        </div>
+      </div>
+    )}
     <div className="flex flex-col h-full overflow-hidden bg-background-dark text-white">
 
       {/* Header — same style as DetailsView */}
@@ -258,9 +400,45 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({ onBack, onConnect
             </p>
           </div>
 
+          {/* ── Unlink Sign ── */}
+          <section>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4 px-1">
+              Danger Zone
+            </p>
+            <div className="bg-[#0d1117] border border-red-500/15 rounded-2xl overflow-hidden">
+              <div className="px-6 py-5 flex flex-col gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                    <span className="material-symbols-outlined text-red-400" style={{ fontSize: '16px' }}>link_off</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-black text-sm">Unlink This Sign</p>
+                    <p className="text-slate-500 text-[11px]">Release the licence and reset to setup wizard</p>
+                  </div>
+                </div>
+
+                {/* Unlink button — always visible, overlays handle the rest */}
+                <button
+                  onClick={() => { setUnlinkError(null); setUnlinkStage('auth'); }}
+                  className="w-full py-3.5 rounded-xl font-black text-sm border border-red-500/25 text-red-400 hover:bg-red-500/8 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>link_off</span>
+                  Unlink Sign
+                </button>
+                {unlinkError && (
+                  <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/8 border border-red-500/15 px-3 py-2.5 rounded-xl">
+                    <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '14px' }}>error</span>
+                    {unlinkError}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
         </div>
       </main>
     </div>
+    </>
   );
 };
 

@@ -1,6 +1,9 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getActivationKey } from './lib/activationKey';
+import { getLicense, isLicenseExpired, LicenseInfo } from './lib/license';
+import LicenseExpiredScreen from './components/LicenseExpiredScreen';
+import NetworkBanner from './components/NetworkBanner';
 import { View, RoomStatus, HomeLayout, User, Meeting, Amenity } from './types';
 import DashboardView from './components/DashboardView';
 import ScheduleView from './components/ScheduleView';
@@ -15,6 +18,7 @@ import SettingsModal from './components/SettingsModal';
 import { ROOM_INFO } from './constants';
 import { db } from './lib/db';
 import { useBookingSync } from './lib/useBookingSync';
+import { setLedAvailable, setLedBusy } from './lib/led';
 import { doorSignFetch } from './lib/doorSignFetch';
 import { getBaseUrl, loadHostUrl } from './lib/hostUrl';
 import SetupWizard from './components/SetupWizard';
@@ -173,9 +177,10 @@ function mapIcon(apiIcon: string): string {
 
 interface AppProps {
   initialResourceData?: any;
+  onUnlinked?: () => void;
 }
 
-const App: React.FC<AppProps> = ({ initialResourceData }) => {
+const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
   const [resourceBootData, setResourceBootData] = useState<any>(initialResourceData ?? null);
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [selectedStartTime, setSelectedStartTime] = useState<string | undefined>(undefined);
@@ -209,9 +214,12 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
   const [availableExtensions, setAvailableExtensions] = useState<ExtensionSlot[]>([]);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [resourceId, setResourceId] = useState<string | null>(null);
+  const [resourceConfigured, setResourceConfigured] = useState<boolean | null>(null);
 
   useEffect(() => {
     db.init();
+    // Set LED to green on startup — will be corrected by first updateRoomStatus if a meeting is active
+    setLedAvailable();
   }, []);
 
   const applyDigitalSignData = useCallback((data: {
@@ -230,7 +238,12 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
   }) => {
     const resource = data.resource ?? {};
     const resolvedResourceId = data.resourceId ?? resource.id ?? null;
-    if (resolvedResourceId) setResourceId(resolvedResourceId);
+    if (resolvedResourceId) {
+      setResourceId(resolvedResourceId);
+      setResourceConfigured(true);
+    } else {
+      setResourceConfigured(false);
+    }
     const locationParts = [resource.buildingName, resource.floorName].filter(Boolean);
     setRoomStatus(prev => ({
       ...prev,
@@ -388,12 +401,14 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
         .filter(m => parseTimeString(m.startTime) > now)
         .sort((a, b) => parseTimeString(a.startTime).getTime() - parseTimeString(b.startTime).getTime())[0];
 
+      const available = !currentMeeting;
       setRoomStatus(prev => ({
         ...prev,
-        isAvailable: !currentMeeting,
+        isAvailable: available,
         currentMeeting: currentMeeting || undefined,
         nextMeeting: nextMeeting || undefined
       }));
+      if (available) setLedAvailable(); else setLedBusy();
       setIsSyncing(false);
     }, 300);
   }, [parseTimeString]);
@@ -805,12 +820,47 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
               applyDigitalSignData(resourceData);
               setCurrentView(View.DASHBOARD);
             }}
+            onUnlinked={onUnlinked}
           />
         );
       default:
         return <DashboardView currentTime={currentTime} roomStatus={roomStatus} isSyncing={isSyncing} layout={homeLayout} onBook={handleBookAtTime} onShowMeetingDetails={handleShowMeetingDetails} onCheckIn={() => setCurrentView(View.CHECKIN)} onExtend={onExtendRequested} onEndNow={onEndNowRequested} onShowDetails={() => setCurrentView(View.DETAILS)} slotPrecision={slotPrecision} />;
     }
   };
+
+  if (resourceConfigured === false) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-8">
+        <div className="fixed top-[-15%] left-[-10%] w-[50%] h-[50%] bg-primary/6 blur-[140px] rounded-full pointer-events-none" />
+        <div className="fixed bottom-[-15%] right-[-10%] w-[45%] h-[45%] bg-primary/6 blur-[140px] rounded-full pointer-events-none" />
+        <div className="relative w-full max-w-sm flex flex-col items-center gap-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+            <span className="material-symbols-outlined text-amber-400" style={{ fontSize: '32px' }}>meeting_room</span>
+          </div>
+          <div className="text-center flex flex-col gap-2">
+            <h2 className="text-2xl font-black text-white tracking-tight">No Room Configured</h2>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              This door sign does not have a room linked to it.<br />
+              Please configure it from the web portal and reload.
+            </p>
+          </div>
+          <div className="w-full flex items-start gap-3 px-5 py-4 rounded-2xl bg-amber-500/6 border border-amber-500/12">
+            <span className="material-symbols-outlined text-amber-400 flex-shrink-0 mt-0.5" style={{ fontSize: '16px' }}>info</span>
+            <p className="text-amber-300/70 text-xs leading-relaxed">
+              Go to the Sharewinds web portal → Door Signs → select this sign → assign a room resource to it.
+            </p>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full py-4 rounded-2xl font-black text-sm bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>refresh</span>
+            Reload
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const showNav = currentView !== View.CHECKIN && currentView !== View.BOOKING && currentView !== View.LOGIN && currentView !== View.MEETING_DETAILS;
 
@@ -947,28 +997,68 @@ const App: React.FC<AppProps> = ({ initialResourceData }) => {
 const AppGate: React.FC = () => {
   const [checked, setChecked] = useState(false);
   const [isSetup, setIsSetup] = useState(false);
+  const [licence, setLicence] = useState<LicenseInfo | null>(null);
   const [resourceBootData, setResourceBootData] = useState<any>(null);
 
+  const loadState = async () => {
+    const [hostUrl, key, lic] = await Promise.all([loadHostUrl(), getActivationKey(), getLicense()]);
+    setLicence(lic);
+    setIsSetup(!!hostUrl && !!key && !!lic);
+    setChecked(true);
+  };
+
   useEffect(() => {
-    (async () => {
-      const [hostUrl, key] = await Promise.all([loadHostUrl(), getActivationKey()]);
-      setIsSetup(!!hostUrl && !!key);
-      setChecked(true);
-    })();
+    loadState();
+    // Re-check expiry every hour without requiring a restart
+    const interval = setInterval(loadState, 60 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   if (!checked) return null;
+
   if (!isSetup) {
     return (
-      <SetupWizard
-        onComplete={(resourceData) => {
-          setResourceBootData(resourceData);
-          setIsSetup(true);
-        }}
-      />
+      <>
+        <SetupWizard
+          onComplete={(resourceData) => {
+            setResourceBootData(resourceData);
+            loadState();
+          }}
+        />
+        <NetworkBanner />
+      </>
     );
   }
-  return <App initialResourceData={resourceBootData} />;
+
+  if (licence && isLicenseExpired(licence)) {
+    return (
+      <>
+        <LicenseExpiredScreen
+          license={licence}
+          onRenew={() => {
+            setIsSetup(false);
+            setLicence(null);
+            setChecked(false);
+          }}
+        />
+        <NetworkBanner />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <App
+        initialResourceData={resourceBootData}
+        onUnlinked={() => {
+          setIsSetup(false);
+          setLicence(null);
+          setResourceBootData(null);
+        }}
+      />
+      <NetworkBanner />
+    </>
+  );
 };
 
 export default AppGate;

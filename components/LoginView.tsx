@@ -39,30 +39,14 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
         return;
       }
       const data = await res.json();
-      const token: string = data.token ?? data.accessToken ?? data.access_token ?? '';
-      const userId: string =
-        data.userId ?? data.id ?? data.user?.id ?? data.user?.userId ??
-        data.employee?.id ?? data.employee?.userId ?? '';
-      const toStr = (v: unknown) => (v && typeof v === 'string') ? v : null;
-      const rawName =
-        toStr(data.name) ??
-        toStr(data.fullName) ??
-        toStr(data.displayName) ??
-        toStr(data.employee?.name) ??
-        toStr(data.employee?.fullName) ??
-        toStr(data.user?.name) ??
-        toStr(data.user?.fullName) ??
-        (data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : null) ??
-        (data.employee?.firstName && data.employee?.lastName ? `${data.employee.firstName} ${data.employee.lastName}` : null) ??
-        null;
-      const user: User = {
-        employeeId,
-        userId,
-        name: rawName ?? employeeId,
-        role: data.role ?? data.jobTitle ?? data.position ?? data.employee?.jobTitle ?? 'Employee',
-        photo: data.photo ?? data.avatar ?? data.profileImage ?? data.employee?.photo ?? `https://i.pravatar.cc/150?u=${employeeId}`,
-        token,
-      };
+      // Response shape: { token, user: { Id, FullName, Email, Username, Role, EmployeeNumber, AvatarUrl, IsMainAccount } }
+      const u = data.user ?? data;
+      const token: string = data.token ?? data.accessToken ?? '';
+      const userId: string = u.Id ?? u.id ?? u.userId ?? '';
+      const name: string = u.FullName ?? u.fullName ?? u.displayName ?? u.Username ?? u.username ?? employeeId;
+      const role: string = u.Role ?? u.role ?? u.jobTitle ?? 'Employee';
+      const photo: string = u.AvatarUrl ?? u.avatarUrl ?? u.photo ?? `https://i.pravatar.cc/150?u=${employeeId}`;
+      const user: User = { employeeId, userId, name, role, photo, token };
       onLogin(user);
     } catch {
       setError('Network error. Please try again.');

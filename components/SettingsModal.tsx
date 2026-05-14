@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { HomeLayout } from '../types';
+import { setLed, LedCode, LedColor } from '../lib/led';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -21,7 +22,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onSelectSlotPrecision,
   onOpenConfiguration,
 }) => {
+  const [ledStatus, setLedStatus] = useState<string>('');
   if (!isOpen) return null;
+
+  const ledTest = async (color: LedColor) => {
+    setLedStatus(`Sending ${color} (${LedCode[color]})…`);
+    try {
+      await setLed(color);
+      setLedStatus(`✓ ${color} (${LedCode[color]}) sent`);
+    } catch (e: any) {
+      setLedStatus(`✗ ${color} failed: ${e?.message ?? e}`);
+    }
+  };
 
   const layouts = [
     { id: HomeLayout.SPLIT_SCREEN, name: 'Split Screen', desc: 'High-impact split view with vertical imagery', icon: 'view_agenda' },
@@ -103,6 +115,49 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <p className="mt-4 px-4 text-slate-300 text-[10px] font-medium leading-relaxed uppercase tracking-wider">
               Adjusts the density of the grid in the Timeline Schedule view. Higher precision allows for more detailed booking views.
             </p>
+          </div>
+
+          {/* LED Test Panel — tap each button to drive the hardware LED bar */}
+          <div className="pt-2 border-t border-white/5">
+            <h3 className="text-white text-xl font-black mb-4 flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary">lightbulb</span>
+              LED Test
+            </h3>
+            <p className="text-slate-400 text-xs mb-4">
+              Tap a color to send it to the door-sign LED bar. Useful for verifying the
+              vendor color mapping (0x04 red / 0x05 blue / 0x06 green / 0x0b flash).
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <button
+                onClick={() => ledTest('RED')}
+                className="py-5 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-red-600 hover:brightness-110 active:scale-95 transition-all shadow-lg"
+              >
+                Red<br /><span className="text-[10px] opacity-70">0x04</span>
+              </button>
+              <button
+                onClick={() => ledTest('BLUE')}
+                className="py-5 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-blue-600 hover:brightness-110 active:scale-95 transition-all shadow-lg"
+              >
+                Blue<br /><span className="text-[10px] opacity-70">0x05</span>
+              </button>
+              <button
+                onClick={() => ledTest('GREEN')}
+                className="py-5 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-green-600 hover:brightness-110 active:scale-95 transition-all shadow-lg"
+              >
+                Green<br /><span className="text-[10px] opacity-70">0x06</span>
+              </button>
+              <button
+                onClick={() => ledTest('FLASH')}
+                className="py-5 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-gradient-to-r from-pink-500 via-yellow-400 to-cyan-400 hover:brightness-110 active:scale-95 transition-all shadow-lg"
+              >
+                Flash<br /><span className="text-[10px] opacity-70">0x0b</span>
+              </button>
+            </div>
+            {ledStatus && (
+              <p className="mt-4 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-200 text-xs font-mono">
+                {ledStatus}
+              </p>
+            )}
           </div>
 
           {/* Configuration entry */}
