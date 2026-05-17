@@ -541,104 +541,106 @@ const BookingView: React.FC<BookingViewProps> = ({
     <div className="flex flex-col h-full bg-[#050505] overflow-hidden relative">
       <div className="absolute top-[-20%] right-[-10%] size-[80%] bg-primary/20 blur-[150px] rounded-xl pointer-events-none" />
 
-      {/* Header — matching MeetingDetailsView */}
-      <header className="flex items-center justify-between p-3 lg:p-4 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
+      {/* Header */}
+      <header className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
         <div className="flex items-center gap-3">
-          <button type="button" onClick={onBack} className="size-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
-            <span className="material-symbols-outlined text-xl">arrow_back</span>
+          <button type="button" onClick={onBack} className="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
+            <span className="material-symbols-outlined text-2xl">arrow_back</span>
           </button>
           <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black text-white tracking-tight leading-none uppercase">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-black text-white tracking-tight leading-none uppercase">
                 {initialMeetingId ? (isPastMeeting ? 'Archived Booking' : 'Edit Booking') : 'New Booking'}
               </h1>
               {initialMeetingId && !isPastMeeting && (
                 <button
                   type="button"
                   onClick={() => setIsServiceModalOpen(true)}
-                  className="size-8 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 group shadow-lg"
+                  className="size-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 group shadow-lg"
                   title="Request Service"
                 >
-                  <span className="material-symbols-outlined text-base font-variation-fill group-hover:rotate-12 transition-transform">notifications_active</span>
+                  <span className="material-symbols-outlined text-lg font-variation-fill group-hover:rotate-12 transition-transform">notifications_active</span>
                 </button>
               )}
             </div>
-            <p className="text-white text-[8px] font-black uppercase tracking-[0.4em] mt-1">{roomName} • Booking Details</p>
+            <p className="text-slate-400 text-xs font-black uppercase tracking-[0.3em] mt-1">{roomName} • Booking Details</p>
           </div>
         </div>
         {initialMeetingId && !isPastMeeting && (
-          <button onClick={handleDelete} className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+          <button onClick={handleDelete} className="px-5 py-3 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
             Cancel Booking
           </button>
         )}
       </header>
 
-      <main className="flex-1 overflow-y-auto p-3 lg:p-5 relative z-10 custom-scrollbar">
-        <form onSubmit={handleSubmit} className="max-w-5xl mx-auto flex flex-col gap-3">
+      <main className="flex-1 overflow-hidden p-4 lg:p-5 relative z-10">
+        <form onSubmit={handleSubmit} className="h-full max-w-5xl mx-auto flex flex-col gap-4">
 
-          {/* Organizer card */}
+          {/* Organizer card — shrinks to fit, doesn't grow */}
           {(initialMeetingId || currentUser) && organizerPhoto && (
-            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex items-center gap-4">
-              <div className="size-14 rounded-xl bg-white/5 border border-white/10 p-0.5 shrink-0 relative overflow-hidden">
+            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex items-center gap-4 shrink-0">
+              <div className="size-16 rounded-xl bg-white/5 border border-white/10 p-0.5 shrink-0 relative overflow-hidden">
                 <img src={organizerPhoto} alt={organizer} className="size-full object-cover rounded-xl" />
-                <div className="absolute -bottom-1 -right-1 size-4 bg-emerald-500 border-2 border-[#050505] rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="material-symbols-outlined text-white text-[6px] font-bold">verified</span>
+                <div className="absolute -bottom-1 -right-1 size-5 bg-emerald-500 border-2 border-[#050505] rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="material-symbols-outlined text-white text-[8px] font-bold">verified</span>
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">Lead Organizer</span>
-                <h3 className="text-lg font-black text-white tracking-tight leading-none">{organizer}</h3>
-                <span className="text-primary text-[8px] font-black uppercase tracking-widest mt-1">Authenticated</span>
+                <span className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Lead Organizer</span>
+                <h3 className="text-xl font-black text-white tracking-tight leading-none">{organizer}</h3>
+                <span className="text-primary text-xs font-black uppercase tracking-widest mt-1">Authenticated</span>
               </div>
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {/* Two-column grid fills remaining height */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+
             {/* Left column: Details + Recurring */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar pr-1">
 
               {/* Event Details card */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4">
-                <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-                  <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                    <span className="material-symbols-outlined text-base">title</span>
+              <div className="bg-white/[0.03] border border-white/10 rounded-xl p-5 lg:p-7 shadow-2xl flex flex-col gap-5 shrink-0">
+                <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                  <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                    <span className="material-symbols-outlined text-xl">title</span>
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">Event Details</span>
+                  <span className="text-sm font-black uppercase tracking-[0.4em] text-primary">Event Details</span>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Event Title</label>
-                  <div className="flex gap-2">
+                  <label className="text-slate-400 text-xs font-black uppercase tracking-widest">Event Title</label>
+                  <div className="flex gap-3">
                     <input
                       required type="text" value={title}
                       onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('title'); } }}
                       readOnly placeholder="e.g., Weekly Sync"
-                      className={`flex-1 bg-white/5 border rounded-xl p-2.5 text-sm font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'title' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
+                      className={`flex-1 bg-white/5 border rounded-xl p-4 text-base font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'title' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
                     />
-                    <button type="button" disabled={isPastMeeting} onClick={() => setIsSuggestionsOpen(true)} className="size-10 rounded-xl bg-[#0b1a2d] border border-primary/20 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-xl active:scale-95 group shrink-0">
-                      <span className="material-symbols-outlined text-base group-hover:rotate-12 transition-transform">magic_button</span>
+                    <button type="button" disabled={isPastMeeting} onClick={() => setIsSuggestionsOpen(true)} className="size-14 rounded-xl bg-[#0b1a2d] border border-primary/20 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-xl active:scale-95 group shrink-0">
+                      <span className="material-symbols-outlined text-xl group-hover:rotate-12 transition-transform">magic_button</span>
                     </button>
                   </div>
                 </div>
 
                 {!currentUser && (
                   <div className="flex flex-col gap-2">
-                    <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Organizer Name</label>
+                    <label className="text-slate-400 text-xs font-black uppercase tracking-widest">Organizer Name</label>
                     <input
                       required type="text" value={organizer}
                       onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('organizer'); } }}
                       readOnly placeholder="Your Full Name"
-                      className={`bg-white/5 border rounded-xl p-2.5 text-sm font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'organizer' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
+                      className={`bg-white/5 border rounded-xl p-4 text-base font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'organizer' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
                     />
                   </div>
                 )}
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Session Type</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <label className="text-slate-400 text-xs font-black uppercase tracking-widest">Session Type</label>
+                  <div className="grid grid-cols-2 gap-3">
                     {(['INTERNAL', 'CLIENT'] as const).map(t => (
                       <button key={t} type="button" disabled={isPastMeeting} onClick={() => setType(t)}
-                        className={`py-2.5 rounded-xl text-[10px] font-black transition-all border uppercase tracking-widest ${type === t ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>
+                        className={`py-4 rounded-xl text-sm font-black transition-all border uppercase tracking-widest ${type === t ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>
                         {t}
                       </button>
                     ))}
@@ -646,100 +648,100 @@ const BookingView: React.FC<BookingViewProps> = ({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Date</label>
+                  <label className="text-slate-400 text-xs font-black uppercase tracking-widest">Date</label>
                   <input
                     type="date" value={date} onChange={(e) => setDate(e.target.value)}
                     disabled={!!initialMeetingId}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark disabled:opacity-50 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-base font-bold text-white outline-none focus:border-primary color-scheme-dark disabled:opacity-50 transition-all"
                   />
                 </div>
               </div>
 
               {/* Recurring card */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4">
+              <div className="bg-white/[0.03] border border-white/10 rounded-xl p-5 lg:p-7 shadow-2xl flex flex-col gap-5 shrink-0">
                 <div className="flex items-center justify-between pb-3 border-b border-white/5">
-                  <div className="flex items-center gap-2">
-                    <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                      <span className="material-symbols-outlined text-base">repeat</span>
+                  <div className="flex items-center gap-3">
+                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                      <span className="material-symbols-outlined text-xl">repeat</span>
                     </div>
-                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">Recurring</span>
+                    <span className="text-sm font-black uppercase tracking-[0.4em] text-primary">Recurring</span>
                   </div>
                   <button type="button" disabled={isPastMeeting} onClick={() => setIsRecurring(!isRecurring)}
-                    className={`size-8 rounded-xl flex items-center justify-center transition-all ${isRecurring ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 border border-white/10'}`}>
-                    <span className="material-symbols-outlined text-base">{isRecurring ? 'toggle_on' : 'toggle_off'}</span>
+                    className={`size-10 rounded-xl flex items-center justify-center transition-all ${isRecurring ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 border border-white/10'}`}>
+                    <span className="material-symbols-outlined text-xl">{isRecurring ? 'toggle_on' : 'toggle_off'}</span>
                   </button>
                 </div>
                 {isRecurring ? (
-                  <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="grid grid-cols-3 gap-2">
+                  <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="grid grid-cols-3 gap-3">
                       {['DAILY', 'WEEKLY', 'MONTHLY'].map(f => (
                         <button key={f} type="button" onClick={() => setRecurrence(f as any)}
-                          className={`py-2 rounded-xl text-[9px] font-black transition-all border uppercase tracking-widest ${recurrence === f ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>{f}</button>
+                          className={`py-3.5 rounded-xl text-sm font-black transition-all border uppercase tracking-widest ${recurrence === f ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>{f}</button>
                       ))}
                     </div>
                     {recurrence === 'WEEKLY' && (
                       <div className="flex flex-col gap-2">
-                        <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Days of Week</label>
-                        <div className="grid grid-cols-7 gap-1">
+                        <label className="text-slate-400 text-xs font-black uppercase tracking-widest">Days of Week</label>
+                        <div className="grid grid-cols-7 gap-1.5">
                           {[{n:'Mo',v:1},{n:'Tu',v:2},{n:'We',v:3},{n:'Th',v:4},{n:'Fr',v:5},{n:'Sa',v:6},{n:'Su',v:7}].map(({n,v}) => (
                             <button key={v} type="button" onClick={() => toggleDay(v)}
-                              className={`py-2 rounded-xl text-[9px] font-black transition-all border ${
+                              className={`py-3 rounded-xl text-xs font-black transition-all border ${
                                 selectedDays.includes(v) ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'
                               }`}>{n}</button>
                           ))}
                         </div>
-                        {selectedDays.length === 0 && <p className="text-red-400 text-[8px] font-black uppercase tracking-widest">Select at least one day</p>}
+                        {selectedDays.length === 0 && <p className="text-red-400 text-xs font-black uppercase tracking-widest">Select at least one day</p>}
                       </div>
                     )}
                     <div className="flex flex-col gap-2">
-                      <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">End Date</label>
-                      <input type="date" value={recurrenceEndDate} onChange={(e) => setRecurrenceEndDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark transition-all" />
+                      <label className="text-slate-400 text-xs font-black uppercase tracking-widest">End Date</label>
+                      <input type="date" value={recurrenceEndDate} onChange={(e) => setRecurrenceEndDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-base font-bold text-white outline-none focus:border-primary color-scheme-dark transition-all" />
                     </div>
                     {initialMeetingId && (
                       <button type="button" onClick={() => setUpdateSeries(!updateSeries)}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all ${updateSeries ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-slate-300'}`}>
-                        <span className="material-symbols-outlined text-base">{updateSeries ? 'check_box' : 'check_box_outline_blank'}</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest">Update Entire Series</span>
+                        className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${updateSeries ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-slate-300'}`}>
+                        <span className="material-symbols-outlined text-xl">{updateSeries ? 'check_box' : 'check_box_outline_blank'}</span>
+                        <span className="text-sm font-black uppercase tracking-widest">Update Entire Series</span>
                       </button>
                     )}
                   </div>
                 ) : (
-                  <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest">One-time meeting</p>
+                  <p className="text-slate-500 text-sm font-black uppercase tracking-widest">One-time meeting</p>
                 )}
               </div>
 
             </div>
 
-            {/* Right column: Schedule & Submit */}
-            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-                <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                  <span className="material-symbols-outlined text-base font-variation-fill">schedule</span>
+            {/* Right column: Schedule & Submit — fills column height */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-5 lg:p-7 shadow-2xl flex flex-col gap-5 h-full overflow-y-auto custom-scrollbar">
+              <div className="flex items-center gap-3 pb-3 border-b border-white/5 shrink-0">
+                <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                  <span className="material-symbols-outlined text-xl font-variation-fill">schedule</span>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">Schedule</span>
+                <span className="text-sm font-black uppercase tracking-[0.4em] text-primary">Schedule</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4 shrink-0">
                 <div className="flex flex-col gap-2">
-                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Start Time</label>
-                  <select disabled={isPastMeeting} value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
+                  <label className="text-slate-400 text-xs font-black uppercase tracking-widest">Start Time</label>
+                  <select disabled={isPastMeeting} value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-base font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
                     {startOptions.map((o) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.reason === 'past' ? ' (past)' : o.reason === 'booked' ? ' (booked)' : ''}</option>)}
                   </select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">End Time</label>
-                  <select disabled={availableEndOptions.length === 0 || isPastMeeting} value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
+                  <label className="text-slate-400 text-xs font-black uppercase tracking-widest">End Time</label>
+                  <select disabled={availableEndOptions.length === 0 || isPastMeeting} value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-base font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
                     {availableEndOptions.map((o: { time: string; disabled: boolean }) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.disabled ? ' (booked)' : ''}</option>)}
                   </select>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Quick Duration</label>
-                <div className="grid grid-cols-4 gap-2">
+              <div className="flex flex-col gap-2 shrink-0">
+                <label className="text-slate-400 text-xs font-black uppercase tracking-widest">Quick Duration</label>
+                <div className="grid grid-cols-4 gap-3">
                   {QUICK_DURATIONS.map(dur => (
                     <button key={dur} type="button" disabled={!availableDurations.includes(dur) || isPastMeeting} onClick={() => handleSetDuration(dur)}
-                      className={`py-2.5 rounded-xl text-[10px] font-black transition-all border ${currentDuration === dur ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 disabled:opacity-30 hover:border-white/20 hover:text-white'}`}>
+                      className={`py-4 rounded-xl text-sm font-black transition-all border ${currentDuration === dur ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 disabled:opacity-30 hover:border-white/20 hover:text-white'}`}>
                       {dur >= 60 ? `${dur / 60}h` : `${dur}m`}
                     </button>
                   ))}
@@ -748,13 +750,13 @@ const BookingView: React.FC<BookingViewProps> = ({
 
               {/* Duration summary */}
               {currentDuration && (
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center gap-3 animate-in fade-in duration-300">
-                  <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
-                    <span className="material-symbols-outlined text-base font-variation-fill">hourglass_empty</span>
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center gap-4 animate-in fade-in duration-300 shrink-0">
+                  <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
+                    <span className="material-symbols-outlined text-xl font-variation-fill">hourglass_empty</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Duration</span>
-                    <span className="text-white text-sm font-black">
+                    <span className="text-slate-400 text-xs font-black uppercase tracking-widest">Duration</span>
+                    <span className="text-white text-base font-black">
                       {startTime} — {endTime} &nbsp;·&nbsp; {currentDuration >= 60 ? `${currentDuration / 60}h` : `${currentDuration}m`}
                     </span>
                   </div>
@@ -762,18 +764,18 @@ const BookingView: React.FC<BookingViewProps> = ({
               )}
 
               {error && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center gap-2 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <span className="material-symbols-outlined text-base">error</span>
-                  <p className="text-[10px] font-bold">{error}</p>
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300 shrink-0">
+                  <span className="material-symbols-outlined text-xl">error</span>
+                  <p className="text-sm font-bold">{error}</p>
                 </div>
               )}
 
-              <div className="mt-auto pt-1">
+              <div className="mt-auto pt-2 shrink-0">
                 <button type="submit" disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting}
-                  className="w-full bg-white text-black py-4 rounded-xl text-sm font-black shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 border-t border-white/20 uppercase tracking-widest">
+                  className="w-full bg-white text-black py-5 rounded-xl text-base font-black shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 border-t border-white/20 uppercase tracking-widest">
                   {isSubmitting
-                    ? <span className="size-4 border-2 border-black/30 border-t-black rounded-xl animate-spin"></span>
-                    : <><span className="material-symbols-outlined text-lg font-bold">{initialMeetingId ? 'save' : 'event_available'}</span>{initialMeetingId ? 'Update Booking' : 'Confirm Booking'}</>
+                    ? <span className="size-5 border-2 border-black/30 border-t-black rounded-xl animate-spin"></span>
+                    : <><span className="material-symbols-outlined text-xl font-bold">{initialMeetingId ? 'save' : 'event_available'}</span>{initialMeetingId ? 'Update Booking' : 'Confirm Booking'}</>
                   }
                 </button>
               </div>
