@@ -1,5 +1,23 @@
 apply plugin: 'com.android.application'
 
+// --- Persistent release signing -----------------------------------------------
+// Load credentials from android/keystore.properties (NOT committed to git).
+// Generate the keystore ONCE with:
+//   keytool -genkeypair -v -keystore doorsign-release.keystore \
+//     -alias doorsign -keyalg RSA -keysize 2048 -validity 36500
+// then create android/keystore.properties with:
+//   storeFile=doorsign-release.keystore
+//   storePassword=YOUR_STORE_PASSWORD
+//   keyAlias=doorsign
+//   keyPassword=YOUR_KEY_PASSWORD
+// Every future release APK will be signed with the same key, so the device
+// will accept it as an UPDATE to the installed app — no uninstall required.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.doorsign.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +34,25 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Only attach the release signing config if the keystore properties
+            // file exists — keeps unsigned/CI builds working out-of-the-box.
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

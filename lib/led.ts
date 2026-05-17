@@ -6,6 +6,11 @@ import { registerPlugin } from '@capacitor/core';
  *   0x05 → 蓝色   (blue)
  *   0x06 → 绿色   (green)
  *   0x0b → 七色混闪 (seven-color flashing)
+ *
+ * NOTE: On some hardware revisions the firmware has green and blue swapped
+ * relative to the doc. Use the LED Test panel in Settings to verify and the
+ * `setAvailableCode` / `setBusyCode` helpers below (or localStorage keys
+ * `led.availableCode` / `led.busyCode`) to override at runtime — no rebuild.
  */
 export const LedCode = {
   RED:   '0x04',
@@ -22,8 +27,32 @@ interface LedPlugin {
 
 const Led = registerPlugin<LedPlugin>('Led');
 
-// Remember the last color we asked for, so we can ignore redundant writes
-// (some drivers ignore back-to-back identical writes, or transition oddly).
+const LS_AVAILABLE = 'led.availableCode';
+const LS_BUSY = 'led.busyCode';
+
+/** Default codes — overridden by localStorage if the user picks differently. */
+const DEFAULT_AVAILABLE = LedCode.GREEN; // doc says green = free
+const DEFAULT_BUSY = LedCode.RED;        // doc says red   = booked
+
+export function getAvailableCode(): string {
+  try { return localStorage.getItem(LS_AVAILABLE) || DEFAULT_AVAILABLE; }
+  catch { return DEFAULT_AVAILABLE; }
+}
+export function getBusyCode(): string {
+  try { return localStorage.getItem(LS_BUSY) || DEFAULT_BUSY; }
+  catch { return DEFAULT_BUSY; }
+}
+export function setAvailableCode(code: string): void {
+  try { localStorage.setItem(LS_AVAILABLE, code); } catch { /* ignore */ }
+  // forget cache so the next call actually re-sends
+  lastCode = null;
+}
+export function setBusyCode(code: string): void {
+  try { localStorage.setItem(LS_BUSY, code); } catch { /* ignore */ }
+  lastCode = null;
+}
+
+// Remember the last color we asked for, so we can ignore redundant writes.
 let lastCode: string | null = null;
 
 async function writeColor(code: string): Promise<void> {
@@ -39,16 +68,18 @@ async function writeColor(code: string): Promise<void> {
   }
 }
 
-/** Room is free → solid GREEN (0x06). */
+/** Room is free → "available" color (default green 0x06). */
 export async function setLedAvailable(): Promise<void> {
-  if (lastCode === LedCode.GREEN) return;
-  await writeColor(LedCode.GREEN);
+  const code = getAvailableCode();
+  if (lastCode === code) return;
+  await writeColor(code);
 }
 
-/** Room is occupied → solid RED (0x04). */
+/** Room is occupied → "busy" color (default red 0x04). */
 export async function setLedBusy(): Promise<void> {
-  if (lastCode === LedCode.RED) return;
-  await writeColor(LedCode.RED);
+  const code = getBusyCode();
+  if (lastCode === code) return;
+  await writeColor(code);
 }
 
 /** Solid BLUE (0x05). */
@@ -63,7 +94,19 @@ export async function setLedFlash(): Promise<void> {
   await writeColor(LedCode.FLASH);
 }
 
-/** Generic helper if you need to set any color by name. */
+/** Generic helper — set any color by name. */
 export async function setLed(color: LedColor): Promise<void> {
   await writeColor(LedCode[color]);
+}
+
+/** Generic helper — set any code (e.g. '0x06') directly. */
+export async function setLedRaw(code: string): Promise<void> {
+  await writeColor(code);
+}
+
+/** Force re-send the appropriate color for the current room state. */
+export async function refreshLed(isAvailable: boolean): Promise<void> {
+  lastCode = null;
+  if (isAvailable) await setLedAvailable();
+  else await setLedBusy();
 }

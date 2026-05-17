@@ -18,7 +18,7 @@ import SettingsModal from './components/SettingsModal';
 import { ROOM_INFO } from './constants';
 import { db } from './lib/db';
 import { useBookingSync } from './lib/useBookingSync';
-import { setLedAvailable, setLedBusy } from './lib/led';
+import { setLedAvailable, setLedBusy, refreshLed } from './lib/led';
 import { doorSignFetch } from './lib/doorSignFetch';
 import { getBaseUrl, loadHostUrl } from './lib/hostUrl';
 import SetupWizard from './components/SetupWizard';
@@ -220,6 +220,24 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
     db.init();
     // Set LED to green on startup — will be corrected by first updateRoomStatus if a meeting is active
     setLedAvailable();
+
+    // Re-assert the LED whenever the app comes back to the foreground or the
+    // tab becomes visible. Covers the case where the vendor LED test app or
+    // some other process changed the color while we were in the background.
+    const reassert = () => {
+      // Use the latest roomStatus from a ref-like read via setRoomStatus(prev=>...)
+      setRoomStatus(prev => {
+        refreshLed(prev.isAvailable);
+        return prev;
+      });
+    };
+    const onVisibility = () => { if (document.visibilityState === 'visible') reassert(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', reassert);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', reassert);
+    };
   }, []);
 
   const applyDigitalSignData = useCallback((data: {
@@ -408,7 +426,10 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
         currentMeeting: currentMeeting || undefined,
         nextMeeting: nextMeeting || undefined
       }));
-      if (available) setLedAvailable(); else setLedBusy();
+      // Always force-refresh the LED on each tick — never trust the dedupe
+      // cache. Cheap (single sysfs/shell write) and guarantees the bar matches
+      // the current room state at all times.
+      refreshLed(available);
       setIsSyncing(false);
     }, 300);
   }, [parseTimeString]);
@@ -564,6 +585,9 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
     db.updateMeeting(confirmEndId, { endTime: formattedEnd });
     setConfirmEndId(null);
     updateRoomStatus();
+    // Force the LED to refresh — bypass dedupe so the bar definitely flips
+    // green the moment the meeting ends (even if state flapped).
+    refreshLed(true);
     handleLogout();
   };
 

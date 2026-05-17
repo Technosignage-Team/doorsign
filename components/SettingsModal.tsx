@@ -1,7 +1,15 @@
 
 import React, { useState } from 'react';
 import { HomeLayout } from '../types';
-import { setLed, LedCode, LedColor } from '../lib/led';
+import {
+  setLed,
+  LedCode,
+  LedColor,
+  getAvailableCode,
+  getBusyCode,
+  setAvailableCode,
+  setBusyCode,
+} from '../lib/led';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -23,16 +31,34 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenConfiguration,
 }) => {
   const [ledStatus, setLedStatus] = useState<string>('');
+  const [availableCode, setAvailableCodeState] = useState<string>(() => getAvailableCode());
+  const [busyCode, setBusyCodeState] = useState<string>(() => getBusyCode());
   if (!isOpen) return null;
 
   const ledTest = async (color: LedColor) => {
     setLedStatus(`Sending ${color} (${LedCode[color]})…`);
     try {
       await setLed(color);
-      setLedStatus(`✓ ${color} (${LedCode[color]}) sent`);
+      setLedStatus(`✓ ${color} (${LedCode[color]}) sent — does the bar match?`);
     } catch (e: any) {
       setLedStatus(`✗ ${color} failed: ${e?.message ?? e}`);
     }
+  };
+
+  const bindAvailable = (color: LedColor) => {
+    setAvailableCode(LedCode[color]);
+    setAvailableCodeState(LedCode[color]);
+    setLedStatus(`✓ Saved: room-FREE will now use ${color} (${LedCode[color]})`);
+  };
+  const bindBusy = (color: LedColor) => {
+    setBusyCode(LedCode[color]);
+    setBusyCodeState(LedCode[color]);
+    setLedStatus(`✓ Saved: room-BUSY will now use ${color} (${LedCode[color]})`);
+  };
+
+  const codeToName = (code: string): LedColor | string => {
+    const entry = (Object.entries(LedCode) as Array<[LedColor, string]>).find(([, c]) => c === code);
+    return entry ? entry[0] : code;
   };
 
   const layouts = [
@@ -117,42 +143,77 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </p>
           </div>
 
-          {/* LED Test Panel — tap each button to drive the hardware LED bar */}
+          {/* LED Test Panel — tap a color to drive the hardware bar, then "Bind"
+              the one that actually displays correctly to the FREE/BUSY state. */}
           <div className="pt-2 border-t border-white/5">
             <h3 className="text-white text-xl font-black mb-4 flex items-center gap-3">
               <span className="material-symbols-outlined text-primary">lightbulb</span>
-              LED Test
+              LED Test &amp; Binding
             </h3>
-            <p className="text-slate-400 text-xs mb-4">
-              Tap a color to send it to the door-sign LED bar. Useful for verifying the
-              vendor color mapping (0x04 red / 0x05 blue / 0x06 green / 0x0b flash).
+            <p className="text-slate-400 text-xs mb-4 leading-relaxed">
+              Tap a color to send it to the door-sign LED bar. If the wrong color
+              lights up, use the small <b>Free</b> / <b>Busy</b> buttons to bind
+              whichever code actually matches what you want for each room state.
             </p>
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <button
-                onClick={() => ledTest('RED')}
-                className="py-5 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-red-600 hover:brightness-110 active:scale-95 transition-all shadow-lg"
-              >
-                Red<br /><span className="text-[10px] opacity-70">0x04</span>
-              </button>
-              <button
-                onClick={() => ledTest('BLUE')}
-                className="py-5 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-blue-600 hover:brightness-110 active:scale-95 transition-all shadow-lg"
-              >
-                Blue<br /><span className="text-[10px] opacity-70">0x05</span>
-              </button>
-              <button
-                onClick={() => ledTest('GREEN')}
-                className="py-5 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-green-600 hover:brightness-110 active:scale-95 transition-all shadow-lg"
-              >
-                Green<br /><span className="text-[10px] opacity-70">0x06</span>
-              </button>
-              <button
-                onClick={() => ledTest('FLASH')}
-                className="py-5 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-gradient-to-r from-pink-500 via-yellow-400 to-cyan-400 hover:brightness-110 active:scale-95 transition-all shadow-lg"
-              >
-                Flash<br /><span className="text-[10px] opacity-70">0x0b</span>
-              </button>
+              {(['RED', 'BLUE', 'GREEN', 'FLASH'] as LedColor[]).map((color) => {
+                const bg =
+                  color === 'RED'   ? 'bg-red-600' :
+                  color === 'BLUE'  ? 'bg-blue-600' :
+                  color === 'GREEN' ? 'bg-green-600' :
+                  'bg-gradient-to-r from-pink-500 via-yellow-400 to-cyan-400';
+                const isFree = availableCode === LedCode[color];
+                const isBusy = busyCode === LedCode[color];
+                return (
+                  <div key={color} className="flex flex-col gap-2">
+                    <button
+                      onClick={() => ledTest(color)}
+                      className={`py-5 rounded-xl font-black uppercase tracking-widest text-xs text-white ${bg} hover:brightness-110 active:scale-95 transition-all shadow-lg`}
+                    >
+                      {color}<br />
+                      <span className="text-[10px] opacity-70">{LedCode[color]}</span>
+                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => bindAvailable(color)}
+                        className={`flex-1 py-2 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${
+                          isFree
+                            ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/50'
+                            : 'bg-white/5 text-slate-400 border border-white/10 hover:text-white'
+                        }`}
+                        title="Use this code when the room is FREE"
+                      >
+                        {isFree ? '✓ Free' : 'Free'}
+                      </button>
+                      <button
+                        onClick={() => bindBusy(color)}
+                        className={`flex-1 py-2 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${
+                          isBusy
+                            ? 'bg-rose-500/30 text-rose-200 border border-rose-400/50'
+                            : 'bg-white/5 text-slate-400 border border-white/10 hover:text-white'
+                        }`}
+                        title="Use this code when the room is BUSY"
+                      >
+                        {isBusy ? '✓ Busy' : 'Busy'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
+              <div className="px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-200">
+                <span className="opacity-70 mr-1">FREE →</span>
+                <b>{codeToName(availableCode)}</b> ({availableCode})
+              </div>
+              <div className="px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-200">
+                <span className="opacity-70 mr-1">BUSY →</span>
+                <b>{codeToName(busyCode)}</b> ({busyCode})
+              </div>
+            </div>
+
             {ledStatus && (
               <p className="mt-4 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-200 text-xs font-mono">
                 {ledStatus}
