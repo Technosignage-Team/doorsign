@@ -234,10 +234,10 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
         <div className="w-40 lg:w-48" />
       </header>
 
-      <main className="flex-1 flex flex-row px-6 lg:px-20 gap-8 lg:gap-16 relative z-10 max-w-[1440px] mx-auto w-full pb-8 overflow-y-auto custom-scrollbar">
+      <main className="flex-1 flex flex-row px-4 lg:px-12 gap-6 lg:gap-10 relative z-10 max-w-[1440px] mx-auto w-full pb-4 overflow-hidden">
         
         {/* Left Sidebar */}
-        <div className="w-64 lg:w-80 flex flex-col gap-4 py-2 shrink-0 h-full transition-opacity duration-300" style={{ opacity: isAuthenticated ? 0.3 : 1, pointerEvents: isAuthenticated ? 'none' : 'auto' }}>
+        <div className="w-52 lg:w-64 flex flex-col gap-3 py-2 shrink-0 h-full transition-opacity duration-300" style={{ opacity: isAuthenticated ? 0.3 : 1, pointerEvents: isAuthenticated ? 'none' : 'auto' }}>
           <div className="bg-white/5 p-1.5 rounded-xl border border-white/5 flex flex-col gap-2 backdrop-blur-lg">
             <button 
               onClick={() => { setMode('CHECK_IN'); handleClear(); }}
@@ -273,7 +273,7 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
           <div className="mt-auto flex flex-col gap-4">
             <button 
               onClick={startScanner}
-              className="w-full bg-[#111] border border-primary/40 text-white py-8 lg:py-10 rounded-xl flex flex-col items-center justify-center gap-3 hover:bg-primary/10 hover:border-primary transition-all active:scale-95 group shadow-2xl relative overflow-hidden"
+              className="w-full bg-[#111] border border-primary/40 text-white py-5 lg:py-8 rounded-xl flex flex-col items-center justify-center gap-3 hover:bg-primary/10 hover:border-primary transition-all active:scale-95 group shadow-2xl relative overflow-hidden"
             >
               <div className="size-16 lg:size-20 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform mb-1">
                  <span className="material-symbols-outlined text-3xl lg:text-4xl text-primary font-variation-fill">qr_code_2</span>
@@ -287,7 +287,7 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
 
         {/* Center Panel */}
         <div className="flex-1 flex flex-col items-center justify-center py-2 overflow-visible">
-          <div className="w-full max-w-[520px] bg-white/[0.02] border border-white/10 rounded-xl p-6 lg:p-10 backdrop-blur-3xl shadow-[0_40px_120px_rgba(0,0,0,0.8)] flex flex-col items-center relative group min-h-[580px] transition-all duration-500">
+          <div className="w-full max-w-[480px] bg-white/[0.02] border border-white/10 rounded-xl p-5 lg:p-8 backdrop-blur-3xl shadow-[0_40px_120px_rgba(0,0,0,0.8)] flex flex-col items-center relative group min-h-0 transition-all duration-500">
             <div className="absolute top-0 right-0 size-64 bg-primary/5 blur-[100px] rounded-xl pointer-events-none -translate-y-32 translate-x-32" />
             
             {isAuthenticated ? (

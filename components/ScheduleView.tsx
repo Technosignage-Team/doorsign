@@ -180,9 +180,9 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
   }, [slotPrecision, now, isToday]);
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto pb-24 custom-scrollbar bg-background-dark text-white">
-      <header className="sticky top-0 z-50 bg-background-dark/95 backdrop-blur-xl border-b border-white/5">
-        <div className="flex items-center p-8 justify-between w-full">
+    <div className="flex flex-col h-full overflow-hidden bg-background-dark text-white">
+      <header className="sticky top-0 z-50 bg-background-dark/95 backdrop-blur-xl border-b border-white/5 shrink-0">
+        <div className="flex items-center px-6 py-4 lg:px-8 lg:py-5 justify-between w-full flex-wrap gap-3">
           <div className="flex items-center gap-4">
             {onBack && (
               <button onClick={onBack} className="flex size-12 items-center justify-center hover:bg-white/5 text-white rounded-xl transition-all">
@@ -194,7 +194,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
               <span className="material-symbols-outlined text-4xl font-variation-fill">calendar_view_day</span>
             </div>
             <div className="flex flex-col">
-              <h1 className="text-3xl font-black leading-tight tracking-tight text-white">Timeline Schedule</h1>
+              <h1 className="text-2xl lg:text-3xl font-black leading-tight tracking-tight text-white">Timeline Schedule</h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className={`flex size-1.5 rounded-xl ${isToday ? 'bg-emerald-500 animate-pulse' : 'bg-slate-200'}`}></span>
                 <p className="text-[10px] font-black text-slate-100 uppercase tracking-[0.4em]">
@@ -250,10 +250,10 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
         )}
       </header>
 
-      <main className="flex-1 p-8 lg:p-12">
+      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8">
         <div
-          className="max-w-5xl mx-auto grid grid-cols-[140px_1fr] relative"
-          style={{ gridAutoRows: 'minmax(110px, auto)' }}
+          className="max-w-5xl mx-auto grid grid-cols-[120px_1fr] lg:grid-cols-[140px_1fr] relative"
+          style={{ gridAutoRows: 'minmax(80px, auto)' }}
         >
           {timeSlots.map((slot, idx) => {
             const slotStart = parseTimeString(slot);
@@ -329,7 +329,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
                   >
                     <button
                       onClick={() => onShowMeetingDetails(meetingAtSlot.id)}
-                      className={`h-full w-full p-8 rounded-xl border transition-all duration-500 relative overflow-hidden flex flex-col justify-center text-left ${
+                      className={`h-full w-full p-4 lg:p-8 rounded-xl border transition-all duration-500 relative overflow-hidden flex flex-col justify-center text-left ${
                         isCurrent
                           ? 'bg-status-busy/15 border-status-busy/50 shadow-2xl ring-1 ring-status-busy/25'
                           : 'bg-white/[0.03] border-white/5'
@@ -347,7 +347,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
                             {meetingAtSlot.type} {isCurrent && '(NOW)'}
                           </span>
                         </div>
-                        <h3 className="text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight group-hover:text-primary transition-colors truncate">
+                        <h3 className="text-2xl lg:text-3xl font-black text-white tracking-tight leading-tight group-hover:text-primary transition-colors truncate">
                           {meetingAtSlot.title}
                         </h3>
                         <div className="flex flex-wrap items-center gap-x-8 gap-y-2 mt-5 text-slate-100 font-bold">
@@ -377,7 +377,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
                   >
                     {/* Not in any freeSlot window → booked externally */}
                     {apiSaysBooked && !isPast ? (
-                      <div className="w-full h-full min-h-[110px] bg-status-busy/5 border border-status-busy/20 rounded-xl flex items-center gap-6 px-8 opacity-70">
+                      <div className="w-full h-full min-h-[80px] bg-status-busy/5 border border-status-busy/20 rounded-xl flex items-center gap-6 px-8 opacity-70">
                         <div className="size-10 rounded-xl bg-status-busy/15 flex items-center justify-center text-status-busy shrink-0">
                           <span className="material-symbols-outlined text-xl">event_busy</span>
                         </div>
@@ -390,7 +390,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
                       <button
                         onClick={() => !isPast && onBook(slot)}
                         disabled={isPast}
-                        className={`w-full h-full min-h-[110px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 px-10 transition-all group/btn ${
+                        className={`w-full h-full min-h-[80px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 px-10 transition-all group/btn ${
                           isPast
                             ? 'border-white/5 opacity-40 cursor-not-allowed'
                             : 'border-emerald-500/50 hover:border-emerald-500 hover:bg-emerald-500/10'
