@@ -33,13 +33,13 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
         </button>
       </div>
 
-      <main className="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
+      <main className="flex-1 p-4 lg:p-8 overflow-y-auto custom-scrollbar">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12">
           {/* Left Column: Media & Info */}
           <div className="flex flex-col gap-8">
             {/* Main Photo - Shorter height, rounded corners */}
             <div
-              className="aspect-[21/10] rounded-xl border border-white/10 bg-cover bg-center shadow-2xl overflow-hidden relative group shrink-0 bg-white/5"
+              className="aspect-[16/7] lg:aspect-[21/10] rounded-xl border border-white/10 bg-cover bg-center shadow-2xl overflow-hidden relative group shrink-0 bg-white/5"
               style={imageUrl ? { backgroundImage: `url("${imageUrl}")` } : undefined}
             >
               {!imageUrl && (
