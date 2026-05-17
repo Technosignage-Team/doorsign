@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:static": "vite --mode static",
     "build": "vite build",
-    "build:static": "vite build --mode static",
+    "build:static": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit"
   },
