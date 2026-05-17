@@ -136,7 +136,6 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
                   </div>
                   <div className="flex flex-col">
                     <h3 className="text-2xl lg:text-3xl font-black text-white tracking-tighter uppercase leading-none">{selectedAmenity.title}</h3>
-                    <p className="text-primary text-[9px] font-black uppercase tracking-[0.4em] mt-1.5">{selectedAmenity.subtitle}</p>
                   </div>
                 </div>
                 {selectedAmenity.quantity && (
