@@ -1018,6 +1018,8 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
   );
 };
 
+const STATIC_MODE = !!(import.meta as any).env?.VITE_STATIC_HOST_URL && !!(import.meta as any).env?.VITE_STATIC_ACTIVATION_KEY;
+
 const AppGate: React.FC = () => {
   const [checked, setChecked] = useState(false);
   const [isSetup, setIsSetup] = useState(false);
@@ -1025,6 +1027,11 @@ const AppGate: React.FC = () => {
   const [resourceBootData, setResourceBootData] = useState<any>(null);
 
   const loadState = async () => {
+    if (STATIC_MODE) {
+      setIsSetup(true);
+      setChecked(true);
+      return;
+    }
     const [hostUrl, key, lic] = await Promise.all([loadHostUrl(), getActivationKey(), getLicense()]);
     setLicence(lic);
     setIsSetup(!!hostUrl && !!key && !!lic);
@@ -1033,9 +1040,10 @@ const AppGate: React.FC = () => {
 
   useEffect(() => {
     loadState();
-    // Re-check expiry every hour without requiring a restart
-    const interval = setInterval(loadState, 60 * 60 * 1000);
-    return () => clearInterval(interval);
+    if (!STATIC_MODE) {
+      const interval = setInterval(loadState, 60 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   if (!checked) return null;
@@ -1054,7 +1062,7 @@ const AppGate: React.FC = () => {
     );
   }
 
-  if (licence && isLicenseExpired(licence)) {
+  if (!STATIC_MODE && licence && isLicenseExpired(licence)) {
     return (
       <>
         <LicenseExpiredScreen

@@ -573,8 +573,8 @@ const BookingView: React.FC<BookingViewProps> = ({
         )}
       </header>
 
-      <main className="flex-1 overflow-y-auto p-3 lg:p-4 relative z-10 custom-scrollbar">
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto flex flex-col gap-3">
+      <main className="flex-1 overflow-y-auto p-3 lg:p-5 relative z-10 custom-scrollbar">
+        <form onSubmit={handleSubmit} className="max-w-5xl mx-auto flex flex-col gap-3">
 
           {/* Organizer card */}
           {(initialMeetingId || currentUser) && organizerPhoto && (
