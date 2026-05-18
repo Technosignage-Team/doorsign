@@ -34,13 +34,13 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
       </div>
 
       <main className="flex-1 p-4 lg:p-8 overflow-y-auto custom-scrollbar">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 tablet:grid-cols-2 gap-6 lg:gap-8 min-h-full">
           {/* Left Column: Media & Info */}
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6 h-full">
             {/* Main Photo - Shorter height, rounded corners */}
             <div
-              className="aspect-[16/7] lg:aspect-[21/10] rounded-xl border border-white/10 bg-cover bg-center shadow-2xl overflow-hidden relative group shrink-0 bg-white/5"
-              style={imageUrl ? { backgroundImage: `url("${imageUrl}")` } : undefined}
+              className="rounded-xl border border-white/10 bg-cover bg-center shadow-2xl overflow-hidden relative group shrink-0 bg-white/5"
+              style={{ backgroundImage: imageUrl ? `url("${imageUrl}")` : undefined, height: 'clamp(150px, 28vh, 320px)' }}
             >
               {!imageUrl && (
                 <div className="absolute inset-0 flex items-center justify-center text-white/10">
@@ -62,7 +62,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
             </div>
 
             {/* Description / Overview */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 flex-1">
               <div className="flex items-center gap-3 mb-1">
                 <span className="text-status-available text-[9px] font-black uppercase tracking-widest">Room Ready</span>
                 <span className="flex h-1.5 w-1.5 rounded-xl bg-status-available animate-pulse"></span>
@@ -85,14 +85,14 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
           </div>
 
           {/* Right Column: Amenities */}
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6 h-full">
             <div className="flex items-center justify-between">
               <h3 className="text-2xl font-black tracking-tight text-white uppercase">Room Amenities</h3>
               <p className="text-slate-100 font-bold text-[10px] uppercase tracking-widest">Click for details</p>
             </div>
             
             {amenities.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 xs:grid-cols-2 gap-4 flex-1">
                 {amenities.map((amenity) => (
                   <AmenityCard
                     key={amenity.id}
