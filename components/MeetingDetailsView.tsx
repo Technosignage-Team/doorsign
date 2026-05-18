@@ -128,8 +128,8 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
         </div>
       </header>
 
-      <main className="flex-1 overflow-hidden p-3 lg:p-4 relative z-10 flex flex-col justify-center">
-        <div className="max-w-4xl mx-auto w-full flex flex-col gap-3">
+      <main className="flex-1 overflow-y-auto p-3 lg:p-4 relative z-10 custom-scrollbar flex flex-col">
+        <div className="flex-1 max-w-4xl mx-auto w-full flex flex-col gap-3 justify-center py-2">
           
           <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-6 shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 size-48 bg-primary/5 blur-[60px] rounded-xl pointer-events-none -translate-y-16 translate-x-16" />
@@ -171,7 +171,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
                    <h2 className={`text-2xl lg:text-3xl font-black tracking-tighter leading-tight pr-32 ${meeting.isCancelled ? 'text-slate-200 line-through decoration-red-500/40' : 'text-white'}`}>
                      {meeting.title}
                    </h2>
-                </div>                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 border-y border-white/5">
+                </div>                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-4 py-4 border-y border-white/5">
                    <div className="flex items-center gap-3">
                       <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-primary border border-white/10">
                         <span className="material-symbols-outlined text-xl font-variation-fill">schedule</span>
@@ -276,7 +276,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
              </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 xs:grid-cols-3 gap-3">
              <InfoCard icon="groups" label="Room Capacity" value={capacity != null ? `${capacity} Persons` : '—'} />
              <InfoCard icon="security" label="Privacy Level" value="Internal Only" />
              <button onClick={() => setIsAmenitiesOpen(true)} className="group text-left">

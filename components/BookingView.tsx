@@ -574,7 +574,7 @@ const BookingView: React.FC<BookingViewProps> = ({
       </header>
 
       <main className="flex-1 overflow-y-auto p-3 lg:p-5 relative z-10 custom-scrollbar">
-        <form onSubmit={handleSubmit} className="max-w-5xl mx-auto flex flex-col gap-3">
+        <form onSubmit={handleSubmit} className="w-full max-w-5xl mx-auto flex flex-col gap-3 min-h-full">
 
           {/* Organizer card */}
           {(initialMeetingId || currentUser) && organizerPhoto && (
@@ -593,7 +593,7 @@ const BookingView: React.FC<BookingViewProps> = ({
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 tablet:grid-cols-2 gap-3 flex-1">
             {/* Left column: Details + Recurring */}
             <div className="flex flex-col gap-3">
 
@@ -711,7 +711,7 @@ const BookingView: React.FC<BookingViewProps> = ({
             </div>
 
             {/* Right column: Schedule & Submit */}
-            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4">
+            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4 h-full">
               <div className="flex items-center gap-2 pb-3 border-b border-white/5">
                 <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                   <span className="material-symbols-outlined text-base font-variation-fill">schedule</span>

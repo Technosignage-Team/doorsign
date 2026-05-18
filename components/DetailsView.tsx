@@ -12,173 +12,202 @@ interface DetailsViewProps {
   amenities?: Amenity[];
 }
 
-const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'Conference Room A', roomLocation = 'Nile Business Center – Tower A • Level 1', capacity = 12, description, imageUrl, amenities = [] }) => {
+const DetailsView: React.FC<DetailsViewProps> = ({
+  onBack, onBook,
+  roomName = 'Conference Room A',
+  roomLocation = 'Nile Business Center – Tower A • Level 1',
+  capacity = 12,
+  description,
+  imageUrl,
+  amenities = [],
+}) => {
   const [selectedAmenity, setSelectedAmenity] = useState<Amenity | null>(null);
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background-dark text-white">
-      {/* Sticky Header */}
-      <div className="flex items-center bg-background-dark/95 backdrop-blur-xl p-6 border-b border-white/5 shrink-0">
-        <button onClick={onBack} className="text-white flex size-12 items-center justify-center hover:bg-white/5 hover:text-white rounded-xl transition-all">
-          <span className="material-symbols-outlined text-3xl">arrow_back</span>
+
+      {/* Header */}
+      <div className="flex items-center bg-background-dark/95 backdrop-blur-xl px-4 py-3 lg:px-6 lg:py-4 border-b border-white/5 shrink-0 gap-3">
+        <button onClick={onBack} className="text-white flex size-11 items-center justify-center hover:bg-white/5 rounded-xl transition-all shrink-0">
+          <span className="material-symbols-outlined" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2rem)' }}>arrow_back</span>
         </button>
-        <div className="flex flex-col flex-1 text-center">
-          <h2 className="text-2xl font-black tracking-tighter uppercase text-white">{roomName}</h2>
-          <p className="text-[9px] font-black text-primary tracking-[0.4em] uppercase mt-1">
-            {roomLocation}
-          </p>
+        <div className="flex flex-col flex-1 min-w-0">
+          <h2 className="font-black tracking-tighter uppercase text-white truncate" style={{ fontSize: 'clamp(1rem, 2vw, 1.75rem)' }}>{roomName}</h2>
+          <p className="text-primary font-black uppercase mt-0.5 truncate" style={{ fontSize: 'clamp(0.55rem, 0.85vw, 0.7rem)', letterSpacing: '0.3em' }}>{roomLocation}</p>
         </div>
-        <button className="size-12 flex items-center justify-center text-white hover:bg-white/5 hover:text-white rounded-xl transition-all">
-          <span className="material-symbols-outlined text-2xl">share</span>
+        <button
+          onClick={onBook}
+          className="shrink-0 bg-primary text-white font-black rounded-xl uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all"
+          style={{ fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)', padding: 'clamp(0.45rem, 1vh, 0.65rem) clamp(0.75rem, 1.5vw, 1.25rem)' }}
+        >
+          Reserve
         </button>
       </div>
 
-      <main className="flex-1 p-4 lg:p-8 overflow-y-auto custom-scrollbar">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12">
-          {/* Left Column: Media & Info */}
-          <div className="flex flex-col gap-8">
-            {/* Main Photo - Shorter height, rounded corners */}
+      {/* Scrollable main */}
+      <main className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: 'clamp(0.75rem, 1.5vw, 1.5rem)' }}>
+        <div className="max-w-7xl mx-auto grid grid-cols-1 tablet:grid-cols-2 gap-4 lg:gap-6 min-h-full">
+
+          {/* ── Left: Room Info ── */}
+          <div className="flex flex-col gap-4 h-full">
+
+            {/* Photo */}
             <div
-              className="aspect-[16/7] lg:aspect-[21/10] rounded-xl border border-white/10 bg-cover bg-center shadow-2xl overflow-hidden relative group shrink-0 bg-white/5"
-              style={imageUrl ? { backgroundImage: `url("${imageUrl}")` } : undefined}
+              className="w-full rounded-xl border border-white/10 overflow-hidden relative shrink-0 bg-white/5"
+              style={{ height: 'clamp(140px, 25vh, 280px)' }}
             >
-              {!imageUrl && (
-                <div className="absolute inset-0 flex items-center justify-center text-white/10">
-                  <span className="material-symbols-outlined text-[80px]">meeting_room</span>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-              {/* Capacity Overlay on Photo */}
-              <div className="absolute bottom-6 left-6 flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
-                <span className="material-symbols-outlined text-primary text-xl">groups</span>
-                <span className="text-white font-black text-sm uppercase tracking-widest">{capacity} Persons</span>
+              {imageUrl
+                ? <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${imageUrl}")` }} />
+                : <div className="absolute inset-0 flex items-center justify-center text-white/10">
+                    <span className="material-symbols-outlined" style={{ fontSize: 'clamp(4rem, 8vw, 6rem)' }}>meeting_room</span>
+                  </div>
+              }
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
+                <span className="flex h-1.5 w-1.5 rounded-full bg-status-available animate-pulse" />
+                <span className="text-white font-black uppercase tracking-widest" style={{ fontSize: 'clamp(0.5rem, 0.7vw, 0.6rem)' }}>Live</span>
               </div>
-
-              <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-                <span className="flex h-1.5 w-1.5 rounded-xl bg-status-available animate-pulse"></span>
-                <span className="text-white text-[8px] font-black uppercase tracking-widest">Live View</span>
+              <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
+                <span className="material-symbols-outlined text-primary" style={{ fontSize: 'clamp(0.875rem, 1.4vw, 1.25rem)' }}>groups</span>
+                <span className="text-white font-black uppercase tracking-widest" style={{ fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)' }}>{capacity} Persons</span>
               </div>
             </div>
 
-            {/* Description / Overview */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-status-available text-[9px] font-black uppercase tracking-widest">Room Ready</span>
-                <span className="flex h-1.5 w-1.5 rounded-xl bg-status-available animate-pulse"></span>
-                <div className="h-px flex-1 bg-white/10" />
+            {/* Quick stats */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { icon: 'groups', value: String(capacity), label: 'Persons', color: 'text-primary' },
+                { icon: 'check_circle', value: 'Available', label: 'Status', color: 'text-status-available' },
+                { icon: 'location_on', value: roomLocation.split('•')[0].trim(), label: 'Floor', color: 'text-primary' },
+              ].map(s => (
+                <div key={s.label} className="bg-white/[0.03] border border-white/5 rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2">
+                  <span className={`material-symbols-outlined font-variation-fill ${s.color}`} style={{ fontSize: 'clamp(1rem, 1.6vw, 1.4rem)' }}>{s.icon}</span>
+                  <span className="text-white font-black text-center truncate w-full text-center" style={{ fontSize: 'clamp(0.6rem, 0.95vw, 0.8rem)' }}>{s.value}</span>
+                  <span className="text-slate-500 font-black uppercase text-center" style={{ fontSize: 'clamp(0.45rem, 0.6vw, 0.55rem)', letterSpacing: '0.2em' }}>{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Description — flex-1 fills remaining column height */}
+            <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-white/5 shrink-0">
+                <span className="material-symbols-outlined text-primary" style={{ fontSize: 'clamp(0.875rem, 1.3vw, 1.1rem)' }}>info</span>
+                <span className="text-primary font-black uppercase tracking-[0.3em]" style={{ fontSize: 'clamp(0.5rem, 0.7vw, 0.625rem)' }}>About This Room</span>
               </div>
-              <p className="text-white text-lg lg:text-xl leading-relaxed font-medium">
+              <p className="flex-1 text-slate-200 font-medium leading-relaxed overflow-y-auto" style={{ fontSize: 'clamp(0.75rem, 1.1vw, 0.9rem)' }}>
                 {description || 'Premier meeting space designed for high-stakes decision making and global collaboration. Featuring state-of-the-art acoustic treatment, ergonomic seating, and integrated smart technology to ensure seamless communication.'}
               </p>
-
-              {/* Small Reserve Now Button - Moved here */}
-              <div className="mt-4 flex justify-center">
-                <button 
-                  onClick={onBook}
-                  className="px-10 py-3.5 bg-white text-black text-sm font-black rounded-xl shadow-xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all border-t border-white/20 uppercase tracking-[0.2em]"
-                >
-                  Reserve Now
-                </button>
-              </div>
+              <button
+                onClick={onBook}
+                className="shrink-0 w-full mt-auto bg-white text-black font-black rounded-xl shadow-xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-2"
+                style={{ padding: 'clamp(0.6rem, 1.4vh, 1rem)', fontSize: 'clamp(0.7rem, 1vw, 0.85rem)' }}
+              >
+                <span className="material-symbols-outlined font-variation-fill" style={{ fontSize: 'clamp(0.875rem, 1.4vw, 1.1rem)' }}>event_available</span>
+                Reserve Now
+              </button>
             </div>
           </div>
 
-          {/* Right Column: Amenities */}
-          <div className="flex flex-col gap-8">
-            <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-black tracking-tight text-white uppercase">Room Amenities</h3>
-              <p className="text-slate-100 font-bold text-[10px] uppercase tracking-widest">Click for details</p>
+          {/* ── Right: Amenities ── */}
+          <div className="flex flex-col gap-4 h-full">
+            <div className="flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary" style={{ fontSize: 'clamp(1rem, 1.6vw, 1.3rem)' }}>inventory_2</span>
+                <h3 className="font-black tracking-tight text-white uppercase" style={{ fontSize: 'clamp(0.85rem, 1.3vw, 1.1rem)' }}>Room Amenities</h3>
+                {amenities.length > 0 && (
+                  <span className="px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-full text-primary font-black" style={{ fontSize: 'clamp(0.5rem, 0.7vw, 0.6rem)' }}>{amenities.length}</span>
+                )}
+              </div>
+              {amenities.length > 0 && (
+                <span className="text-slate-500 font-black uppercase" style={{ fontSize: 'clamp(0.45rem, 0.6vw, 0.55rem)', letterSpacing: '0.2em' }}>Tap for details</span>
+              )}
             </div>
-            
-            {amenities.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {amenities.map((amenity) => (
-                  <AmenityCard
-                    key={amenity.id}
-                    amenity={amenity}
-                    onClick={() => setSelectedAmenity(amenity)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 gap-4 text-white/20 border border-white/5 rounded-xl bg-white/[0.02]">
-                <span className="material-symbols-outlined text-5xl">category</span>
-                <p className="text-[10px] font-black uppercase tracking-widest">Loading amenities…</p>
-              </div>
-            )}
 
+            {/* Amenity grid — flex-1 fills remaining column height; cards stay natural size */}
+            <div className="flex-1 flex flex-col">
+              {amenities.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3 content-start">
+                  {amenities.map(a => (
+                    <AmenityCard key={a.id} amenity={a} onClick={() => setSelectedAmenity(a)} />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 text-white/20 border border-white/5 rounded-xl bg-white/[0.02]">
+                  <span className="material-symbols-outlined" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>category</span>
+                  <p className="font-black uppercase tracking-widest" style={{ fontSize: 'clamp(0.6rem, 0.85vw, 0.75rem)' }}>No amenities configured</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
 
-      {/* Amenity Detail Overlay */}
+      {/* ── Amenity Detail Overlay ── */}
       {selectedAmenity && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-2xl" onClick={() => setSelectedAmenity(null)} />
-          <div className="relative w-full max-w-xl bg-card-dark rounded-xl border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden animate-in zoom-in-95 duration-300">
-            {/* Modal Header */}
-            <div className="px-8 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-              <h2 className="text-[9px] font-black text-slate-300 uppercase tracking-[0.5em]">Amenity Details</h2>
-              <button 
-                onClick={() => setSelectedAmenity(null)}
-                className="size-8 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center hover:bg-white/10 transition-all"
-              >
-                <span className="material-symbols-outlined text-xl">close</span>
+          <div
+            className="relative w-full max-w-xl tablet:max-w-2xl bg-card-dark rounded-2xl border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300"
+            style={{ maxHeight: '88vh' }}
+          >
+            {/* Modal top bar */}
+            <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02] shrink-0">
+              <span className="text-slate-400 font-black uppercase tracking-[0.4em]" style={{ fontSize: 'clamp(0.5rem, 0.7vw, 0.625rem)' }}>Amenity Details</span>
+              <button onClick={() => setSelectedAmenity(null)} className="size-8 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center hover:bg-white/10 transition-all">
+                <span className="material-symbols-outlined text-lg">close</span>
               </button>
             </div>
 
-            <div className="p-8 lg:p-10 flex flex-col gap-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="size-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-lg shrink-0">
-                    <span className="material-symbols-outlined text-2xl font-variation-fill">{selectedAmenity.icon}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <h3 className="text-2xl lg:text-3xl font-black text-white tracking-tighter uppercase leading-none">{selectedAmenity.title}</h3>
-                  </div>
+            {/* Scrollable body */}
+            <div className="overflow-y-auto custom-scrollbar flex-1">
+              {selectedAmenity.img && (
+                <div className="w-full overflow-hidden relative bg-black/60" style={{ height: 'clamp(120px, 25vh, 260px)' }}>
+                  <img src={selectedAmenity.img} alt={selectedAmenity.title} className="w-full h-full object-contain object-center" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-card-dark/30 to-transparent pointer-events-none" />
+                  <span className="absolute bottom-3 right-4 font-black text-white/20 uppercase tracking-[0.3em]" style={{ fontSize: 'clamp(0.45rem, 0.6vw, 0.55rem)' }}>Hardware Visualization</span>
                 </div>
-                {selectedAmenity.quantity && (
-                  <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/10">
-                    <span className="text-white font-black text-xs uppercase tracking-widest">{selectedAmenity.quantity}</span>
+              )}
+
+              <div className="flex flex-col gap-4" style={{ padding: 'clamp(1rem, 2vw, 1.5rem)' }}>
+                {/* Title row */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shrink-0" style={{ width: 'clamp(2.25rem, 3.5vw, 3rem)', height: 'clamp(2.25rem, 3.5vw, 3rem)' }}>
+                      <span className="material-symbols-outlined font-variation-fill" style={{ fontSize: 'clamp(1.1rem, 1.8vw, 1.5rem)' }}>{selectedAmenity.icon}</span>
+                    </div>
+                    <h3 className="font-black text-white tracking-tighter uppercase leading-tight" style={{ fontSize: 'clamp(1.1rem, 2.2vw, 1.75rem)' }}>{selectedAmenity.title}</h3>
                   </div>
-                )}
-              </div>
-
-              <div className="h-px bg-white/10 w-full" />
-
-              <p className="text-white text-base lg:text-lg font-medium leading-relaxed">
-                {selectedAmenity.description}
-              </p>
-
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-slate-100 text-[9px] font-black uppercase tracking-widest">Health Status</p>
-                  <div className="flex items-center gap-2">
-                    <span className="size-1.5 rounded-xl bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"></span>
-                    <span className="text-white font-black uppercase text-xs tracking-widest">{selectedAmenity.status}</span>
-                  </div>
+                  {selectedAmenity.quantity && (
+                    <div className="shrink-0 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10">
+                      <span className="text-white font-black uppercase tracking-widest" style={{ fontSize: 'clamp(0.6rem, 0.85vw, 0.7rem)' }}>{selectedAmenity.quantity}</span>
+                    </div>
+                  )}
                 </div>
-                <button 
-                  onClick={() => setSelectedAmenity(null)}
-                  className="px-8 py-3.5 bg-white text-black font-black rounded-xl shadow-lg shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-widest text-[10px]"
-                >
-                  Got it
-                </button>
+
+                <div className="h-px bg-white/10" />
+
+                <p className="text-slate-200 font-medium leading-relaxed" style={{ fontSize: 'clamp(0.78rem, 1.2vw, 0.95rem)' }}>
+                  {selectedAmenity.description}
+                </p>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-slate-500 font-black uppercase tracking-widest" style={{ fontSize: 'clamp(0.5rem, 0.65vw, 0.6rem)' }}>Health Status</p>
+                    <div className="flex items-center gap-2">
+                      <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                      <span className="text-emerald-400 font-black uppercase tracking-widest" style={{ fontSize: 'clamp(0.65rem, 0.95vw, 0.8rem)' }}>{selectedAmenity.status}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedAmenity(null)}
+                    className="bg-white text-black font-black rounded-xl hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-widest"
+                    style={{ padding: 'clamp(0.55rem, 1.1vh, 0.8rem) clamp(1.25rem, 2.5vw, 2rem)', fontSize: 'clamp(0.6rem, 0.85vw, 0.7rem)' }}
+                  >
+                    Got it
+                  </button>
+                </div>
               </div>
             </div>
-
-            {selectedAmenity.img && (
-              <div className="w-full h-56 overflow-hidden border-t border-white/10 relative bg-black/60">
-                <img
-                  src={selectedAmenity.img}
-                  alt={selectedAmenity.title}
-                  className="w-full h-full object-contain object-center"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-card-dark/40 to-transparent pointer-events-none" />
-                <div className="absolute bottom-4 right-8 text-[7px] font-black text-white/20 uppercase tracking-[0.3em]">Hardware Visualization</div>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -186,41 +215,40 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
   );
 };
 
-const GalleryItem: React.FC<{ img: string; label: string }> = ({ img, label }) => (
-  <div className="flex flex-col gap-4 group cursor-pointer">
-    <div className="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover rounded-xl border-2 border-white/5 transition-all duration-500 group-hover:scale-[1.03] group-hover:border-primary/40 shadow-xl overflow-hidden" style={{ backgroundImage: `url(${img})` }} />
-    <div className="px-2">
-      <p className="text-white font-black text-sm uppercase tracking-[0.2em] opacity-80 group-hover:text-primary transition-colors">{label}</p>
-    </div>
-  </div>
-);
-
 const AmenityCard: React.FC<{ amenity: Amenity; onClick: () => void }> = ({ amenity, onClick }) => (
-  <button 
+  <button
     onClick={onClick}
-    className="group relative flex flex-col bg-white/[0.03] border border-white/5 rounded-xl text-left transition-all duration-300 hover:bg-white/[0.07] hover:border-white/20 hover:translate-y-[-4px] active:scale-95 overflow-hidden min-h-[160px]"
+    className="group flex flex-col bg-white/[0.03] border border-white/5 rounded-xl text-left transition-all duration-300 hover:bg-white/[0.07] hover:border-primary/30 hover:-translate-y-0.5 active:scale-[0.98] overflow-hidden"
   >
-    <div className="flex flex-col h-full w-full">
-      <div className="flex-1 flex flex-col min-w-0 p-4">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="size-10 rounded-xl bg-primary/20 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shrink-0">
-            <span className="material-symbols-outlined text-xl font-variation-fill">{amenity.icon}</span>
-          </div>
-          <h4 className="text-white text-sm font-black tracking-tight truncate uppercase leading-none">{amenity.title}</h4>
-        </div>
-        <p className="text-slate-100 text-[8px] font-black uppercase tracking-widest mt-1 truncate">{amenity.subtitle}</p>
+    {/* Image / icon backdrop */}
+    {amenity.img ? (
+      <div className="w-full overflow-hidden relative bg-black/60 shrink-0" style={{ height: 'clamp(70px, 12vh, 130px)' }}>
+        <img src={amenity.img} alt={amenity.title} className="w-full h-full object-contain object-center transition-transform duration-700 group-hover:scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
       </div>
-      
-      {amenity.img && (
-        <div className="w-full h-36 overflow-hidden border-t border-white/10 relative shrink-0 bg-black/60">
-          <img
-            src={amenity.img}
-            alt={amenity.title}
-            className="w-full h-full object-contain object-center transition-transform duration-700 group-hover:scale-110"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+    ) : (
+      <div className="w-full flex items-center justify-center bg-primary/5 border-b border-white/5 shrink-0" style={{ height: 'clamp(50px, 8vh, 90px)' }}>
+        <span className="material-symbols-outlined text-primary/25 font-variation-fill" style={{ fontSize: 'clamp(1.75rem, 3.5vw, 3rem)' }}>{amenity.icon}</span>
+      </div>
+    )}
+
+    {/* Info */}
+    <div className="flex flex-col p-3 gap-1.5">
+      <div className="flex items-center gap-2">
+        <div className="size-6 rounded-lg bg-primary/20 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+          <span className="material-symbols-outlined font-variation-fill" style={{ fontSize: '13px' }}>{amenity.icon}</span>
         </div>
-      )}
+        <h4 className="text-white font-black tracking-tight uppercase leading-none truncate" style={{ fontSize: 'clamp(0.625rem, 0.95vw, 0.8rem)' }}>{amenity.title}</h4>
+      </div>
+      <p className="text-slate-400 font-medium leading-snug line-clamp-2" style={{ fontSize: 'clamp(0.575rem, 0.8vw, 0.7rem)' }}>
+        {amenity.subtitle || amenity.description}
+      </p>
+    </div>
+
+    {/* Hover footer */}
+    <div className="px-3 py-1.5 border-t border-white/5 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity bg-primary/5">
+      <span className="text-primary font-black uppercase tracking-widest" style={{ fontSize: 'clamp(0.45rem, 0.6vw, 0.55rem)' }}>Details</span>
+      <span className="material-symbols-outlined text-primary" style={{ fontSize: '13px' }}>arrow_forward</span>
     </div>
   </button>
 );

@@ -61,7 +61,7 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
       </div>
 
       {/* Main content area */}
-      <div className="flex flex-col md:flex-row flex-1 px-4 py-3 lg:px-8 lg:py-5 gap-4 lg:gap-6 overflow-hidden">
+      <div className="flex flex-col tablet:flex-row flex-1 px-4 py-3 lg:px-8 lg:py-5 gap-4 lg:gap-6 overflow-hidden">
         {/* Scrollable column — internal scroll only, not browser scroll */}
         <div className="flex-1 flex flex-col gap-4 lg:gap-5 overflow-y-auto custom-scrollbar pr-1">
 

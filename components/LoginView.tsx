@@ -74,7 +74,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
 
       {/* Body */}
       <div className="flex-1 flex items-center justify-center p-6 relative z-10 overflow-hidden">
-        <div className="w-full max-w-sm flex flex-col gap-4 lg:gap-5">
+        <div className="w-full max-w-sm sm:max-w-md tablet:max-w-lg flex flex-col gap-4 lg:gap-5">
 
           {/* Lock icon + title */}
           <div className="flex flex-col items-center gap-3 text-center">
@@ -91,7 +91,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
           </div>
 
           {/* ID Display */}
-          <div className="bg-white/[0.04] border border-white/10 rounded-2xl px-6 py-5 flex flex-col items-center gap-3 min-h-[90px] justify-center">
+          <div className="bg-white/[0.04] border border-white/10 rounded-2xl px-6 flex flex-col items-center gap-3 justify-center" style={{ minHeight: 'clamp(5rem, 12vh, 8rem)', padding: 'clamp(1rem, 3vh, 1.75rem) 1.5rem' }}>
             {employeeId ? (
               <>
                 <div className="flex items-center gap-2">
@@ -115,7 +115,8 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
                   else if (key === 'C') { setEmployeeId(''); setError(null); }
                   else handleKeyPress(key);
                 }}
-                className={`h-16 rounded-xl text-lg font-black transition-all active:scale-90 flex items-center justify-center ${
+                style={{ height: 'clamp(3.5rem, 8vh, 6rem)', fontSize: 'clamp(1rem, 2.5vw, 1.5rem)' }}
+                className={`rounded-xl font-black transition-all active:scale-90 flex items-center justify-center ${
                   key === 'del'
                     ? 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/5'
                     : key === 'C'
@@ -134,7 +135,8 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
           <button
             onClick={handleLogin}
             disabled={!employeeId || loading}
-            className="w-full bg-white text-black py-5 rounded-xl text-base font-black uppercase tracking-[0.2em] shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none border-t border-white/20 flex items-center justify-center gap-3"
+            style={{ padding: 'clamp(1rem, 3vh, 1.75rem)', fontSize: 'clamp(0.875rem, 1.8vw, 1.25rem)' }}
+            className="w-full bg-white text-black rounded-xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none border-t border-white/20 flex items-center justify-center gap-3"
           >
             {loading ? (
               <>
