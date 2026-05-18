@@ -46,10 +46,10 @@ const DetailsView: React.FC<DetailsViewProps> = ({
 
       {/* Scrollable main */}
       <main className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: 'clamp(0.75rem, 1.5vw, 1.5rem)' }}>
-        <div className="max-w-7xl mx-auto grid grid-cols-1 tablet:grid-cols-2 gap-4 lg:gap-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 tablet:grid-cols-2 gap-4 lg:gap-6 min-h-full">
 
           {/* ── Left: Room Info ── */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 h-full">
 
             {/* Photo */}
             <div
@@ -88,18 +88,18 @@ const DetailsView: React.FC<DetailsViewProps> = ({
               ))}
             </div>
 
-            {/* Description */}
-            <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col gap-3">
-              <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+            {/* Description — flex-1 fills remaining column height */}
+            <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-white/5 shrink-0">
                 <span className="material-symbols-outlined text-primary" style={{ fontSize: 'clamp(0.875rem, 1.3vw, 1.1rem)' }}>info</span>
                 <span className="text-primary font-black uppercase tracking-[0.3em]" style={{ fontSize: 'clamp(0.5rem, 0.7vw, 0.625rem)' }}>About This Room</span>
               </div>
-              <p className="text-slate-200 font-medium leading-relaxed" style={{ fontSize: 'clamp(0.75rem, 1.1vw, 0.9rem)' }}>
+              <p className="flex-1 text-slate-200 font-medium leading-relaxed overflow-y-auto" style={{ fontSize: 'clamp(0.75rem, 1.1vw, 0.9rem)' }}>
                 {description || 'Premier meeting space designed for high-stakes decision making and global collaboration. Featuring state-of-the-art acoustic treatment, ergonomic seating, and integrated smart technology to ensure seamless communication.'}
               </p>
               <button
                 onClick={onBook}
-                className="w-full mt-1 bg-white text-black font-black rounded-xl shadow-xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-2"
+                className="shrink-0 w-full mt-auto bg-white text-black font-black rounded-xl shadow-xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-2"
                 style={{ padding: 'clamp(0.6rem, 1.4vh, 1rem)', fontSize: 'clamp(0.7rem, 1vw, 0.85rem)' }}
               >
                 <span className="material-symbols-outlined font-variation-fill" style={{ fontSize: 'clamp(0.875rem, 1.4vw, 1.1rem)' }}>event_available</span>
@@ -109,8 +109,8 @@ const DetailsView: React.FC<DetailsViewProps> = ({
           </div>
 
           {/* ── Right: Amenities ── */}
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 h-full">
+            <div className="flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary" style={{ fontSize: 'clamp(1rem, 1.6vw, 1.3rem)' }}>inventory_2</span>
                 <h3 className="font-black tracking-tight text-white uppercase" style={{ fontSize: 'clamp(0.85rem, 1.3vw, 1.1rem)' }}>Room Amenities</h3>
@@ -123,18 +123,21 @@ const DetailsView: React.FC<DetailsViewProps> = ({
               )}
             </div>
 
-            {amenities.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
-                {amenities.map(a => (
-                  <AmenityCard key={a.id} amenity={a} onClick={() => setSelectedAmenity(a)} />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-4 text-white/20 border border-white/5 rounded-xl bg-white/[0.02]" style={{ minHeight: 'clamp(120px, 20vh, 200px)' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>category</span>
-                <p className="font-black uppercase tracking-widest" style={{ fontSize: 'clamp(0.6rem, 0.85vw, 0.75rem)' }}>No amenities configured</p>
-              </div>
-            )}
+            {/* Amenity grid — flex-1 fills remaining column height; cards stay natural size */}
+            <div className="flex-1 flex flex-col">
+              {amenities.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3 content-start">
+                  {amenities.map(a => (
+                    <AmenityCard key={a.id} amenity={a} onClick={() => setSelectedAmenity(a)} />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 text-white/20 border border-white/5 rounded-xl bg-white/[0.02]">
+                  <span className="material-symbols-outlined" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>category</span>
+                  <p className="font-black uppercase tracking-widest" style={{ fontSize: 'clamp(0.6rem, 0.85vw, 0.75rem)' }}>No amenities configured</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
