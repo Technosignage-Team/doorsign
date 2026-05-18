@@ -69,8 +69,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-3xl" onClick={onClose} />
 
-      <div className="relative w-full max-w-3xl bg-card-dark rounded-xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <header className="p-10 border-b border-white/5 flex justify-between items-center">
+      <div className="relative w-full max-w-3xl tablet:max-w-4xl bg-card-dark rounded-xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <header className="px-6 py-6 sm:px-10 sm:py-8 border-b border-white/5 flex justify-between items-center">
           <div className="flex flex-col">
             <h2 className="text-3xl font-black text-white">System Settings</h2>
             <p className="text-slate-300 font-bold uppercase tracking-widest text-xs mt-1">Appearance & Layout</p>
@@ -80,7 +80,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           </button>
         </header>
 
-        <main className="p-10 flex flex-col gap-10 overflow-y-auto custom-scrollbar min-h-0">
+        <main className="p-6 sm:p-10 flex flex-col gap-8 sm:gap-10 overflow-y-auto custom-scrollbar min-h-0">
           <div>
             <h3 className="text-white text-xl font-black mb-6 flex items-center gap-3">
               <span className="material-symbols-outlined text-primary">grid_view</span>

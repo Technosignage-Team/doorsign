@@ -32,7 +32,7 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
     <div className="flex flex-col h-full bg-[#050505] items-center overflow-hidden px-6 py-[3vh] gap-0">
 
       {/* ── TOP: Pill header + clock ── */}
-      <div className="flex flex-col items-center gap-[1.5vh] shrink-0 w-full max-w-xl">
+      <div className="flex flex-col items-center gap-[1.5vh] shrink-0 w-full max-w-xl tablet:max-w-2xl">
         {/* Status pill */}
         <div className={`bg-black border-[2px] rounded-xl flex items-center justify-center gap-3 transition-all duration-500 ${
           roomStatus.isAvailable ? 'border-emerald-500/80' : 'border-status-busy/100 shadow-[0_0_30px_rgba(239,68,68,0.6)]'
@@ -72,7 +72,7 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
       </div>
 
       {/* ── MIDDLE: Main content — flex-1 to fill remaining space ── */}
-      <div className="flex-1 flex flex-col w-full max-w-xl items-center justify-center gap-[2vh] min-h-0 py-[2vh]">
+      <div className="flex-1 flex flex-col w-full max-w-xl tablet:max-w-2xl items-center justify-center gap-[2vh] min-h-0 py-[2vh]">
 
         {/* Busy: meeting card */}
         {!roomStatus.isAvailable && roomStatus.currentMeeting && (
@@ -177,7 +177,7 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
       </div>
 
       {/* ── BOTTOM: Upcoming meeting ── */}
-      <div className="w-full max-w-xl shrink-0">
+      <div className="w-full max-w-xl tablet:max-w-2xl shrink-0">
         <div className="space-y-2">
           {roomStatus.nextMeeting ? (
             <button

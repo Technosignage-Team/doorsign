@@ -14,7 +14,10 @@
 @tailwind utilities;
 
 html {
+  width: 100%;
   height: 100%;
+  /* Use dvh where supported so status bar / nav bar don't steal space */
+  height: 100dvh;
   overflow: hidden;
   /* Prevent iOS/Android font size inflation in landscape */
   -webkit-text-size-adjust: 100%;
@@ -22,7 +25,9 @@ html {
 }
 
 body {
+  width: 100%;
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
   margin: 0;
   font-family: 'Inter', sans-serif;
@@ -33,7 +38,9 @@ body {
 }
 
 #root {
+  width: 100%;
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
 }
 
