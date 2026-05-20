@@ -20,7 +20,9 @@ import { db } from './lib/db';
 import { useBookingSync } from './lib/useBookingSync';
 import { setLedAvailable, setLedBusy, refreshLed } from './lib/led';
 import { doorSignFetch } from './lib/doorSignFetch';
-import { getBaseUrl, loadHostUrl } from './lib/hostUrl';
+import { getBaseUrl, loadHostUrl, setHostUrl } from './lib/hostUrl';
+import { setActivationKey } from './lib/activationKey';
+import { DEV_WEB_MODE, DEV_HOST_URL, DEV_ACTIVATION_KEY } from './lib/devMode';
 import SetupWizard from './components/SetupWizard';
 
 interface PendingAction {
@@ -227,7 +229,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
     const reassert = () => {
       // Use the latest roomStatus from a ref-like read via setRoomStatus(prev=>...)
       setRoomStatus(prev => {
-        refreshLed(prev.isAvailable);
+        refreshLed(prev.isAvailable, prev.isUpNextSoon);
         return prev;
       });
     };
@@ -420,16 +422,20 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
         .sort((a, b) => parseTimeString(a.startTime).getTime() - parseTimeString(b.startTime).getTime())[0];
 
       const available = !currentMeeting;
+      // Yellow state: room is free but next meeting starts within 15 minutes
+      const upNextSoon = available && !!nextMeeting &&
+        (parseTimeString(nextMeeting.startTime).getTime() - now.getTime()) <= 15 * 60 * 1000;
       setRoomStatus(prev => ({
         ...prev,
         isAvailable: available,
+        isUpNextSoon: upNextSoon,
         currentMeeting: currentMeeting || undefined,
         nextMeeting: nextMeeting || undefined
       }));
       // Always force-refresh the LED on each tick — never trust the dedupe
       // cache. Cheap (single sysfs/shell write) and guarantees the bar matches
       // the current room state at all times.
-      refreshLed(available);
+      refreshLed(available, upNextSoon);
       setIsSyncing(false);
     }, 300);
   }, [parseTimeString]);
@@ -1025,6 +1031,22 @@ const AppGate: React.FC = () => {
   const [resourceBootData, setResourceBootData] = useState<any>(null);
 
   const loadState = async () => {
+    // ── DEV_WEB_MODE: skip wizard + license, use fixed host/key ──────────────
+    if (DEV_WEB_MODE) {
+      await setHostUrl(DEV_HOST_URL);
+      await setActivationKey(DEV_ACTIVATION_KEY);
+      try {
+        const res = await fetch(
+          `${DEV_HOST_URL}/api/digitalsigns/activate/${DEV_ACTIVATION_KEY}`,
+          { headers: { isDoorSign: 'true', ActivationKey: DEV_ACTIVATION_KEY } }
+        );
+        if (res.ok) setResourceBootData(await res.json());
+      } catch { /* App will retry on mount */ }
+      setIsSetup(true);
+      setChecked(true);
+      return;
+    }
+    // ── Normal APK flow ───────────────────────────────────────────────────────
     const [hostUrl, key, lic] = await Promise.all([loadHostUrl(), getActivationKey(), getLicense()]);
     setLicence(lic);
     setIsSetup(!!hostUrl && !!key && !!lic);
@@ -1054,7 +1076,8 @@ const AppGate: React.FC = () => {
     );
   }
 
-  if (licence && isLicenseExpired(licence)) {
+  // License expiry check is skipped in DEV_WEB_MODE
+  if (!DEV_WEB_MODE && licence && isLicenseExpired(licence)) {
     return (
       <>
         <LicenseExpiredScreen

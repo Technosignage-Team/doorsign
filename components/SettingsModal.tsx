@@ -9,6 +9,8 @@ import {
   getBusyCode,
   setAvailableCode,
   setBusyCode,
+  ledShell,
+  readLed,
 } from '../lib/led';
 
 interface SettingsModalProps {
@@ -38,11 +40,43 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const ledTest = async (color: LedColor) => {
     setLedStatus(`Sending ${color} (${LedCode[color]})…`);
     try {
-      await setLed(color);
-      setLedStatus(`✓ ${color} (${LedCode[color]}) sent — does the bar match?`);
+      const res: any = await setLed(color);
+      const method = res?.method ?? 'unknown';
+      const trace = res?.trace ? `\nTrace: ${res.trace}` : '';
+      setLedStatus(`✓ ${color} (${LedCode[color]}) sent via ${method}${trace}`);
     } catch (e: any) {
-      setLedStatus(`✗ ${color} failed: ${e?.message ?? e}`);
+      const trace = e?.data?.trace ?? e?.trace ?? '';
+      setLedStatus(`✗ ${color} (${LedCode[color]}) failed: ${e?.message ?? e}${trace ? `\nTrace: ${trace}` : ''}`);
     }
+  };
+
+  const runDiagnostic = async () => {
+    setLedStatus('Running LED diagnostics…');
+    const lines: string[] = [];
+    // 1) try to read current LED value
+    lines.push(`readLed → ${await readLed()}`);
+    // 2) check which writers work
+    try {
+      const a = await ledShell(`ls -l /sys/devices/platform/led_con_h/zigbee_reset`, false);
+      lines.push(`ls (sh) exit=${a.exit} ${a.stdout}${a.stderr ? ' err=' + a.stderr : ''}`);
+    } catch (e: any) { lines.push(`ls (sh) threw ${e?.message}`); }
+    try {
+      const b = await ledShell(`echo w 0x06 > /sys/devices/platform/led_con_h/zigbee_reset`, false);
+      lines.push(`write (sh) exit=${b.exit}${b.stderr ? ' err=' + b.stderr : ''}`);
+    } catch (e: any) { lines.push(`write (sh) threw ${e?.message}`); }
+    try {
+      const c = await ledShell(`echo w 0x06 > /sys/devices/platform/led_con_h/zigbee_reset`, true);
+      lines.push(`write (su) exit=${c.exit}${c.stderr ? ' err=' + c.stderr : ''}`);
+    } catch (e: any) { lines.push(`write (su) threw ${e?.message}`); }
+    try {
+      const d = await ledShell(`id`, false);
+      lines.push(`id (sh) → ${d.stdout || d.stderr}`);
+    } catch (e: any) { lines.push(`id (sh) threw ${e?.message}`); }
+    try {
+      const e2 = await ledShell(`which su`, false);
+      lines.push(`which su → ${e2.stdout || '(none)'}`);
+    } catch (e: any) { lines.push(`which su threw ${e?.message}`); }
+    setLedStatus(lines.join('\n'));
   };
 
   const bindAvailable = (color: LedColor) => {
@@ -214,10 +248,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             </div>
 
+            <button
+              onClick={runDiagnostic}
+              className="mt-3 w-full py-3 rounded-lg text-xs font-black uppercase tracking-widest bg-amber-500/10 text-amber-200 border border-amber-500/20 hover:bg-amber-500/20 transition-all"
+            >
+              Run LED Diagnostics
+            </button>
+
             {ledStatus && (
-              <p className="mt-4 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-200 text-xs font-mono">
-                {ledStatus}
-              </p>
+              <pre className="mt-4 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-200 text-[11px] font-mono whitespace-pre-wrap break-words max-h-60 overflow-auto custom-scrollbar">
+{ledStatus}
+              </pre>
             )}
           </div>
 

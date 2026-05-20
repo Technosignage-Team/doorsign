@@ -541,205 +541,91 @@ const BookingView: React.FC<BookingViewProps> = ({
     <div className="flex flex-col h-full bg-[#050505] overflow-hidden relative">
       <div className="absolute top-[-20%] right-[-10%] size-[80%] bg-primary/20 blur-[150px] rounded-xl pointer-events-none" />
 
-      {/* Header — matching MeetingDetailsView */}
-      <header className="flex items-center justify-between p-3 lg:p-4 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={onBack} className="size-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
+      {/* Header — compact for tablet */}
+      <header className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={onBack} className="size-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
             <span className="material-symbols-outlined text-xl">arrow_back</span>
           </button>
-          <div className="flex flex-col">
+          <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black text-white tracking-tight leading-none uppercase">
+              <h1 className="text-base font-black text-white tracking-tight leading-none uppercase">
                 {initialMeetingId ? (isPastMeeting ? 'Archived Booking' : 'Edit Booking') : 'New Booking'}
               </h1>
               {initialMeetingId && !isPastMeeting && (
-                <button
-                  type="button"
-                  onClick={() => setIsServiceModalOpen(true)}
-                  className="size-8 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 group shadow-lg"
-                  title="Request Service"
-                >
-                  <span className="material-symbols-outlined text-base font-variation-fill group-hover:rotate-12 transition-transform">notifications_active</span>
+                <button type="button" onClick={() => setIsServiceModalOpen(true)}
+                  className="size-7 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95">
+                  <span className="material-symbols-outlined text-sm">notifications_active</span>
                 </button>
               )}
             </div>
-            <p className="text-white text-[8px] font-black uppercase tracking-[0.4em] mt-1">{roomName} • Booking Details</p>
+            <p className="text-white/60 text-[7px] font-black uppercase tracking-[0.3em]">{roomName}</p>
           </div>
         </div>
         {initialMeetingId && !isPastMeeting && (
-          <button onClick={handleDelete} className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+          <button onClick={handleDelete} className="px-3 py-1.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
             Cancel Booking
           </button>
         )}
       </header>
 
-      <main className="flex-1 overflow-y-auto p-3 lg:p-4 relative z-10 custom-scrollbar">
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto flex flex-col gap-3">
+      {/*
+        Always flex-row — no breakpoint. Tablet portrait and landscape both get
+        the two-column layout. Each column scrolls independently if content
+        overflows (e.g. recurring fully expanded), but the page never scrolls.
+      */}
+      <main className="flex-1 overflow-hidden p-2 relative z-10">
+        <form onSubmit={handleSubmit} className="h-full flex flex-row gap-2">
 
-          {/* Organizer card */}
-          {(initialMeetingId || currentUser) && organizerPhoto && (
-            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex items-center gap-4">
-              <div className="size-14 rounded-xl bg-white/5 border border-white/10 p-0.5 shrink-0 relative overflow-hidden">
-                <img src={organizerPhoto} alt={organizer} className="size-full object-cover rounded-xl" />
-                <div className="absolute -bottom-1 -right-1 size-4 bg-emerald-500 border-2 border-[#050505] rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="material-symbols-outlined text-white text-[6px] font-bold">verified</span>
+          {/* ── LEFT COLUMN: SCHEDULE ── */}
+          <div className="flex flex-col gap-2 w-[46%] overflow-y-auto custom-scrollbar">
+
+            {/* Schedule card */}
+            <div className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl p-3 flex flex-col gap-2.5">
+              <div className="flex items-center gap-2 pb-2 border-b border-white/5 shrink-0">
+                <div className="size-7 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                  <span className="material-symbols-outlined text-sm font-variation-fill">schedule</span>
                 </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">Lead Organizer</span>
-                <h3 className="text-lg font-black text-white tracking-tight leading-none">{organizer}</h3>
-                <span className="text-primary text-[8px] font-black uppercase tracking-widest mt-1">Authenticated</span>
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {/* Left column: Details + Recurring */}
-            <div className="flex flex-col gap-3">
-
-              {/* Event Details card */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4">
-                <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-                  <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                    <span className="material-symbols-outlined text-base">title</span>
-                  </div>
-                  <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">Event Details</span>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Event Title</label>
-                  <div className="flex gap-2">
-                    <input
-                      required type="text" value={title}
-                      onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('title'); } }}
-                      readOnly placeholder="e.g., Weekly Sync"
-                      className={`flex-1 bg-white/5 border rounded-xl p-2.5 text-sm font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'title' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
-                    />
-                    <button type="button" disabled={isPastMeeting} onClick={() => setIsSuggestionsOpen(true)} className="size-10 rounded-xl bg-[#0b1a2d] border border-primary/20 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-xl active:scale-95 group shrink-0">
-                      <span className="material-symbols-outlined text-base group-hover:rotate-12 transition-transform">magic_button</span>
-                    </button>
-                  </div>
-                </div>
-
-                {!currentUser && (
-                  <div className="flex flex-col gap-2">
-                    <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Organizer Name</label>
-                    <input
-                      required type="text" value={organizer}
-                      onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('organizer'); } }}
-                      readOnly placeholder="Your Full Name"
-                      className={`bg-white/5 border rounded-xl p-2.5 text-sm font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'organizer' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
-                    />
-                  </div>
-                )}
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Session Type</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['INTERNAL', 'CLIENT'] as const).map(t => (
-                      <button key={t} type="button" disabled={isPastMeeting} onClick={() => setType(t)}
-                        className={`py-2.5 rounded-xl text-[10px] font-black transition-all border uppercase tracking-widest ${type === t ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Date</label>
-                  <input
-                    type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                    disabled={!!initialMeetingId}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark disabled:opacity-50 transition-all"
-                  />
-                </div>
+                <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary">Schedule</span>
               </div>
 
-              {/* Recurring card */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4">
-                <div className="flex items-center justify-between pb-3 border-b border-white/5">
-                  <div className="flex items-center gap-2">
-                    <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                      <span className="material-symbols-outlined text-base">repeat</span>
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">Recurring</span>
-                  </div>
-                  <button type="button" disabled={isPastMeeting} onClick={() => setIsRecurring(!isRecurring)}
-                    className={`size-8 rounded-xl flex items-center justify-center transition-all ${isRecurring ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 border border-white/10'}`}>
-                    <span className="material-symbols-outlined text-base">{isRecurring ? 'toggle_on' : 'toggle_off'}</span>
-                  </button>
-                </div>
-                {isRecurring ? (
-                  <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="grid grid-cols-3 gap-2">
-                      {['DAILY', 'WEEKLY', 'MONTHLY'].map(f => (
-                        <button key={f} type="button" onClick={() => setRecurrence(f as any)}
-                          className={`py-2 rounded-xl text-[9px] font-black transition-all border uppercase tracking-widest ${recurrence === f ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>{f}</button>
-                      ))}
-                    </div>
-                    {recurrence === 'WEEKLY' && (
-                      <div className="flex flex-col gap-2">
-                        <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Days of Week</label>
-                        <div className="grid grid-cols-7 gap-1">
-                          {[{n:'Mo',v:1},{n:'Tu',v:2},{n:'We',v:3},{n:'Th',v:4},{n:'Fr',v:5},{n:'Sa',v:6},{n:'Su',v:7}].map(({n,v}) => (
-                            <button key={v} type="button" onClick={() => toggleDay(v)}
-                              className={`py-2 rounded-xl text-[9px] font-black transition-all border ${
-                                selectedDays.includes(v) ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'
-                              }`}>{n}</button>
-                          ))}
-                        </div>
-                        {selectedDays.length === 0 && <p className="text-red-400 text-[8px] font-black uppercase tracking-widest">Select at least one day</p>}
-                      </div>
-                    )}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">End Date</label>
-                      <input type="date" value={recurrenceEndDate} onChange={(e) => setRecurrenceEndDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark transition-all" />
-                    </div>
-                    {initialMeetingId && (
-                      <button type="button" onClick={() => setUpdateSeries(!updateSeries)}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all ${updateSeries ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-slate-300'}`}>
-                        <span className="material-symbols-outlined text-base">{updateSeries ? 'check_box' : 'check_box_outline_blank'}</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest">Update Entire Series</span>
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest">One-time meeting</p>
-                )}
+              {/* Date */}
+              <div className="flex flex-col gap-1 shrink-0">
+                <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Date</label>
+                <input
+                  type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                  disabled={!!initialMeetingId}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark disabled:opacity-50 transition-all"
+                />
               </div>
 
-            </div>
-
-            {/* Right column: Schedule & Submit */}
-            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-5 shadow-2xl flex flex-col gap-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-                <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                  <span className="material-symbols-outlined text-base font-variation-fill">schedule</span>
-                </div>
-                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">Schedule</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-2">
-                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Start Time</label>
-                  <select disabled={isPastMeeting} value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
+              {/* Start + End */}
+              <div className="grid grid-cols-2 gap-2 shrink-0">
+                <div className="flex flex-col gap-1">
+                  <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Start Time</label>
+                  <select disabled={isPastMeeting} value={startTime} onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
                     {startOptions.map((o) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.reason === 'past' ? ' (past)' : o.reason === 'booked' ? ' (booked)' : ''}</option>)}
                   </select>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">End Time</label>
-                  <select disabled={availableEndOptions.length === 0 || isPastMeeting} value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
+                <div className="flex flex-col gap-1">
+                  <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">End Time</label>
+                  <select disabled={availableEndOptions.length === 0 || isPastMeeting} value={endTime} onChange={(e) => setEndTime(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
                     {availableEndOptions.map((o: { time: string; disabled: boolean }) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.disabled ? ' (booked)' : ''}</option>)}
                   </select>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Quick Duration</label>
-                <div className="grid grid-cols-4 gap-2">
+              {/* Quick Duration */}
+              <div className="flex flex-col gap-1 shrink-0">
+                <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Duration</label>
+                <div className="grid grid-cols-4 gap-1.5">
                   {QUICK_DURATIONS.map(dur => (
-                    <button key={dur} type="button" disabled={!availableDurations.includes(dur) || isPastMeeting} onClick={() => handleSetDuration(dur)}
-                      className={`py-2.5 rounded-xl text-[10px] font-black transition-all border ${currentDuration === dur ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 disabled:opacity-30 hover:border-white/20 hover:text-white'}`}>
+                    <button key={dur} type="button"
+                      disabled={!availableDurations.includes(dur) || isPastMeeting}
+                      onClick={() => handleSetDuration(dur)}
+                      className={`py-2.5 rounded-xl text-[11px] font-black transition-all border ${currentDuration === dur ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 disabled:opacity-30 hover:border-white/20 hover:text-white'}`}>
                       {dur >= 60 ? `${dur / 60}h` : `${dur}m`}
                     </button>
                   ))}
@@ -748,43 +634,175 @@ const BookingView: React.FC<BookingViewProps> = ({
 
               {/* Duration summary */}
               {currentDuration && (
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center gap-3 animate-in fade-in duration-300">
-                  <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
-                    <span className="material-symbols-outlined text-base font-variation-fill">hourglass_empty</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest">Duration</span>
-                    <span className="text-white text-sm font-black">
-                      {startTime} — {endTime} &nbsp;·&nbsp; {currentDuration >= 60 ? `${currentDuration / 60}h` : `${currentDuration}m`}
-                    </span>
-                  </div>
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-2 flex items-center gap-2 shrink-0 animate-in fade-in duration-300">
+                  <span className="material-symbols-outlined text-primary text-sm font-variation-fill shrink-0">hourglass_empty</span>
+                  <span className="text-white text-xs font-black truncate">
+                    {startTime} — {endTime}&nbsp;·&nbsp;{currentDuration >= 60 ? `${currentDuration / 60}h` : `${currentDuration}m`}
+                  </span>
                 </div>
               )}
+            </div>
 
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center gap-2 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <span className="material-symbols-outlined text-base">error</span>
-                  <p className="text-[10px] font-bold">{error}</p>
+            {/* Recurring card */}
+            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-3 flex flex-col gap-2 shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="size-7 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                    <span className="material-symbols-outlined text-sm">repeat</span>
+                  </div>
+                  <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary">Recurring</span>
                 </div>
-              )}
-
-              <div className="mt-auto pt-1">
-                <button type="submit" disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting}
-                  className="w-full bg-white text-black py-4 rounded-xl text-sm font-black shadow-2xl shadow-white/10 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 border-t border-white/20 uppercase tracking-widest">
-                  {isSubmitting
-                    ? <span className="size-4 border-2 border-black/30 border-t-black rounded-xl animate-spin"></span>
-                    : <><span className="material-symbols-outlined text-lg font-bold">{initialMeetingId ? 'save' : 'event_available'}</span>{initialMeetingId ? 'Update Booking' : 'Confirm Booking'}</>
-                  }
+                <button type="button" disabled={isPastMeeting} onClick={() => setIsRecurring(!isRecurring)}
+                  className={`size-7 rounded-xl flex items-center justify-center transition-all ${isRecurring ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 border border-white/10'}`}>
+                  <span className="material-symbols-outlined text-sm">{isRecurring ? 'toggle_on' : 'toggle_off'}</span>
                 </button>
               </div>
+              {isRecurring ? (
+                <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {['DAILY', 'WEEKLY', 'MONTHLY'].map(f => (
+                      <button key={f} type="button" onClick={() => setRecurrence(f as any)}
+                        className={`py-1.5 rounded-xl text-[8px] font-black transition-all border uppercase tracking-widest ${recurrence === f ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>{f}</button>
+                    ))}
+                  </div>
+                  {recurrence === 'WEEKLY' && (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Days of Week</label>
+                      <div className="grid grid-cols-7 gap-1">
+                        {[{n:'Mo',v:1},{n:'Tu',v:2},{n:'We',v:3},{n:'Th',v:4},{n:'Fr',v:5},{n:'Sa',v:6},{n:'Su',v:7}].map(({n,v}) => (
+                          <button key={v} type="button" onClick={() => toggleDay(v)}
+                            className={`py-1.5 rounded-xl text-[8px] font-black transition-all border ${selectedDays.includes(v) ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'}`}>{n}</button>
+                        ))}
+                      </div>
+                      {selectedDays.length === 0 && <p className="text-red-400 text-[7px] font-black uppercase tracking-widest">Select at least one day</p>}
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">End Date</label>
+                    <input type="date" value={recurrenceEndDate} onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark transition-all" />
+                  </div>
+                  {initialMeetingId && (
+                    <button type="button" onClick={() => setUpdateSeries(!updateSeries)}
+                      className={`flex items-center gap-2 p-2 rounded-xl border transition-all ${updateSeries ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-slate-300'}`}>
+                      <span className="material-symbols-outlined text-sm">{updateSeries ? 'check_box' : 'check_box_outline_blank'}</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest">Update Entire Series</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-[8px] font-black uppercase tracking-widest">One-time meeting</p>
+              )}
             </div>
           </div>
+
+          {/* ── RIGHT COLUMN: DETAILS + SUBMIT ── */}
+          <div className="flex-1 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
+
+            {/* Details card — contains title, organizer, session type */}
+            <div className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl p-3 flex flex-col gap-3">
+
+              {/* Card header */}
+              <div className="flex items-center justify-between pb-2 border-b border-white/5 shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="size-7 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                    <span className="material-symbols-outlined text-sm">title</span>
+                  </div>
+                  <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary">Details</span>
+                </div>
+                <button type="button" disabled={isPastMeeting} onClick={() => setIsSuggestionsOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0b1a2d] border border-primary/20 text-primary hover:bg-primary hover:text-white transition-all active:scale-95 group">
+                  <span className="material-symbols-outlined text-sm group-hover:rotate-12 transition-transform">magic_button</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest">Suggestions</span>
+                </button>
+              </div>
+
+              {/* Event Title — large textarea matches reference screenshot */}
+              <div className="flex flex-col gap-1.5 flex-1">
+                <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Event Title</label>
+                <textarea
+                  required value={title}
+                  onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('title'); } }}
+                  readOnly
+                  placeholder="e.g., Weekly Project Sync & Stakeholder Review"
+                  className={`flex-1 w-full bg-white/5 border rounded-xl px-3 py-2.5 text-base font-bold text-white placeholder:text-slate-500/60 outline-none transition-all cursor-pointer resize-none leading-relaxed ${activeInput === 'title' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
+                />
+              </div>
+
+              {/* Organizer — shown when logged in, inside the card */}
+              {(initialMeetingId || currentUser) && organizerPhoto ? (
+                <div className="flex flex-col gap-1.5 shrink-0">
+                  <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Organizer</label>
+                  <div className="flex items-center gap-3 bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2.5">
+                    <div className="size-10 rounded-xl bg-white/5 border border-white/10 shrink-0 relative overflow-hidden">
+                      <img src={organizerPhoto} alt={organizer} className="size-full object-cover" />
+                      <div className="absolute -bottom-0.5 -right-0.5 size-3.5 bg-emerald-500 border-2 border-[#050505] rounded-full flex items-center justify-center shadow">
+                        <span className="material-symbols-outlined text-white text-[6px]">verified</span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Full Name</span>
+                      <p className="text-white text-sm font-black leading-tight mt-0.5">{organizer}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : !currentUser ? (
+                <div className="flex flex-col gap-1.5 shrink-0">
+                  <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Organizer</label>
+                  <input
+                    required type="text" value={organizer}
+                    onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('organizer'); } }}
+                    readOnly placeholder="Your Full Name"
+                    className={`w-full bg-white/5 border rounded-xl px-2.5 py-2.5 text-sm font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'organizer' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
+                  />
+                </div>
+              ) : null}
+
+              {/* Session Type */}
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Session Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['INTERNAL', 'CLIENT'] as const).map(t => (
+                    <button key={t} type="button" disabled={isPastMeeting} onClick={() => setType(t)}
+                      className={`py-2.5 rounded-xl text-[10px] font-black transition-all border uppercase tracking-widest ${type === t ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-2.5 flex items-center gap-2 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300 shrink-0">
+                <span className="material-symbols-outlined text-sm">error</span>
+                <p className="text-[10px] font-bold">{error}</p>
+              </div>
+            )}
+
+            {/* Submit — BOOK style matching reference screenshot */}
+            <button type="submit" disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting}
+              className="w-full bg-primary text-white py-4 rounded-2xl shadow-2xl shadow-primary/30 hover:bg-primary/90 active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 disabled:opacity-50 shrink-0">
+              {isSubmitting
+                ? <span className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                : <>
+                    <span className="text-2xl font-black tracking-[0.25em] uppercase leading-none">
+                      {initialMeetingId ? 'Update' : 'Book'}
+                    </span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/60">
+                      {initialMeetingId ? 'Save Changes' : 'Secure Booking'}
+                    </span>
+                  </>
+              }
+            </button>
+          </div>
+
         </form>
       </main>
 
-      {/* Virtual Keyboard */}
+      {/* Virtual Keyboard — unchanged */}
       <div className={`fixed bottom-0 left-0 right-0 z-[70] bg-[#0a1016]/95 backdrop-blur-3xl border-t border-white/10 shadow-[0_-40px_120px_rgba(0,0,0,0.9)] transition-all duration-500 ${isKeyboardOpen ? 'translate-y-0' : 'translate-y-full'}`}>
-        <div className="max-w-4xl mx-auto p-4 flex flex-col gap-4">
+        <div className="w-full p-4 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <span className="text-slate-200 font-black uppercase tracking-widest text-[8px]">Input Field: <span className="text-primary">{activeInput?.toUpperCase()}</span></span>
             <button onClick={() => { setIsKeyboardOpen(false); setActiveInput(null); }} className="px-4 py-1.5 bg-white/5 hover:bg-white/10 text-slate-200 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all">Dismiss</button>

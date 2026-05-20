@@ -61,6 +61,7 @@ export interface Meeting {
 
 export interface RoomStatus {
   isAvailable: boolean;
+  isUpNextSoon?: boolean;
   currentMeeting?: Meeting;
   nextMeeting?: Meeting;
   name: string;

@@ -34,7 +34,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
       </div>
 
       <main className="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
           {/* Left Column: Media & Info */}
           <div className="flex flex-col gap-8">
             {/* Main Photo - Shorter height, rounded corners */}
@@ -136,7 +136,6 @@ const DetailsView: React.FC<DetailsViewProps> = ({ onBack, onBook, roomName = 'C
                   </div>
                   <div className="flex flex-col">
                     <h3 className="text-2xl lg:text-3xl font-black text-white tracking-tighter uppercase leading-none">{selectedAmenity.title}</h3>
-                    <p className="text-primary text-[9px] font-black uppercase tracking-[0.4em] mt-1.5">{selectedAmenity.subtitle}</p>
                   </div>
                 </div>
                 {selectedAmenity.quantity && (

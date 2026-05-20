@@ -13,19 +13,39 @@ import { registerPlugin } from '@capacitor/core';
  * `led.availableCode` / `led.busyCode`) to override at runtime — no rebuild.
  */
 export const LedCode = {
-  RED:   '0x04',
-  BLUE:  '0x05',
-  GREEN: '0x06',
-  FLASH: '0x0b',
+  RED:    '0x04',
+  // NOTE: vendor doc says 0x05=blue / 0x06=green, but on this hardware
+  // the two are physically swapped, so we swap them here to match reality.
+  BLUE:   '0x06',
+  GREEN:  '0x05',
+  YELLOW: '0x14',
+  FLASH:  '0x0b',
 } as const;
 
 export type LedColor = keyof typeof LedCode;
 
 interface LedPlugin {
-  setColor(options: { code: string }): Promise<{ success: boolean; method?: string }>;
+  setColor(options: { code: string }): Promise<{ success: boolean; method?: string; payload?: string; trace?: string }>;
+  shell(options: { cmd: string; su?: boolean }): Promise<{ exit: number; stdout: string; stderr: string }>;
+  readLed(): Promise<{ value: string }>;
 }
 
 const Led = registerPlugin<LedPlugin>('Led');
+
+/** Diagnostic — run any shell command on the device. */
+export async function ledShell(cmd: string, su = false): Promise<{ exit: number; stdout: string; stderr: string }> {
+  return Led.shell({ cmd, su });
+}
+
+/** Diagnostic — read the current value from the LED sysfs node, if readable. */
+export async function readLed(): Promise<string> {
+  try {
+    const r = await Led.readLed();
+    return r.value;
+  } catch (e: any) {
+    return `<<unreadable: ${e?.message ?? e}>>`;
+  }
+}
 
 const LS_AVAILABLE = 'led.availableCode';
 const LS_BUSY = 'led.busyCode';
@@ -55,16 +75,18 @@ export function setBusyCode(code: string): void {
 // Remember the last color we asked for, so we can ignore redundant writes.
 let lastCode: string | null = null;
 
-async function writeColor(code: string): Promise<void> {
+async function writeColor(code: string): Promise<{ method?: string; trace?: string }> {
   try {
     const res = await Led.setColor({ code });
     lastCode = code;
     // eslint-disable-next-line no-console
     console.log('[LED] setColor', code, res);
-  } catch (e) {
-    // non-LED device or sysfs not writable — log and ignore
+    return res;
+  } catch (e: any) {
+    // non-LED device or sysfs not writable — log and bubble up details
     // eslint-disable-next-line no-console
     console.warn('[LED] setColor failed for', code, e);
+    throw e;
   }
 }
 
@@ -82,6 +104,12 @@ export async function setLedBusy(): Promise<void> {
   await writeColor(code);
 }
 
+/** Room is free but next meeting starts within 15 min → yellow (0x14). */
+export async function setLedYellow(): Promise<void> {
+  if (lastCode === LedCode.YELLOW) return;
+  await writeColor(LedCode.YELLOW);
+}
+
 /** Solid BLUE (0x05). */
 export async function setLedBlue(): Promise<void> {
   if (lastCode === LedCode.BLUE) return;
@@ -95,18 +123,20 @@ export async function setLedFlash(): Promise<void> {
 }
 
 /** Generic helper — set any color by name. */
-export async function setLed(color: LedColor): Promise<void> {
-  await writeColor(LedCode[color]);
+export async function setLed(color: LedColor) {
+  return writeColor(LedCode[color]);
 }
 
 /** Generic helper — set any code (e.g. '0x06') directly. */
-export async function setLedRaw(code: string): Promise<void> {
-  await writeColor(code);
+export async function setLedRaw(code: string) {
+  return writeColor(code);
 }
 
-/** Force re-send the appropriate color for the current room state. */
-export async function refreshLed(isAvailable: boolean): Promise<void> {
+/** Force re-send the appropriate color for the current room state.
+ *  upNextSoon = free but next meeting starts within 15 min → yellow. */
+export async function refreshLed(isAvailable: boolean, upNextSoon = false): Promise<void> {
   lastCode = null;
-  if (isAvailable) await setLedAvailable();
-  else await setLedBusy();
+  if (!isAvailable) await setLedBusy();
+  else if (upNextSoon) await setLedYellow();
+  else await setLedAvailable();
 }

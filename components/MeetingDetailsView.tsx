@@ -128,10 +128,10 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
         </div>
       </header>
 
-      <main className="flex-1 overflow-hidden p-3 lg:p-4 relative z-10 flex flex-col justify-center">
-        <div className="max-w-4xl mx-auto w-full flex flex-col gap-3">
+      <main className="flex-1 overflow-auto p-3 lg:p-6 relative z-10 flex flex-col">
+        <div className="w-full flex-1 flex flex-col gap-3 portrait:justify-stretch">
           
-          <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-6 shadow-2xl relative overflow-hidden">
+          <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-6 shadow-2xl relative overflow-hidden portrait:flex-1 portrait:flex portrait:flex-col">
              <div className="absolute top-0 right-0 size-48 bg-primary/5 blur-[60px] rounded-xl pointer-events-none -translate-y-16 translate-x-16" />
              
              {/* Bell Button - Only for current/future meetings */}

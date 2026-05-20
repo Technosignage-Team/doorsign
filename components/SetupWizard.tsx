@@ -336,7 +336,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
         <Glow />
-        <div className="relative flex flex-col items-center w-full max-w-sm">
+        <div className="relative flex flex-col items-center w-full max-w-xl">
           <div className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-8 flex flex-col items-center gap-7 shadow-2xl">
             <Logo size="lg" />
             <div className="w-full h-px bg-white/8" />
@@ -368,7 +368,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
         <Glow />
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full max-w-xl">
           <TopBar />
           <div className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
             <StepBar current="host" />
@@ -447,7 +447,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
         <Glow />
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full max-w-xl">
           <TopBar />
           <div className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
 
@@ -549,7 +549,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
         <Glow />
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full max-w-xl">
           <TopBar />
           <div className="w-full bg-[#0d1117] border border-amber-500/20 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
             <div className="flex flex-col items-center gap-3 text-center">
@@ -583,7 +583,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-white px-6">
       <Glow />
-      <div className="relative w-full max-w-sm">
+      <div className="relative w-full max-w-xl">
         <TopBar />
         <div className="w-full bg-[#0d1117] border border-white/8 rounded-3xl p-7 flex flex-col gap-6 shadow-2xl">
 

@@ -228,7 +228,7 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({ onBack, onConnect
 
       {/* Body */}
       <main className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-8 lg:p-12 pb-24">
-        <div className="max-w-2xl mx-auto flex flex-col gap-8">
+        <div className="w-full flex flex-col gap-8">
 
           {/* ── Host URL ── */}
           <section>

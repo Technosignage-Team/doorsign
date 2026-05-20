@@ -252,7 +252,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
 
       <main className="flex-1 p-8 lg:p-12">
         <div
-          className="max-w-5xl mx-auto grid grid-cols-[140px_1fr] relative"
+          className="w-full grid grid-cols-[140px_1fr] relative"
           style={{ gridAutoRows: 'minmax(110px, auto)' }}
         >
           {timeSlots.map((slot, idx) => {

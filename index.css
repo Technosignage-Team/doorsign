@@ -13,11 +13,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ──────────────────────────────────────────────────────────────
+   RESPONSIVE ROOT SIZING
+   The door-sign app runs on screens from ~7" (800×480) up to
+   28" (1920×1080). Because Tailwind sizes (px, py, text-, gap-,
+   size-, etc.) are rem-based, scaling the root font-size with
+   the viewport scales the ENTIRE UI proportionally with no
+   per-component changes. clamp() ensures sensible bounds.
+   ────────────────────────────────────────────────────────────── */
+html {
+  /* Use vmin (smaller of vw/vh) so rotating the device does not
+     shrink the UI — landscape and portrait scale symmetrically. */
+  font-size: clamp(14px, 1.8vmin, 22px);
+}
+
+/* In portrait orientation the viewport is taller than wide, so vmin
+   (which equals vw) yields a smaller root font and the UI looks
+   under-sized with lots of empty vertical space. Bump the scaling
+   in portrait so forms and content fill the screen properly. */
+@media (orientation: portrait) {
+  html {
+    font-size: clamp(15px, 2.4vmin, 26px);
+  }
+}
+
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Make sure nothing escapes the viewport */
+  width: 100vw;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

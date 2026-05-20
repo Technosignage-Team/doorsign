@@ -74,7 +74,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onBack, onLogin }) => {
 
       {/* Body */}
       <div className="flex-1 flex items-center justify-center p-6 relative z-10 overflow-y-auto custom-scrollbar">
-        <div className="w-full max-w-sm flex flex-col gap-5">
+        <div className="w-full max-w-xl flex flex-col gap-5">
 
           {/* Lock icon + title */}
           <div className="flex flex-col items-center gap-3 text-center">
