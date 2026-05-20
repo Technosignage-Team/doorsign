@@ -722,8 +722,8 @@ const BookingView: React.FC<BookingViewProps> = ({
               className="w-full bg-primary text-white py-4 rounded-2xl shadow-2xl shadow-primary/30 hover:bg-primary/90 active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 disabled:opacity-50 shrink-0">
               {isSubmitting
                 ? <span className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                : <span className="text-2xl font-black tracking-[0.25em] uppercase leading-none">
-                    {initialMeetingId ? 'Update' : 'Book'}
+                : <span className="text-xl font-black tracking-[0.2em] uppercase leading-none">
+                    {initialMeetingId ? 'Update Booking' : 'Confirm Booking'}
                   </span>
               }
             </button>

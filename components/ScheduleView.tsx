@@ -390,7 +390,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
                       <button
                         onClick={() => !isPast && onBook(slot)}
                         disabled={isPast}
-                        className={`w-full h-full min-h-[110px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 px-10 transition-all group/btn ${
+                        className={`w-full h-full min-h-[110px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 px-10 transition-all ${
                           isPast
                             ? 'border-white/5 opacity-40 cursor-not-allowed'
                             : 'border-emerald-500/50 hover:border-emerald-500 hover:bg-emerald-500/10'
@@ -402,15 +402,10 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
                             <span className="font-black uppercase tracking-[0.3em] text-[11px]">Slot Past</span>
                           </div>
                         ) : (
-                          <>
-                            <div className="flex items-center gap-3">
-                              <span className="material-symbols-outlined text-2xl text-emerald-400">event_available</span>
-                              <span className="font-black uppercase tracking-[0.3em] text-[11px] text-emerald-400">Available</span>
-                            </div>
-                            <div className="px-8 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg transition-all group-hover/btn:scale-105 group-active/btn:scale-95 border bg-emerald-500 text-white border-emerald-400/30 group-hover/btn:bg-emerald-400">
-                              Quick Reserve
-                            </div>
-                          </>
+                          <div className="flex items-center gap-3">
+                            <span className="material-symbols-outlined text-2xl text-emerald-400">event_available</span>
+                            <span className="font-black uppercase tracking-[0.3em] text-[11px] text-emerald-400">Available</span>
+                          </div>
                         )}
                       </button>
                     )}
