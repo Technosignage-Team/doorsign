@@ -643,57 +643,6 @@ const BookingView: React.FC<BookingViewProps> = ({
               )}
             </div>
 
-            {/* Recurring card */}
-            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-3 flex flex-col gap-2 shrink-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="size-7 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                    <span className="material-symbols-outlined text-sm">repeat</span>
-                  </div>
-                  <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary">Recurring</span>
-                </div>
-                <button type="button" disabled={isPastMeeting} onClick={() => setIsRecurring(!isRecurring)}
-                  className={`size-7 rounded-xl flex items-center justify-center transition-all ${isRecurring ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 border border-white/10'}`}>
-                  <span className="material-symbols-outlined text-sm">{isRecurring ? 'toggle_on' : 'toggle_off'}</span>
-                </button>
-              </div>
-              {isRecurring ? (
-                <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {['DAILY', 'WEEKLY', 'MONTHLY'].map(f => (
-                      <button key={f} type="button" onClick={() => setRecurrence(f as any)}
-                        className={`py-1.5 rounded-xl text-[8px] font-black transition-all border uppercase tracking-widest ${recurrence === f ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>{f}</button>
-                    ))}
-                  </div>
-                  {recurrence === 'WEEKLY' && (
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Days of Week</label>
-                      <div className="grid grid-cols-7 gap-1">
-                        {[{n:'Mo',v:1},{n:'Tu',v:2},{n:'We',v:3},{n:'Th',v:4},{n:'Fr',v:5},{n:'Sa',v:6},{n:'Su',v:7}].map(({n,v}) => (
-                          <button key={v} type="button" onClick={() => toggleDay(v)}
-                            className={`py-1.5 rounded-xl text-[8px] font-black transition-all border ${selectedDays.includes(v) ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'}`}>{n}</button>
-                        ))}
-                      </div>
-                      {selectedDays.length === 0 && <p className="text-red-400 text-[7px] font-black uppercase tracking-widest">Select at least one day</p>}
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-1">
-                    <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">End Date</label>
-                    <input type="date" value={recurrenceEndDate} onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark transition-all" />
-                  </div>
-                  {initialMeetingId && (
-                    <button type="button" onClick={() => setUpdateSeries(!updateSeries)}
-                      className={`flex items-center gap-2 p-2 rounded-xl border transition-all ${updateSeries ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-slate-300'}`}>
-                      <span className="material-symbols-outlined text-sm">{updateSeries ? 'check_box' : 'check_box_outline_blank'}</span>
-                      <span className="text-[8px] font-black uppercase tracking-widest">Update Entire Series</span>
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <p className="text-slate-500 text-[8px] font-black uppercase tracking-widest">One-time meeting</p>
-              )}
-            </div>
           </div>
 
           {/* ── RIGHT COLUMN: DETAILS + SUBMIT ── */}
@@ -758,18 +707,6 @@ const BookingView: React.FC<BookingViewProps> = ({
                 </div>
               ) : null}
 
-              {/* Session Type */}
-              <div className="flex flex-col gap-1.5 shrink-0">
-                <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Session Type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['INTERNAL', 'CLIENT'] as const).map(t => (
-                    <button key={t} type="button" disabled={isPastMeeting} onClick={() => setType(t)}
-                      className={`py-2.5 rounded-xl text-[10px] font-black transition-all border uppercase tracking-widest ${type === t ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:border-white/20'}`}>
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* Error */}
@@ -785,14 +722,9 @@ const BookingView: React.FC<BookingViewProps> = ({
               className="w-full bg-primary text-white py-4 rounded-2xl shadow-2xl shadow-primary/30 hover:bg-primary/90 active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 disabled:opacity-50 shrink-0">
               {isSubmitting
                 ? <span className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                : <>
-                    <span className="text-2xl font-black tracking-[0.25em] uppercase leading-none">
-                      {initialMeetingId ? 'Update' : 'Book'}
-                    </span>
-                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/60">
-                      {initialMeetingId ? 'Save Changes' : 'Secure Booking'}
-                    </span>
-                  </>
+                : <span className="text-2xl font-black tracking-[0.25em] uppercase leading-none">
+                    {initialMeetingId ? 'Update' : 'Book'}
+                  </span>
               }
             </button>
           </div>
