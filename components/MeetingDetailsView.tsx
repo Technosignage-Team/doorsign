@@ -116,165 +116,125 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({ meetingId, onBa
 
   return (
     <div className="flex flex-col h-full bg-[#050505] overflow-hidden relative">
-      <div className="absolute top-[-20%] left-[-10%] size-[80%] bg-primary/10 blur-[150px] rounded-xl pointer-events-none" />
-      
-      <header className="flex items-center p-3 lg:p-4 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
-        <button onClick={onBack} className="size-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-100 hover:text-white transition-all">
-          <span className="material-symbols-outlined text-xl">arrow_back</span>
-        </button>
-        <div className="flex flex-col ml-3">
-          <h1 className="text-xl font-black text-white tracking-tight leading-none uppercase">Meeting Details</h1>
-          <p className="text-white text-[8px] font-black uppercase tracking-[0.4em] mt-1">{roomName} • Core Information</p>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.05)_0%,transparent_100%)] pointer-events-none" />
+
+      <header className="flex items-center justify-between p-4 lg:p-6 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-20 shrink-0">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="size-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-100 hover:text-white transition-all">
+            <span className="material-symbols-outlined text-xl">arrow_back</span>
+          </button>
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-black text-white tracking-tighter leading-none uppercase">Meeting Details</h1>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-1">Everest Boardroom • Core Information</p>
+          </div>
         </div>
+        <button className="size-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-[0_0_20px_rgba(19,127,236,0.2)]">
+          <span className="material-symbols-outlined text-2xl font-variation-fill">grid_view</span>
+        </button>
       </header>
 
-      <main className="flex-1 overflow-auto p-3 lg:p-6 relative z-10 flex flex-col">
-        <div className="w-full flex-1 flex flex-col gap-3 portrait:justify-stretch">
+      <main className="flex-1 overflow-hidden p-4 lg:p-10 relative z-10 flex flex-col items-center justify-center">
+        <div className="w-full max-w-5xl flex flex-col gap-6">
           
-          <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 lg:p-6 shadow-2xl relative overflow-hidden portrait:flex-1 portrait:flex portrait:flex-col">
-             <div className="absolute top-0 right-0 size-48 bg-primary/5 blur-[60px] rounded-xl pointer-events-none -translate-y-16 translate-x-16" />
-             
-             {/* Bell Button - Only for current/future meetings */}
-             {!isPast && (
-               <button 
-                 onClick={() => setIsServiceModalOpen(true)}
-                 className="absolute top-4 right-32 size-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 group z-20 shadow-xl"
-                 title="Request Service"
-               >
-                 <span className="material-symbols-outlined text-xl font-variation-fill group-hover:rotate-12 transition-transform">notifications_active</span>
-               </button>
-             )}
-
-             {/* Dynamic Status Indicator - Top Right */}
-             <div className="absolute top-4 right-4 flex items-center gap-2">
-                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-xl border backdrop-blur-md transition-all duration-500 ${status?.bg} ${status?.border} ${status?.color} ${status?.pulse ? 'shadow-[0_0_15px_rgba(251,191,36,0.1)]' : ''}`}>
-                  <span className={`material-symbols-outlined text-xs ${status?.pulse ? 'animate-pulse' : ''}`}>
-                    {status?.icon}
-                  </span>
-                  <span className="text-[8px] font-black uppercase tracking-widest">{status?.label}</span>
+          <div className="bg-white/[0.03] border border-white/10 rounded-[40px] p-8 lg:p-12 shadow-[0_40px_100px_rgba(0,0,0,0.8)] relative overflow-hidden backdrop-blur-md">
+             <div className="absolute top-0 right-0 size-96 bg-primary/5 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2" />
+             {/* Card Top Row */}
+             <div className="flex items-start justify-between mb-2">
+                <div className="px-5 py-1.5 rounded-full bg-[#0a2342] text-[#137fec] border border-[#137fec]/30 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
+                   {meeting.type} Session
+                </div>
+                <div className="flex items-center gap-4">
+                   <button 
+                     onClick={() => setIsServiceModalOpen(true)}
+                     className="size-12 rounded-2xl bg-[#ff9800]/5 border border-[#ff9800]/20 flex items-center justify-center text-[#ff9800] hover:bg-[#ff9800] hover:text-white transition-all active:scale-95 group shadow-xl"
+                   >
+                     <span className="material-symbols-outlined text-2xl font-variation-fill">notifications_active</span>
+                   </button>
+                   <div className="flex items-center gap-2 px-5 py-1.5 rounded-xl bg-[#0a2342] border border-[#137fec]/30 text-[#137fec] shadow-lg">
+                      <span className="material-symbols-outlined text-lg">calendar_today</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">{status?.label}</span>
+                   </div>
                 </div>
              </div>
 
-             <div className="flex flex-col gap-4 relative z-10">
-                <div className="flex flex-col gap-2">
-                   <div className="flex items-center gap-2">
-                      <div className="inline-flex items-center px-2 py-0.5 rounded-xl bg-primary/10 text-primary border border-primary/20 text-[8px] font-black uppercase tracking-widest self-start">
-                         {meeting.type} Session
-                      </div>
-                      {meeting.recurrence && meeting.recurrence !== 'NONE' && (
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase tracking-widest self-start">
-                           <span className="material-symbols-outlined text-[10px]">repeat</span>
-                           {meeting.recurrence}
-                        </div>
-                      )}
-                   </div>
-                   <h2 className={`text-2xl lg:text-3xl font-black tracking-tighter leading-tight pr-32 ${meeting.isCancelled ? 'text-slate-200 line-through decoration-red-500/40' : 'text-white'}`}>
-                     {meeting.title}
-                   </h2>
-                </div>                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 border-y border-white/5">
-                   <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-primary border border-white/10">
-                        <span className="material-symbols-outlined text-xl font-variation-fill">schedule</span>
-                      </div>
-                      <div className="flex flex-col">
-                         <span className="text-slate-100 text-[8px] font-black uppercase tracking-widest mb-0">Duration</span>
-                         <span className={`text-lg lg:text-xl font-black ${meeting.isCancelled ? 'text-slate-200' : 'text-white'}`}>
-                           {meeting.startTime} - {meeting.endTime}
-                         </span>
-                      </div>
-                   </div>
-                   <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-primary border border-white/10 overflow-hidden shadow-lg">
-                        {meeting.organizerPhoto ? (
-                          <img src={meeting.organizerPhoto} className={`size-full object-cover ${meeting.isCancelled ? 'grayscale opacity-50' : ''}`} alt={meeting.organizer} referrerPolicy="no-referrer" />
-                        ) : (
-                          <span className="material-symbols-outlined text-xl font-variation-fill">person</span>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                         <span className="text-slate-100 text-[8px] font-black uppercase tracking-widest mb-0">Lead Organizer</span>
-                         <span className={`text-lg lg:text-xl font-black ${meeting.isCancelled ? 'text-slate-200' : 'text-white'}`}>
-                           {meeting.organizer}
-                         </span>
-                      </div>
-                   </div>
-                </div>
+             {/* Title Section */}
+             <h2 className={`text-5xl lg:text-6xl font-black tracking-tighter leading-tight mb-12 ${meeting.isCancelled ? 'text-slate-400 line-through' : 'text-white'}`}>
+               {meeting.title}
+             </h2>
 
-                {/* Attendees Section with Photos */}
-                <div className="flex flex-col gap-3">
-                   <div className="flex items-center justify-between">
-                      <h4 className="text-slate-100 text-[9px] font-black uppercase tracking-[0.4em]">Attendees List</h4>
-                      <span className="text-[8px] font-black bg-white/5 px-1.5 py-0.5 rounded-xl border border-white/10">{meeting.attendees?.length || 1} Total</span>
+             {/* Info Bar Section */}
+             <div className="grid grid-cols-2 gap-12 py-8 border-y border-white/10 mb-10">
+                <div className="flex items-center gap-5">
+                   <div className="size-14 rounded-2xl bg-[#0a2342] flex items-center justify-center text-[#137fec] border border-[#137fec]/20 shadow-inner">
+                     <span className="material-symbols-outlined text-3xl font-variation-fill">schedule</span>
                    </div>
-                   <div className="flex flex-col gap-2 w-full">
-                      {meeting.attendees && meeting.attendees.length > 0 ? (
-                        meeting.attendees.map((person, i) => (
-                          <div key={i} className="flex items-center gap-3 group bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2 hover:bg-white/[0.06] hover:border-white/10 transition-all">
-                             <div className={`size-8 shrink-0 rounded-lg border border-white/10 bg-white/5 overflow-hidden ${meeting.isCancelled ? 'grayscale opacity-40' : ''}`}>
-                                {person.photo ? (
-                                  <img 
-                                     src={person.photo} 
-                                     alt={person.fullName ?? ''} 
-                                     className="size-full object-cover" 
-                                     referrerPolicy="no-referrer"
-                                   />
-                                ) : (
-                                  <div className="size-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
-                                     {person.fullName?.charAt(0) ?? '?'}
-                                  </div>
-                                )}
-                             </div>
-                             <span className="text-sm font-semibold text-white group-hover:text-primary transition-colors truncate">{person.fullName ?? 'Unknown'}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-slate-200 text-[10px] font-medium italic">No other attendees listed</div>
-                      )}
-                   </div>
-                </div>
-
-                {/* Primary Action Buttons - Gray font color applied */}
-                <div className="flex flex-col gap-2 mt-1">
-                  {isOngoing && (
-                    <div className="grid grid-cols-2 gap-2 animate-in slide-in-from-bottom-4 duration-500">
-                      <button 
-                        onClick={() => onExtend(meeting.id)}
-                        className="flex-1 bg-white/5 text-slate-100 py-2.5 rounded-xl text-sm font-black shadow-2xl border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2"
-                      >
-                        <span className="material-symbols-outlined text-xl text-slate-100">more_time</span>
-                        Extend
-                      </button>
-                      <button 
-                        onClick={() => { onEndNow(meeting.id); }}
-                        className="flex-1 bg-white/5 text-slate-100 py-2.5 rounded-xl text-sm font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2"
-                      >
-                        <span className="material-symbols-outlined text-xl text-slate-100">logout</span>
-                        Finish Early
-                      </button>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => !isPast && onEdit(meeting.id)}
-                      disabled={isPast}
-                      className={`flex-1 ${isPast ? 'bg-white/5 text-slate-100 cursor-not-allowed border-white/5' : isOngoing ? 'bg-white/5 text-slate-100 border-white/10 hover:bg-white/10' : 'bg-white text-black border-white/20 hover:bg-slate-100'} py-3 rounded-xl text-sm font-black shadow-2xl transition-all flex items-center justify-center gap-2 border-t`}
-                    >
-                      <span className="material-symbols-outlined text-xl">
-                        {isPast ? 'lock' : 'edit'}
+                   <div className="flex flex-col">
+                      <span className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">Duration</span>
+                      <span className="text-3xl font-black text-white tracking-tight">
+                        {meeting.startTime} - {meeting.endTime}
                       </span>
-                      {isPast ? 'History Locked' : 'Edit Details'}
-                    </button>
-                    <button 
-                      onClick={onBack}
-                      className="flex-1 bg-white/5 text-slate-100 py-3 rounded-xl text-sm font-black border border-white/10 hover:bg-white/10 active:scale-95 transition-all uppercase tracking-widest"
-                    >
-                      {isOngoing ? 'Go Back' : 'Close'}
-                    </button>
-                  </div>
+                   </div>
                 </div>
+                <div className="flex items-center gap-5">
+                   <div className="size-14 rounded-2xl bg-white/5 border border-white/10 overflow-hidden shadow-2xl relative">
+                     {meeting.organizerPhoto ? (
+                       <img src={meeting.organizerPhoto} className="size-full object-cover" alt={meeting.organizer} referrerPolicy="no-referrer" />
+                     ) : (
+                       <span className="material-symbols-outlined text-3xl text-primary font-variation-fill absolute inset-0 flex items-center justify-center">person</span>
+                     )}
+                   </div>
+                   <div className="flex flex-col">
+                      <span className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">Lead Organizer</span>
+                      <span className="text-3xl font-black text-white tracking-tight">
+                        {meeting.organizer}
+                      </span>
+                   </div>
+                </div>
+             </div>
+
+             {/* Attendees List Section */}
+             <div className="flex flex-col gap-6 mb-12">
+                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                   <h4 className="text-slate-400 text-[11px] font-black uppercase tracking-[0.5em]">Attendees List</h4>
+                   <span className="text-[10px] font-black bg-white/5 px-3 py-1 rounded-full border border-white/10 text-white shadow-inner">
+                     {meeting.attendees?.length || 1} Total
+                   </span>
+                </div>
+                <div className="flex flex-wrap gap-8">
+                   {meeting.attendees?.map((person, i) => (
+                     <div key={i} className="flex flex-col items-center gap-3 group">
+                        <div className="relative">
+                           <div className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                           <div className="size-16 rounded-2xl border-2 border-white/10 bg-white/5 p-1 relative z-10 overflow-hidden group-hover:border-primary transition-all">
+                              <img src={person.photo} alt={person.name} className="size-full rounded-xl object-cover shadow-2xl" referrerPolicy="no-referrer" />
+                           </div>
+                        </div>
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest group-hover:text-white transition-colors">{person.name}</span>
+                     </div>
+                   ))}
+                </div>
+             </div>
+
+             {/* Card Action Buttons */}
+             <div className="flex gap-4">
+                <button 
+                  onClick={() => onEdit(meeting.id)}
+                  className="flex-1 h-20 bg-white text-black rounded-3xl text-xl font-black shadow-[0_20px_50px_rgba(255,255,255,0.1)] hover:bg-slate-100 active:scale-[0.98] transition-all flex items-center justify-center gap-4 uppercase tracking-tighter"
+                >
+                  <span className="material-symbols-outlined text-3xl">edit_note</span>
+                  Edit Details
+                </button>
+                <button 
+                  onClick={onBack}
+                  className="flex-1 h-20 bg-white/[0.05] text-white border border-white/10 rounded-3xl text-xl font-black hover:bg-white/[0.08] active:scale-[0.98] transition-all uppercase tracking-[0.2em]"
+                >
+                  Close
+                </button>
              </div>
           </div>
+
+          {/* Bottom Info Row */}
+        
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
              <InfoCard icon="groups" label="Room Capacity" value={capacity != null ? `${capacity} Persons` : '—'} />

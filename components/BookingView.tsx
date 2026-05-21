@@ -537,223 +537,274 @@ const BookingView: React.FC<BookingViewProps> = ({
 
   const currentInputValue = activeInput === 'title' ? title : organizer;
 
-  return (
-    <div className="flex flex-col h-full bg-[#050505] overflow-hidden relative">
-      <div className="absolute top-[-20%] right-[-10%] size-[80%] bg-primary/20 blur-[150px] rounded-xl pointer-events-none" />
+  const [isPortrait, setIsPortrait] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(orientation: portrait)').matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(orientation: portrait)');
+    const handler = (e: MediaQueryListEvent) => setIsPortrait(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
-      {/* Header — compact for tablet */}
-      <header className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={onBack} className="size-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
-            <span className="material-symbols-outlined text-xl">arrow_back</span>
-          </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-black text-white tracking-tight leading-none uppercase">
-                {initialMeetingId ? (isPastMeeting ? 'Archived Booking' : 'Edit Booking') : 'New Booking'}
-              </h1>
-              {initialMeetingId && !isPastMeeting && (
-                <button type="button" onClick={() => setIsServiceModalOpen(true)}
-                  className="size-7 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95">
-                  <span className="material-symbols-outlined text-sm">notifications_active</span>
-                </button>
-              )}
+  const renderSchedulePanel = () => (
+    <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-4 lg:p-6 flex flex-col justify-between gap-3 lg:gap-4 h-full w-full overflow-hidden">
+      <div className={`flex flex-col h-full ${isPortrait ? 'gap-3 lg:gap-6 justify-between' : 'gap-3 lg:gap-4 justify-start'}`}>
+        <h2 className="text-primary text-xs font-black uppercase tracking-[0.45em] flex items-center gap-1.5 leading-none shrink-0">
+          <span className="material-symbols-outlined text-xl">schedule</span> Schedule
+        </h2>
+
+        <div className="flex flex-col gap-1.5 mt-1 shrink-0">
+          <label className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] ml-1">Date</label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            disabled={!!initialMeetingId}
+            className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-6 py-5 text-xl lg:text-2xl font-black text-white outline-none focus:border-primary [color-scheme:dark] disabled:opacity-50 transition-all hover:bg-white/10 cursor-pointer"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 lg:gap-4 shrink-0">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] ml-1">Start Time</label>
+            <div className="relative group">
+              <select
+                disabled={isPastMeeting}
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-6 py-5 pr-12 text-xl lg:text-2xl font-black text-white outline-none focus:border-primary appearance-none cursor-pointer transition-all hover:bg-white/10"
+              >
+                {startOptions.map((o) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.reason === 'past' ? ' (past)' : o.reason === 'booked' ? ' (booked)' : ''}</option>)}
+              </select>
+              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-hover:text-primary transition-colors text-2xl">expand_more</span>
             </div>
-            <p className="text-white/60 text-[7px] font-black uppercase tracking-[0.3em]">{roomName}</p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] ml-1">End Time</label>
+            <div className="relative group">
+              <select
+                disabled={availableEndOptions.length === 0 || isPastMeeting}
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-6 py-5 pr-12 text-xl lg:text-2xl font-black text-white outline-none focus:border-primary appearance-none cursor-pointer transition-all hover:bg-white/10"
+              >
+                {availableEndOptions.map((o: { time: string; disabled: boolean }) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.disabled ? ' (booked)' : ''}</option>)}
+              </select>
+              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-hover:text-primary transition-colors text-2xl">expand_more</span>
+            </div>
           </div>
         </div>
-        {initialMeetingId && !isPastMeeting && (
-          <button onClick={handleDelete} className="px-3 py-1.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
-            Cancel Booking
+
+        <div className="flex flex-col gap-1.5 mt-1 shrink-0">
+          <label className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] ml-1">Duration</label>
+          <div className="grid grid-cols-4 gap-2 lg:gap-3">
+            {QUICK_DURATIONS.map(dur => (
+              <button
+                key={dur}
+                type="button"
+                disabled={!availableDurations.includes(dur) || isPastMeeting}
+                onClick={() => handleSetDuration(dur)}
+                className={`py-5 rounded-2xl text-xs lg:text-sm font-black transition-all border-2 ${currentDuration === dur ? 'bg-primary border-primary text-white shadow-md scale-105 z-10' : 'bg-white/5 border-white/10 text-slate-400 disabled:opacity-20 hover:bg-white/10'}`}
+              >
+                {dur >= 60 ? `${dur / 60}h` : `${dur}m`}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDetailsPanel = (showBookButton: boolean) => (
+    <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-4 lg:p-6 flex flex-col justify-between gap-3 lg:gap-4 h-full w-full overflow-hidden">
+      <div className="flex flex-col gap-3 lg:gap-4 h-full justify-between">
+        <div className="flex items-center justify-between shrink-0">
+          <h2 className="text-primary text-xs font-black uppercase tracking-[0.45em] flex items-center gap-1.5 leading-none">
+            Details
+          </h2>
+          <button
+            type="button"
+            disabled={isPastMeeting}
+            onClick={() => setIsSuggestionsOpen(true)}
+            className="px-4 py-2 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary rounded-xl transition-all flex items-center gap-2 shadow-md active:scale-95 leading-none"
+          >
+            <span className="material-symbols-outlined text-sm">magic_button</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Suggestions</span>
           </button>
-        )}
+        </div>
+
+        <div className="flex flex-col gap-1.5 mt-1 flex-1 min-h-0 justify-center">
+          <label className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] ml-1 shrink-0">Event Title</label>
+          <textarea
+            required
+            value={title}
+            onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('title'); } }}
+            readOnly
+            placeholder="e.g., Weekly Project Sync & Stakeholder Review"
+            rows={isPortrait ? 2 : 4}
+            className={`w-full bg-white/5 border-2 rounded-2xl px-6 py-4 lg:py-6 text-2xl lg:text-3xl font-black text-white placeholder:text-slate-600 outline-none transition-all cursor-pointer resize-none flex-1 min-h-0 ${activeInput === 'title' ? 'border-primary ring-4 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5 mt-1 shrink-0">
+          <label className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] ml-1">Organizer</label>
+          <button
+            type="button"
+            disabled={!!currentUser || isPastMeeting}
+            onClick={() => { if (!currentUser && !isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('organizer'); } }}
+            className={`flex items-center gap-4 bg-white/[0.02] border-2 rounded-2xl px-5 py-4 w-full text-left transition-all ${!currentUser && !isPastMeeting ? 'border-white/10 hover:border-primary/50 hover:bg-white/[0.06] cursor-pointer active:scale-[0.98]' : 'border-white/5 cursor-default'}`}
+          >
+            <div className="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-0.5 shrink-0 relative overflow-hidden">
+              {organizerPhoto ? (
+                <img src={organizerPhoto} alt={organizer} className="size-full object-cover rounded shadow-2xl" referrerPolicy="no-referrer" />
+              ) : (
+                <span className="material-symbols-outlined text-2xl font-variation-fill text-primary">person</span>
+              )}
+              <div className="absolute -bottom-0.5 -right-0.5 size-3 bg-emerald-500 border border-[#0a0a0a] rounded-full flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-[6px] font-bold">verified</span>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="text-primary text-[8px] font-black uppercase tracking-[0.22em] leading-none mb-1 block">Full Name</span>
+              <h3 className="text-lg font-black text-white tracking-tight leading-none truncate flex items-center gap-1.5">
+                {organizer || 'Tap to sign in / enter name'}
+                {!currentUser && !isPastMeeting && (
+                  <span className="material-symbols-outlined text-sm text-primary/70">edit</span>
+                )}
+              </h3>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {showBookButton && (
+        <div className="flex flex-col gap-3 lg:gap-4 mt-auto">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-3 text-red-500 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <span className="material-symbols-outlined text-2xl">error</span>
+              <p className="text-sm font-black uppercase tracking-tight leading-none">{error}</p>
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting}
+            className="w-full py-8 bg-primary hover:bg-primary/95 text-white rounded-3xl text-2xl lg:text-3xl font-black shadow-lg hover:brightness-110 active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50 border border-white/10 uppercase tracking-[0.2em] min-h-[100px]"
+          >
+            {isSubmitting ? (
+              <span className="size-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></span>
+            ) : (
+              <>
+                <span className="text-white tracking-widest leading-none">{initialMeetingId ? 'SAVE' : 'BOOK'}</span>
+                <span className="text-[9px] font-black tracking-widest text-[#a8d3fc]/70 mt-2 normal-case leading-none">SECURE BOOKING</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col h-full bg-[#050505] overflow-hidden relative">
+      <div className="absolute top-[-20%] right-[-10%] size-[80%] bg-primary/20 blur-[150px] rounded-full pointer-events-none" />
+
+      <header className="flex items-center justify-between p-4 lg:p-6 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-10 shrink-0">
+        <div className="flex items-center gap-6">
+          <button type="button" onClick={onBack} className="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-200 hover:text-white transition-all">
+            <span className="material-symbols-outlined text-2xl">arrow_back</span>
+          </button>
+          <div className="flex flex-col">
+            <h1 className="text-xl lg:text-2xl font-black text-white tracking-tighter leading-none">
+              {initialMeetingId ? (isPastMeeting ? 'Archived' : 'Edit Booking') : 'New Booking'}
+            </h1>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-1">{roomName}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {initialMeetingId && !isPastMeeting && (
+            <button
+              type="button"
+              onClick={() => setIsServiceModalOpen(true)}
+              className="size-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 group shadow-lg"
+            >
+              <span className="material-symbols-outlined text-2xl font-variation-fill group-hover:rotate-12 transition-transform">notifications_active</span>
+            </button>
+          )}
+          {initialMeetingId && !isPastMeeting && (
+            <button onClick={handleDelete} className="px-5 py-2.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all h-12 flex items-center justify-center">
+              Cancel
+            </button>
+          )}
+        </div>
       </header>
 
-      {/*
-        Always flex-row — no breakpoint. Tablet portrait and landscape both get
-        the two-column layout. Each column scrolls independently if content
-        overflows (e.g. recurring fully expanded), but the page never scrolls.
-      */}
-      <main className="flex-1 overflow-hidden p-2 relative z-10">
-        <form onSubmit={handleSubmit} className="h-full flex flex-row gap-2">
-
-          {/* ── LEFT COLUMN: SCHEDULE ── */}
-          <div className="flex flex-col gap-2 w-[46%] overflow-y-auto custom-scrollbar">
-
-            {/* Schedule card */}
-            <div className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl p-3 flex flex-col gap-2.5">
-              <div className="flex items-center gap-2 pb-2 border-b border-white/5 shrink-0">
-                <div className="size-7 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                  <span className="material-symbols-outlined text-sm font-variation-fill">schedule</span>
-                </div>
-                <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary">Schedule</span>
+      <main className="flex-1 p-3 sm:p-4 lg:p-6 relative z-10 overflow-hidden">
+        <form onSubmit={handleSubmit} className="w-full h-full flex flex-col justify-between gap-3 lg:gap-4">
+          {isPortrait ? (
+            <div className="flex flex-col gap-3 sm:gap-4 w-full h-full min-h-0 pb-1">
+              <div className="flex-1 min-h-0 w-full">
+                {renderDetailsPanel(false)}
               </div>
-
-              {/* Date */}
-              <div className="flex flex-col gap-1 shrink-0">
-                <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Date</label>
-                <input
-                  type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                  disabled={!!initialMeetingId}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2.5 text-sm font-bold text-white outline-none focus:border-primary color-scheme-dark disabled:opacity-50 transition-all"
-                />
+              <div className="flex-1 min-h-0 w-full">
+                {renderSchedulePanel()}
               </div>
-
-              {/* Start + End */}
-              <div className="grid grid-cols-2 gap-2 shrink-0">
-                <div className="flex flex-col gap-1">
-                  <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Start Time</label>
-                  <select disabled={isPastMeeting} value={startTime} onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
-                    {startOptions.map((o) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.reason === 'past' ? ' (past)' : o.reason === 'booked' ? ' (booked)' : ''}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">End Time</label>
-                  <select disabled={availableEndOptions.length === 0 || isPastMeeting} value={endTime} onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2.5 text-sm font-bold text-white outline-none focus:border-primary appearance-none transition-all hover:border-white/20">
-                    {availableEndOptions.map((o: { time: string; disabled: boolean }) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.disabled ? ' (booked)' : ''}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* Quick Duration */}
-              <div className="flex flex-col gap-1 shrink-0">
-                <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Duration</label>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {QUICK_DURATIONS.map(dur => (
-                    <button key={dur} type="button"
-                      disabled={!availableDurations.includes(dur) || isPastMeeting}
-                      onClick={() => handleSetDuration(dur)}
-                      className={`py-2.5 rounded-xl text-[11px] font-black transition-all border ${currentDuration === dur ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-300 disabled:opacity-30 hover:border-white/20 hover:text-white'}`}>
-                      {dur >= 60 ? `${dur / 60}h` : `${dur}m`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Duration summary */}
-              {currentDuration && (
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-2 flex items-center gap-2 shrink-0 animate-in fade-in duration-300">
-                  <span className="material-symbols-outlined text-primary text-sm font-variation-fill shrink-0">hourglass_empty</span>
-                  <span className="text-white text-xs font-black truncate">
-                    {startTime} — {endTime}&nbsp;·&nbsp;{currentDuration >= 60 ? `${currentDuration / 60}h` : `${currentDuration}m`}
-                  </span>
-                </div>
-              )}
-            </div>
-
-          </div>
-
-          {/* ── RIGHT COLUMN: DETAILS + SUBMIT ── */}
-          <div className="flex-1 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
-
-            {/* Details card — contains title, organizer, session type */}
-            <div className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl p-3 flex flex-col gap-3">
-
-              {/* Card header */}
-              <div className="flex items-center justify-between pb-2 border-b border-white/5 shrink-0">
-                <div className="flex items-center gap-2">
-                  <div className="size-7 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                    <span className="material-symbols-outlined text-sm">title</span>
+              <div className="flex flex-col gap-2 w-full shrink-0">
+                {error && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-3 text-red-500 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <span className="material-symbols-outlined text-2xl">error</span>
+                    <p className="text-sm font-black uppercase tracking-tight leading-none">{error}</p>
                   </div>
-                  <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary">Details</span>
-                </div>
-                <button type="button" disabled={isPastMeeting} onClick={() => setIsSuggestionsOpen(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0b1a2d] border border-primary/20 text-primary hover:bg-primary hover:text-white transition-all active:scale-95 group">
-                  <span className="material-symbols-outlined text-sm group-hover:rotate-12 transition-transform">magic_button</span>
-                  <span className="text-[8px] font-black uppercase tracking-widest">Suggestions</span>
+                )}
+                <button
+                  type="submit"
+                  disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting}
+                  className="w-full py-6 bg-primary hover:bg-primary/95 text-white rounded-3xl text-xl lg:text-2xl font-black shadow-lg hover:brightness-110 active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50 border border-white/10 uppercase tracking-[0.2em] min-h-[80px]"
+                >
+                  {isSubmitting ? (
+                    <span className="size-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  ) : (
+                    <>
+                      <span className="text-white tracking-widest leading-none text-xl sm:text-2xl">{initialMeetingId ? 'SAVE' : 'BOOK'}</span>
+                      <span className="text-[9px] font-black tracking-widest text-[#a8d3fc]/70 mt-1 normal-case leading-none">SECURE BOOKING</span>
+                    </>
+                  )}
                 </button>
               </div>
-
-              {/* Event Title — large textarea matches reference screenshot */}
-              <div className="flex flex-col gap-1.5 flex-1">
-                <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Event Title</label>
-                <textarea
-                  required value={title}
-                  onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('title'); } }}
-                  readOnly
-                  placeholder="e.g., Weekly Project Sync & Stakeholder Review"
-                  className={`flex-1 w-full bg-white/5 border rounded-xl px-3 py-2.5 text-base font-bold text-white placeholder:text-slate-500/60 outline-none transition-all cursor-pointer resize-none leading-relaxed ${activeInput === 'title' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
-                />
-              </div>
-
-              {/* Organizer — shown when logged in, inside the card */}
-              {(initialMeetingId || currentUser) && organizerPhoto ? (
-                <div className="flex flex-col gap-1.5 shrink-0">
-                  <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Organizer</label>
-                  <div className="flex items-center gap-3 bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2.5">
-                    <div className="size-10 rounded-xl bg-white/5 border border-white/10 shrink-0 relative overflow-hidden">
-                      <img src={organizerPhoto} alt={organizer} className="size-full object-cover" />
-                      <div className="absolute -bottom-0.5 -right-0.5 size-3.5 bg-emerald-500 border-2 border-[#050505] rounded-full flex items-center justify-center shadow">
-                        <span className="material-symbols-outlined text-white text-[6px]">verified</span>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Full Name</span>
-                      <p className="text-white text-sm font-black leading-tight mt-0.5">{organizer}</p>
-                    </div>
-                  </div>
-                </div>
-              ) : !currentUser ? (
-                <div className="flex flex-col gap-1.5 shrink-0">
-                  <label className="text-slate-400 text-[7px] font-black uppercase tracking-widest">Organizer</label>
-                  <input
-                    required type="text" value={organizer}
-                    onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('organizer'); } }}
-                    readOnly placeholder="Your Full Name"
-                    className={`w-full bg-white/5 border rounded-xl px-2.5 py-2.5 text-sm font-bold text-white placeholder:text-slate-500 outline-none transition-all cursor-pointer ${activeInput === 'organizer' ? 'border-primary ring-2 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
-                  />
-                </div>
-              ) : null}
-
             </div>
-
-            {/* Error */}
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-2.5 flex items-center gap-2 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300 shrink-0">
-                <span className="material-symbols-outlined text-sm">error</span>
-                <p className="text-[10px] font-bold">{error}</p>
-              </div>
-            )}
-
-            {/* Submit — BOOK style matching reference screenshot */}
-            <button type="submit" disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting}
-              className="w-full bg-primary text-white py-4 rounded-2xl shadow-2xl shadow-primary/30 hover:bg-primary/90 active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 disabled:opacity-50 shrink-0">
-              {isSubmitting
-                ? <span className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                : <span className="text-xl font-black tracking-[0.2em] uppercase leading-none">
-                    {initialMeetingId ? 'Update Booking' : 'Confirm Booking'}
-                  </span>
-              }
-            </button>
-          </div>
-
+          ) : (
+            <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
+              {renderSchedulePanel()}
+              {renderDetailsPanel(true)}
+            </div>
+          )}
         </form>
       </main>
 
-      {/* Virtual Keyboard — unchanged */}
-      <div className={`fixed bottom-0 left-0 right-0 z-[70] bg-[#0a1016]/95 backdrop-blur-3xl border-t border-white/10 shadow-[0_-40px_120px_rgba(0,0,0,0.9)] transition-all duration-500 ${isKeyboardOpen ? 'translate-y-0' : 'translate-y-full'}`}>
-        <div className="w-full p-4 flex flex-col gap-4">
+      {/* Virtual Keyboard */}
+      <div className={`fixed bottom-0 left-0 right-0 z-[70] bg-[#0a1016]/98 backdrop-blur-[80px] border-t border-white/10 shadow-[0_-60px_150px_rgba(0,0,0,1)] transition-all duration-700 ease-out ${isKeyboardOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+        <div className="w-full max-w-6xl mx-auto p-10 flex flex-col gap-8">
           <div className="flex items-center justify-between">
-            <span className="text-slate-200 font-black uppercase tracking-widest text-[8px]">Input Field: <span className="text-primary">{activeInput?.toUpperCase()}</span></span>
-            <button onClick={() => { setIsKeyboardOpen(false); setActiveInput(null); }} className="px-4 py-1.5 bg-white/5 hover:bg-white/10 text-slate-200 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all">Dismiss</button>
+            <span className="text-slate-200 font-black uppercase tracking-[0.5em] text-xs">Input Field: <span className="text-primary">{activeInput?.toUpperCase()}</span></span>
+            <button onClick={() => { setIsKeyboardOpen(false); setActiveInput(null); }} className="px-6 py-2 bg-white/5 hover:bg-white/10 text-slate-200 rounded-2xl text-xs font-black uppercase tracking-widest transition-all">Dismiss Keyboard</button>
           </div>
-          <div className="bg-white/5 border-2 border-primary/30 rounded-xl p-4 min-h-[60px] flex items-center relative overflow-hidden">
-            <p className={`text-2xl font-black tracking-tight leading-none break-all ${currentInputValue ? 'text-white' : 'text-slate-500'}`}>{currentInputValue || 'Start typing...'}</p>
-            <span className="ml-1 w-0.5 h-8 bg-primary animate-pulse rounded-xl"></span>
+          <div className="bg-white/5 border-2 border-primary/40 rounded-2xl p-6 min-h-[100px] flex items-center relative overflow-hidden">
+            <p className={`text-4xl lg:text-5xl font-black tracking-tight leading-none break-all ${currentInputValue ? 'text-white' : 'text-slate-600'}`}>{currentInputValue || 'Start typing...'}</p>
+            <span className="ml-2 w-1 h-12 bg-primary animate-pulse rounded-full"></span>
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-3">
             {keyboardRows.map((row, rIdx) => (
-              <div key={rIdx} className="flex justify-center gap-1.5">
-                {rIdx === 2 && <button onClick={() => setIsShift(!isShift)} className={`flex-1 max-w-[80px] h-11 rounded-xl flex items-center justify-center transition-all ${isShift ? 'bg-primary text-white shadow-lg' : 'bg-white/5 text-slate-300'}`}><span className="material-symbols-outlined text-xl">shift</span></button>}
-                {row.map(key => <button key={key} onClick={() => handleKeyPress(key)} className="flex-1 min-w-[35px] max-w-[70px] h-11 bg-white/5 hover:bg-white/10 active:bg-primary active:text-white border border-white/5 rounded-xl text-white text-lg font-black transition-all">{isShift ? key : key.toLowerCase()}</button>)}
-                {rIdx === 2 && <button onClick={handleBackspace} className="flex-1 max-w-[80px] h-11 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-slate-200"><span className="material-symbols-outlined text-xl">backspace</span></button>}
+              <div key={rIdx} className="flex justify-center gap-3">
+                {rIdx === 2 && <button onClick={() => setIsShift(!isShift)} className={`flex-1 max-w-[120px] h-16 rounded-2xl flex items-center justify-center transition-all ${isShift ? 'bg-primary text-white shadow-[0_0_40px_rgba(19,127,236,0.3)]' : 'bg-white/5 text-slate-300'}`}><span className="material-symbols-outlined text-3xl">shift</span></button>}
+                {row.map(key => <button key={key} onClick={() => handleKeyPress(key)} className="flex-1 min-w-[50px] max-w-[90px] h-16 bg-white/5 hover:bg-white/10 active:bg-primary active:text-white border-2 border-white/5 rounded-2xl text-white text-2xl font-black transition-all shadow-lg active:scale-95">{isShift ? key : key.toLowerCase()}</button>)}
+                {rIdx === 2 && <button onClick={handleBackspace} className="flex-1 max-w-[120px] h-16 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center text-slate-200 shadow-lg active:scale-95"><span className="material-symbols-outlined text-3xl">backspace</span></button>}
               </div>
             ))}
-            <div className="flex justify-center gap-1.5 mt-1">
-              <button onClick={handleSpace} className="flex-1 max-w-[400px] h-11 bg-white/5 border border-white/5 rounded-xl text-slate-300 text-[10px] font-black uppercase tracking-widest">Space</button>
-              <button onClick={() => { setIsKeyboardOpen(false); setActiveInput(null); }} className="w-20 h-11 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-500 text-[10px] font-black uppercase tracking-widest">Confirm</button>
+            <div className="flex justify-center gap-3 mt-4">
+              <button onClick={handleSpace} className="flex-1 max-w-[500px] h-16 bg-white/5 border-2 border-white/5 rounded-2xl text-slate-300 text-sm font-black uppercase tracking-[0.5em] hover:bg-white/10 transition-all active:scale-95">Space</button>
+              <button onClick={() => { setIsKeyboardOpen(false); setActiveInput(null); }} className="w-40 h-16 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-2xl text-emerald-500 text-sm font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-xl active:scale-95">Confirm</button>
             </div>
           </div>
         </div>
@@ -762,59 +813,60 @@ const BookingView: React.FC<BookingViewProps> = ({
       {/* Service Modal Popup */}
       {isServiceModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-300">
-           <div className="absolute inset-0 bg-black/90 backdrop-blur-2xl" onClick={() => !requestStatus.includes('PENDING') && setIsServiceModalOpen(false)} />
-           <div className="relative w-full max-w-2xl bg-[#1c2127] rounded-xl border border-white/10 shadow-[0_0_100px_rgba(0,0,0,1)] p-10 lg:p-14 flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300 overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-2 bg-amber-500/50" />
-              <div className="flex flex-col items-center text-center gap-3">
-                 <div className="size-20 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-2">
-                    <span className="material-symbols-outlined text-4xl font-variation-fill animate-bounce">notifications_active</span>
-                 </div>
-                 <h2 className="text-4xl font-black text-white tracking-tighter uppercase leading-none">Service Bell</h2>
-                 <p className="text-slate-300 font-bold uppercase tracking-widest text-xs">Request room assistance</p>
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-2xl" onClick={() => !requestStatus.includes('PENDING') && setIsServiceModalOpen(false)} />
+          <div className="relative w-full max-w-2xl bg-[#1c2127] rounded-3xl border border-white/10 shadow-[0_0_100px_rgba(0,0,0,1)] p-10 lg:p-14 flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300 overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-amber-500/50" />
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="size-20 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-2">
+                <span className="material-symbols-outlined text-4xl font-variation-fill animate-bounce">notifications_active</span>
               </div>
-              {requestStatus === 'SUCCESS' ? (
-                <div className="flex flex-col items-center gap-6 py-10 animate-in fade-in zoom-in duration-500">
-                   <div className="size-32 rounded-xl bg-emerald-500/10 border-4 border-emerald-500/30 flex items-center justify-center text-emerald-500 shadow-xl">
-                      <span className="material-symbols-outlined text-6xl font-black">check_circle</span>
-                   </div>
-                   <div className="text-center">
-                     <p className="text-2xl font-black text-white uppercase tracking-tight">Request Sent</p>
-                     <p className="text-slate-300 font-medium mt-1">Our staff has been notified.</p>
-                   </div>
+              <h2 className="text-4xl font-black text-white tracking-tighter uppercase leading-none">Service Bell</h2>
+              <p className="text-slate-300 font-bold uppercase tracking-widest text-xs">Request room assistance</p>
+            </div>
+            {requestStatus === 'SUCCESS' ? (
+              <div className="flex flex-col items-center gap-6 py-10 animate-in fade-in zoom-in duration-500">
+                <div className="size-32 rounded-3xl bg-emerald-500/10 border-4 border-emerald-500/30 flex items-center justify-center text-emerald-500 shadow-xl">
+                  <span className="material-symbols-outlined text-6xl font-black">check_circle</span>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-                  <ServiceCard icon="restaurant" title="Catering" isPending={requestStatus === 'PENDING' && activeService === 'CATERING'} onClick={() => handleServiceRequest('CATERING')} />
-                  <ServiceCard icon="support_agent" title="Support" isPending={requestStatus === 'PENDING' && activeService === 'SUPPORT'} onClick={() => handleServiceRequest('SUPPORT')} />
-                  <ServiceCard icon="cleaning_services" title="Cleaning" isPending={requestStatus === 'PENDING' && activeService === 'CLEANING'} onClick={() => handleServiceRequest('CLEANING')} />
+                <div className="text-center">
+                  <p className="text-2xl font-black text-white uppercase tracking-tight">Request Sent</p>
+                  <p className="text-slate-300 font-medium mt-1">Our staff has been notified.</p>
                 </div>
-              )}
-              <button onClick={() => setIsServiceModalOpen(false)} className="text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Dismiss</button>
-           </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                <ServiceCard icon="restaurant" title="Catering" isPending={requestStatus === 'PENDING' && activeService === 'CATERING'} onClick={() => handleServiceRequest('CATERING')} />
+                <ServiceCard icon="support_agent" title="Support" isPending={requestStatus === 'PENDING' && activeService === 'SUPPORT'} onClick={() => handleServiceRequest('SUPPORT')} />
+                <ServiceCard icon="cleaning_services" title="Cleaning" isPending={requestStatus === 'PENDING' && activeService === 'CLEANING'} onClick={() => handleServiceRequest('CLEANING')} />
+              </div>
+            )}
+            <button onClick={() => setIsServiceModalOpen(false)} className="text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Dismiss</button>
+          </div>
         </div>
       )}
 
       {/* Suggested Titles Modal */}
       {isSuggestionsOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-2xl" onClick={() => setIsSuggestionsOpen(false)} />
-          <div className="relative w-full max-w-2xl bg-[#1c2127] rounded-xl border border-white/10 shadow-[0_0_100px_rgba(0,0,0,1)] p-10 flex flex-col gap-8 animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-10 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-[60px]" onClick={() => setIsSuggestionsOpen(false)} />
+          <div className="relative w-full max-w-2xl bg-[#1c2127] rounded-3xl border-2 border-white/10 shadow-[0_0_120px_rgba(0,0,0,1)] p-8 lg:p-10 flex flex-col gap-6 animate-in zoom-in-95 duration-300 overflow-hidden max-h-[85vh]">
+            <div className="absolute top-0 left-0 w-full h-2 bg-primary/50" />
             <div className="flex flex-col gap-2">
-              <h2 className="text-3xl font-black text-white tracking-tight uppercase">Suggested Titles</h2>
-              <p className="text-slate-300 font-black uppercase tracking-widest text-[10px]">Quick select for common meeting types</p>
+              <h2 className="text-3xl lg:text-4xl font-black text-white tracking-tighter uppercase leading-none">Suggested Titles</h2>
+              <p className="text-slate-300 font-black uppercase tracking-[0.3em] text-[10px]">Quick select common meetings</p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 overflow-y-auto pr-1 custom-scrollbar">
               {SUGGESTED_TITLES.map(t => (
-                <button 
-                  key={t} 
+                <button
+                  key={t}
                   onClick={() => { setTitle(t); setIsSuggestionsOpen(false); }}
-                  className="p-5 rounded-xl bg-white/5 border border-white/10 text-left hover:bg-primary/10 hover:border-primary transition-all active:scale-95 group"
+                  className="p-5 rounded-2xl bg-white/5 border border-white/10 text-left hover:bg-primary/10 hover:border-primary/40 transition-all active:scale-95 group shadow-lg"
                 >
-                  <p className="text-white font-bold group-hover:text-primary transition-colors">{t}</p>
+                  <p className="text-base font-black text-white group-hover:text-primary transition-colors tracking-tight leading-tight">{t}</p>
                 </button>
               ))}
             </div>
-            <button onClick={() => setIsSuggestionsOpen(false)} className="text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors text-center">Dismiss</button>
+            <button onClick={() => setIsSuggestionsOpen(false)} className="text-slate-400 font-black uppercase tracking-[0.4em] text-[10px] hover:text-white transition-colors text-center shrink-0">Dismiss Selection</button>
           </div>
         </div>
       )}
@@ -827,13 +879,13 @@ const BookingView: React.FC<BookingViewProps> = ({
 };
 
 const ServiceCard: React.FC<{ icon: string; title: string; isPending: boolean; onClick: () => void }> = ({ icon, title, isPending, onClick }) => (
-  <button onClick={onClick} disabled={isPending} className={`p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-4 group h-full relative ${isPending ? 'bg-amber-500/10 border-amber-500/40 shadow-xl' : 'bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-amber-500/5 active:scale-95'}`}>
-    <div className={`size-16 rounded-xl flex items-center justify-center transition-all ${isPending ? 'bg-amber-500 text-white' : 'bg-slate-800 text-slate-300 group-hover:text-amber-500'}`}>
-       {isPending ? <span className="size-8 border-4 border-white/30 border-t-white rounded-xl animate-spin"></span> : <span className="material-symbols-outlined text-3xl font-variation-fill">{icon}</span>}
+  <button onClick={onClick} disabled={isPending} className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4 group h-full relative ${isPending ? 'bg-amber-500/10 border-amber-500/40 shadow-xl' : 'bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-amber-500/5 active:scale-95'}`}>
+    <div className={`size-16 rounded-2xl flex items-center justify-center transition-all ${isPending ? 'bg-amber-500 text-white' : 'bg-slate-800 text-slate-300 group-hover:text-amber-500'}`}>
+      {isPending ? <span className="size-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></span> : <span className="material-symbols-outlined text-3xl font-variation-fill">{icon}</span>}
     </div>
     <div className="text-center">
-       <h4 className={`text-xl font-black uppercase tracking-tight leading-none mb-1 transition-colors ${isPending ? 'text-amber-500' : 'text-white group-hover:text-amber-500'}`}>{title}</h4>
-       <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{isPending ? 'Working...' : 'Request now'}</p>
+      <h4 className={`text-xl font-black uppercase tracking-tight leading-none mb-1 transition-colors ${isPending ? 'text-amber-500' : 'text-white group-hover:text-amber-500'}`}>{title}</h4>
+      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{isPending ? 'Working...' : 'Request now'}</p>
     </div>
   </button>
 );
