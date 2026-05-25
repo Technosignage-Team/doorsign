@@ -137,6 +137,6 @@ export async function setLedRaw(code: string) {
 export async function refreshLed(isAvailable: boolean, upNextSoon = false): Promise<void> {
   lastCode = null;
   if (!isAvailable) await setLedBusy();
-  else if (upNextSoon) await setLedYellow();
+  else if (upNextSoon) await setLedBusy();
   else await setLedAvailable();
 }

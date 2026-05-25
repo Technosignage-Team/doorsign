@@ -84,11 +84,9 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
             style={{ backgroundImage: roomStatus.imageUrl ? `url("${roomStatus.imageUrl}")` : 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200")' }}
           />
           <div className={`absolute inset-0 transition-colors duration-1000 ${
-            isUpNextSoon
-              ? 'bg-yellow-500/60'
-              : roomStatus.isAvailable
-                ? 'bg-emerald-500/60'
-                : 'bg-rose-500/60'
+            roomStatus.isAvailable && !isUpNextSoon
+              ? 'bg-emerald-500/60'
+              : 'bg-rose-500/60'
           }`} />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
           {isPortrait
@@ -203,7 +201,7 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
                             className="w-full flex flex-col text-left gap-4"
                           >
                             <div className="w-full">
-                              <span className="text-slate-600 text-[11px] font-black uppercase tracking-[0.5em] leading-none block mb-2">
+                              <span className={`text-[11px] font-black uppercase tracking-[0.5em] leading-none block mb-2 ${isStartingSoon ? 'text-yellow-500' : 'text-slate-600'}`}>
                                 UP NEXT
                               </span>
                               <h4 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight line-clamp-2 break-words text-slate-600 group-hover:text-slate-500 transition-colors">
@@ -348,7 +346,7 @@ const DefaultLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, isSynci
                             className="w-full flex flex-col text-left gap-4"
                           >
                             <div className="w-full">
-                              <span className="text-slate-600 text-[11px] font-black uppercase tracking-[0.5em] leading-none block mb-2">
+                              <span className={`text-[11px] font-black uppercase tracking-[0.5em] leading-none block mb-2 ${isStartingSoon ? 'text-yellow-500' : 'text-slate-600'}`}>
                                 UP NEXT
                               </span>
                               <h4 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight line-clamp-2 break-words text-slate-600 group-hover:text-slate-500 transition-colors">
