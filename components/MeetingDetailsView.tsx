@@ -200,9 +200,11 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({
                 >
                   <div className="relative">
                     <div className="absolute inset-0 bg-primary/20 blur-sm rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="size-20 landscape:size-16 rounded-2xl border-2 border-white/10 bg-white/5 p-1 relative z-10 overflow-hidden group-hover:border-primary transition-all shadow-lg">
-                      {person.photo && (
+                    <div className="size-20 landscape:size-16 rounded-2xl border-2 border-white/10 bg-white/5 p-1 relative z-10 overflow-hidden group-hover:border-primary transition-all shadow-lg flex items-center justify-center">
+                      {person.photo ? (
                         <img src={person.photo} alt={person.fullName} className="size-full rounded-xl object-cover shadow-2xl" referrerPolicy="no-referrer" />
+                      ) : (
+                        <span className="material-symbols-outlined text-3xl landscape:text-2xl text-slate-500 font-variation-fill">person</span>
                       )}
                     </div>
                   </div>

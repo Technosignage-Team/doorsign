@@ -469,7 +469,10 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
             endTime: b.endTime,
             date: b.date ?? today,
             type: (b.type ?? local?.type ?? 'INTERNAL') as 'INTERNAL' | 'CLIENT',
-            attendees: b.attendees ?? [],
+            attendees: (b.attendees ?? []).map((a: any) => ({
+              fullName: a.fullName ?? a.name ?? a.Name ?? '',
+              photo: a.photo ?? a.avatarUrl ?? a.avatar ?? a.photoUrl ?? a.imageUrl ?? undefined,
+            })),
             recurrence: 'NONE' as const,
           };
         });
