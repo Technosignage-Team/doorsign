@@ -94,9 +94,17 @@ const SplitScreenLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onB
           }
 
           <div className={`absolute ${isPortrait ? 'top-6 left-6 text-left' : 'bottom-16 left-12 right-12 text-left'}`}>
-            <h1 className={`text-white font-bold tracking-tight leading-[0.9] drop-shadow-2xl uppercase text-left ${isPortrait ? 'text-3xl sm:text-4xl max-w-[285px]' : 'text-[4vw] max-w-[350px]'}`}>
-              {roomStatus.name || 'EXECUTIVE BOARDROOM'}
+              <button
+            onClick={onShowDetails}
+            className={`absolute ${isPortrait ? 'top-6 left-6 text-left' : 'bottom-16 left-12 right-12 text-left'} group cursor-pointer focus:outline-none flex flex-col items-start`}
+          >
+            <h1 className={`text-white font-black tracking-tight leading-[0.9] drop-shadow-2xl uppercase text-left group-hover:text-primary transition-colors ${isPortrait ? 'text-3xl sm:text-4xl max-w-[285px]' : 'text-[4vw] max-w-[350px]'}`}>
+              {roomStatus.name }
             </h1>
+            <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2 opacity-75 group-hover:opacity-100 group-hover:text-primary transition-all">
+              (Click for Details)
+            </span>
+          </button>
           </div>
         </div>
 
