@@ -10,7 +10,25 @@ module.exports = {
     './constants.tsx',
   ],
   theme: {
+    screens: {
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1536px',
+      portrait: { raw: '(orientation: portrait)' },
+      landscape: { raw: '(orientation: landscape)' },
+    },
     extend: {
+      keyframes: {
+        'slide-up': {
+          '0%': { opacity: '0', transform: 'translateY(24px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'slide-up': 'slide-up 0.25s ease-out both',
+      },
       colors: {
         primary: '#137fec',
         'background-light': '#f6f7f8',

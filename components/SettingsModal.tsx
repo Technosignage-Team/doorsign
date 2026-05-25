@@ -97,6 +97,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const layouts = [
     { id: HomeLayout.SPLIT_SCREEN, name: 'Split Screen', desc: 'High-impact split view with vertical imagery', icon: 'view_agenda' },
+    { id: HomeLayout.CLOCK_SLOTS, name: 'Clock Slots', desc: 'Radial clock dial showing today\'s bookings at a glance', icon: 'schedule' },
   ];
 
   return (

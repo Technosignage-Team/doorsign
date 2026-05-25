@@ -4,6 +4,7 @@ import { RoomStatus, HomeLayout } from '../types';
 import DefaultLayout from './layouts/DefaultLayout';
 import ModernPillLayout from './layouts/ModernPillLayout';
 import SplitScreenLayout from './layouts/SplitScreenLayout';
+import ClockSlotsLayout from './layouts/ClockSlotsLayout';
 
 interface DashboardViewProps {
   currentTime: Date;
@@ -27,6 +28,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ currentTime, roomStatus, 
       return <ModernPillLayout {...layoutProps} />;
     case HomeLayout.SPLIT_SCREEN:
       return <SplitScreenLayout {...layoutProps} />;
+    case HomeLayout.CLOCK_SLOTS:
+      return <ClockSlotsLayout {...layoutProps} />;
     case HomeLayout.DEFAULT:
     default:
       return <DefaultLayout {...layoutProps} />;

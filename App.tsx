@@ -754,12 +754,13 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
         return <CheckInOutView onBack={() => setCurrentView(View.DASHBOARD)} currentTime={currentTime} roomStatus={roomStatus} />;
       case View.MEETING_DETAILS:
         return (
-          <MeetingDetailsView 
-            meetingId={selectedMeetingId || ''} 
-            onBack={() => setCurrentView(View.DASHBOARD)} 
+          <MeetingDetailsView
+            meetingId={selectedMeetingId || ''}
+            onBack={() => setCurrentView(View.DASHBOARD)}
             onEdit={(id) => handleBookAtTime(undefined, id)}
             onExtend={onExtendRequested}
             onEndNow={onEndNowRequested}
+            onShowRoomDetails={() => setCurrentView(View.DETAILS)}
             roomName={roomStatus.name}
             capacity={roomStatus.capacity}
             amenities={amenities}

@@ -13,7 +13,8 @@ export enum View {
 export enum HomeLayout {
   DEFAULT = 'DEFAULT',
   MODERN_PILL = 'MODERN_PILL',
-  SPLIT_SCREEN = 'SPLIT_SCREEN'
+  SPLIT_SCREEN = 'SPLIT_SCREEN',
+  CLOCK_SLOTS = 'CLOCK_SLOTS'
 }
 
 export interface User {
