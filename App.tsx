@@ -202,6 +202,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
   
   const [isNavExpanded, setIsNavExpanded] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [enableAtmosphericBg, setEnableAtmosphericBg] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [roomStatus, setRoomStatus] = useState<RoomStatus>(ROOM_INFO);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -736,6 +737,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
             onEndNow={onEndNowRequested}
             onShowDetails={() => setCurrentView(View.DETAILS)}
             slotPrecision={slotPrecision}
+            enableAtmosphericBg={enableAtmosphericBg}
           />
         );
       case View.SCHEDULE:
@@ -859,7 +861,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
           />
         );
       default:
-        return <DashboardView currentTime={currentTime} roomStatus={roomStatus} isSyncing={isSyncing} layout={homeLayout} onBook={handleBookAtTime} onShowMeetingDetails={handleShowMeetingDetails} onCheckIn={() => setCurrentView(View.CHECKIN)} onExtend={onExtendRequested} onEndNow={onEndNowRequested} onShowDetails={() => setCurrentView(View.DETAILS)} slotPrecision={slotPrecision} />;
+        return <DashboardView currentTime={currentTime} roomStatus={roomStatus} isSyncing={isSyncing} layout={homeLayout} onBook={handleBookAtTime} onShowMeetingDetails={handleShowMeetingDetails} onCheckIn={() => setCurrentView(View.CHECKIN)} onExtend={onExtendRequested} onEndNow={onEndNowRequested} onShowDetails={() => setCurrentView(View.DETAILS)} slotPrecision={slotPrecision} enableAtmosphericBg={enableAtmosphericBg} />;
     }
   };
 
@@ -1023,6 +1025,8 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
         onSelectLayout={setHomeLayout}
         currentSlotPrecision={slotPrecision}
         onSelectSlotPrecision={setSlotPrecision}
+        enableAtmosphericBg={enableAtmosphericBg}
+        onToggleAtmosphericBg={setEnableAtmosphericBg}
         onOpenConfiguration={() => { setIsSettingsOpen(false); setCurrentView(View.CONFIGURATION); }}
       />
     </div>

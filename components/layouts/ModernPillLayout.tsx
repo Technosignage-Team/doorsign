@@ -11,9 +11,10 @@ interface LayoutProps {
   onShowDetails: () => void;
   onCheckIn: () => void;
   slotPrecision: 15 | 30;
+  enableAtmosphericBg?: boolean;
 }
 
-const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBook, onShowMeetingDetails, onExtend, onEndNow, onShowDetails, onCheckIn, slotPrecision }) => {
+const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBook, onShowMeetingDetails, onExtend, onEndNow, onShowDetails, onCheckIn, slotPrecision, enableAtmosphericBg = true }) => {
   const formattedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   const formattedDate = currentTime.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 
@@ -82,11 +83,13 @@ const ModernPillLayout: React.FC<LayoutProps> = ({ currentTime, roomStatus, onBo
             className="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] hover:scale-105"
             style={{ backgroundImage: roomStatus.imageUrl ? `url("${roomStatus.imageUrl}")` : 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200")' }}
           />
-          <div className={`absolute inset-0 transition-colors duration-1000 ${
-            roomStatus.isAvailable && !isUpNextSoon
-              ? 'bg-emerald-500/60'
-              : 'bg-rose-500/60'
-          }`} />
+          {enableAtmosphericBg && (
+            <div className={`absolute inset-0 transition-colors duration-1000 ${
+              roomStatus.isAvailable && !isUpNextSoon
+                ? 'bg-emerald-500/60'
+                : 'bg-rose-500/60'
+            }`} />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
           {isPortrait
             ? <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-b from-transparent to-[#080808]" />

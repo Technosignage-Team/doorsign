@@ -18,10 +18,11 @@ interface DashboardViewProps {
   onEndNow: (id: string) => void;
   onShowDetails: () => void;
   slotPrecision: 15 | 30;
+  enableAtmosphericBg: boolean;
 }
 
-const DashboardView: React.FC<DashboardViewProps> = ({ currentTime, roomStatus, isSyncing, layout, onBook, onShowMeetingDetails, onCheckIn, onExtend, onEndNow, onShowDetails, slotPrecision }) => {
-  const layoutProps = { currentTime, roomStatus, isSyncing, onBook, onShowMeetingDetails, onCheckIn, onExtend, onEndNow, onShowDetails, slotPrecision };
+const DashboardView: React.FC<DashboardViewProps> = ({ currentTime, roomStatus, isSyncing, layout, onBook, onShowMeetingDetails, onCheckIn, onExtend, onEndNow, onShowDetails, slotPrecision, enableAtmosphericBg }) => {
+  const layoutProps = { currentTime, roomStatus, isSyncing, onBook, onShowMeetingDetails, onCheckIn, onExtend, onEndNow, onShowDetails, slotPrecision, enableAtmosphericBg };
 
   switch (layout) {
     case HomeLayout.MODERN_PILL:
