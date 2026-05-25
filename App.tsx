@@ -761,6 +761,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
             onExtend={onExtendRequested}
             onEndNow={onEndNowRequested}
             onShowRoomDetails={() => setCurrentView(View.DETAILS)}
+            onCheckInOut={() => setCurrentView(View.CHECKIN)}
             roomName={roomStatus.name}
             capacity={roomStatus.capacity}
             amenities={amenities}
