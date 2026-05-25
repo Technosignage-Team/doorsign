@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { db } from '../lib/db';
 import { Amenity } from '../types';
 
@@ -37,13 +37,6 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({
   const [activeService, setActiveService] = useState<ServiceType>(null);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const [selectedAttendee, setSelectedAttendee] = useState<{ fullName: string; photo?: string } | null>(null);
-  const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
-
-  useEffect(() => {
-    const handleResize = () => setIsPortrait(window.innerHeight > window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const meeting = db.getMeetings().find(m => m.id === meetingId);
 
@@ -128,10 +121,11 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({
   const canCheckIn = !!(status?.isCurrent || (status?.isNear && !roomHasCurrentMeeting));
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] overflow-hidden relative">
+    <div className="flex flex-col h-full w-full bg-[#050505] overflow-hidden relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(19,127,236,0.05)_0%,transparent_100%)] pointer-events-none" />
 
-      <header className="flex items-center justify-between p-4 lg:p-6 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-20 shrink-0">
+      {/* Header — full width, same in both orientations */}
+      <header className="flex items-center justify-between p-4 lg:p-6 border-b border-white/5 bg-black/20 backdrop-blur-xl relative z-20 shrink-0 w-full">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-100 hover:text-white transition-all">
             <span className="material-symbols-outlined text-xl">arrow_back</span>
@@ -153,156 +147,147 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({
         </div>
       </header>
 
-      <main className={`flex-1 ${isPortrait ? 'overflow-y-auto px-6 sm:px-8 pt-2 pb-6 justify-start' : 'overflow-hidden p-6 lg:p-10 justify-center'} relative z-10 flex flex-col items-center`}>
-        <div className={`w-full ${isPortrait ? 'max-w-xl flex flex-col gap-6 px-4 flex-grow justify-start pb-4' : 'max-w-4xl flex flex-col gap-6'}`}>
+      {/* Main — scrollable in portrait, full-fit in landscape */}
+      <main className="flex-1 overflow-y-auto landscape:overflow-hidden w-full px-6 sm:px-8 lg:px-10 pt-4 pb-6 landscape:py-6 relative z-10 flex flex-col">
+        <div className="w-full flex flex-col gap-6 flex-1 landscape:flex-none">
 
-          {/* Main Meeting Card - Fully transparent */}
-          <div className="bg-transparent border-none p-0 shadow-none relative overflow-hidden flex flex-col">
-            <div className="absolute top-0 right-0 size-96 bg-primary/5 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2" />
+          {/* Title */}
+          <h2 className={`text-[2rem] landscape:text-3xl lg:landscape:text-4xl leading-tight landscape:leading-none mt-6 landscape:mt-0 mb-4 landscape:mb-6 font-black tracking-tight ${meeting.isCancelled ? 'text-slate-400 line-through' : 'text-white'}`}>
+            {meeting.title}
+          </h2>
 
-            <div className="flex flex-col gap-2">
-              {/* Title */}
-              <h2 className={`${isPortrait ? 'text-[2.2rem] leading-tight mb-8 mt-10 min-h-[5.5rem] flex items-center' : 'text-3xl lg:text-4xl mb-10'} font-black tracking-tight ${meeting.isCancelled ? 'text-slate-400 line-through' : 'text-white'}`}>
-                {meeting.title}
-              </h2>
-
-              {/* Info Bar */}
-              <div className={`grid ${isPortrait ? 'grid-cols-1 gap-6 py-6 mb-6' : 'grid-cols-2 gap-6 py-4 mb-6'} border-y border-white/10`}>
-                <div className="flex items-center gap-5">
-                  <div className="flex flex-col">
-                    <span className="text-[#137fec] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Duration</span>
-                    <span className="text-3xl font-black text-white tracking-tight">
-                      {meeting.startTime} - {meeting.endTime}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-5">
-                  <div className="size-14 rounded-2xl bg-white/5 border border-white/10 overflow-hidden shadow-2xl relative shrink-0">
-                    {meeting.organizerPhoto ? (
-                      <img src={meeting.organizerPhoto} className="size-full object-cover" alt={meeting.organizer} referrerPolicy="no-referrer" />
-                    ) : (
-                      <span className="material-symbols-outlined text-3xl text-primary font-variation-fill absolute inset-0 flex items-center justify-center">person</span>
-                    )}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[#137fec] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Lead Organizer</span>
-                    <span className="text-3xl font-black text-white tracking-tight">
-                      {meeting.organizer}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Attendees */}
-              <div className={`flex flex-col ${isPortrait ? 'gap-4 mb-4' : 'gap-6 mb-12'}`}>
-                <div className={`flex items-center justify-between border-b border-white/5 ${isPortrait ? 'pb-3' : 'pb-4'}`}>
-                  <h4 className="text-[#137fec] text-xs font-black uppercase tracking-[0.5em]">Attendees List</h4>
-                  <span className="text-[10px] font-black bg-white/5 px-3 py-1 rounded-full border border-white/10 text-white shadow-inner">
-                    {meeting.attendees?.length || 1} Total
-                  </span>
-                </div>
-                <div className={isPortrait ? 'grid grid-cols-4 gap-y-8 gap-x-6 py-4 w-full justify-items-center' : 'flex flex-row overflow-x-auto gap-8 pb-3 custom-scrollbar max-w-full'}>
-                  {meeting.attendees?.map((person, i) => (
-                    <div
-                      key={i}
-                      onClick={() => setSelectedAttendee(person)}
-                      className={`flex flex-col items-center gap-2 group cursor-pointer hover:scale-105 active:scale-95 transition-all ${isPortrait ? 'w-full' : 'shrink-0'}`}
-                    >
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-primary/20 blur-sm rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className={`${isPortrait ? 'size-24' : 'size-16'} rounded-2xl border-2 border-white/10 bg-white/5 p-1 relative z-10 overflow-hidden group-hover:border-primary transition-all shadow-lg`}>
-                          {person.photo && (
-                            <img src={person.photo} alt={person.fullName} className="size-full rounded-xl object-cover shadow-2xl" referrerPolicy="no-referrer" />
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-xs font-black text-slate-300 uppercase tracking-widest group-hover:text-white transition-colors text-center line-clamp-2 max-w-[110px] leading-tight break-words">{person.fullName}</span>
-                    </div>
-                  ))}
-                </div>
+          {/* Info Bar — 1 col portrait, 2 col landscape */}
+          <div className="grid grid-cols-1 landscape:grid-cols-2 gap-6 landscape:gap-8 py-5 landscape:py-4 mb-2 border-y border-white/10">
+            <div className="flex items-center gap-5">
+              <div className="flex flex-col">
+                <span className="text-[#137fec] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Duration</span>
+                <span className="text-2xl landscape:text-3xl font-black text-white tracking-tight">
+                  {meeting.startTime} - {meeting.endTime}
+                </span>
               </div>
             </div>
-
-            {/* Landscape Action Buttons */}
-            {!isPortrait && (
-              <div className="flex flex-row gap-4 w-full">
-                <button
-                  onClick={onShowRoomDetails}
-                  className="flex-1 h-14 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-base font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider border border-white/10"
-                >
-                  <span className="material-symbols-outlined text-xl">info</span>
-                  Room Info
-                </button>
-                {canCheckIn && (
-                  <button
-                    onClick={onCheckInOut}
-                    className="flex-1 h-14 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-base font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider border border-white/10"
-                  >
-                    <span className="material-symbols-outlined text-xl">verified_user</span>
-                    Check In / Out
-                  </button>
-                )}
-                <button
-                  onClick={() => onEdit(meeting.id)}
-                  className="flex-1 h-14 bg-primary text-white rounded-full text-base font-black hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-lg shadow-primary/20"
-                >
-                  <span className="material-symbols-outlined text-xl">edit</span>
-                  Edit
-                </button>
-                {isOngoing && (
-                  <button
-                    onClick={() => onExtend(meeting.id)}
-                    className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-base font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-lg shadow-emerald-500/20 border border-emerald-500/25"
-                  >
-                    <span className="material-symbols-outlined text-xl">more_time</span>
-                    Extend
-                  </button>
+            <div className="flex items-center gap-5">
+              <div className="size-14 rounded-2xl bg-white/5 border border-white/10 overflow-hidden shadow-2xl relative shrink-0">
+                {meeting.organizerPhoto ? (
+                  <img src={meeting.organizerPhoto} className="size-full object-cover" alt={meeting.organizer} referrerPolicy="no-referrer" />
+                ) : (
+                  <span className="material-symbols-outlined text-3xl text-primary font-variation-fill absolute inset-0 flex items-center justify-center">person</span>
                 )}
               </div>
-            )}
+              <div className="flex flex-col">
+                <span className="text-[#137fec] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Lead Organizer</span>
+                <span className="text-2xl landscape:text-3xl font-black text-white tracking-tight">
+                  {meeting.organizer}
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
 
-      {/* Portrait Action Buttons Panel */}
-      {isPortrait && (
-        <div className="bg-black/35 border-t border-white/5 px-6 sm:px-8 py-5 z-20 shrink-0 backdrop-blur-xl w-full flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-3 w-full max-w-xl mx-auto">
+          {/* Attendees — grid in portrait, horizontal scroll in landscape */}
+          <div className="flex flex-col gap-4 landscape:gap-5 mb-4 landscape:mb-6">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h4 className="text-[#137fec] text-xs font-black uppercase tracking-[0.5em]">Attendees List</h4>
+              <span className="text-[10px] font-black bg-white/5 px-3 py-1 rounded-full border border-white/10 text-white shadow-inner">
+                {meeting.attendees?.length || 1} Total
+              </span>
+            </div>
+            <div className="grid grid-cols-4 landscape:flex landscape:flex-row gap-y-8 gap-x-4 landscape:gap-8 py-3 w-full justify-items-center landscape:justify-items-start landscape:overflow-x-auto landscape:pb-2 custom-scrollbar">
+              {meeting.attendees?.map((person, i) => (
+                <div
+                  key={i}
+                  onClick={() => setSelectedAttendee(person)}
+                  className="flex flex-col items-center gap-2 group cursor-pointer hover:scale-105 active:scale-95 transition-all w-full landscape:w-auto landscape:shrink-0"
+                >
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/20 blur-sm rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="size-20 landscape:size-16 rounded-2xl border-2 border-white/10 bg-white/5 p-1 relative z-10 overflow-hidden group-hover:border-primary transition-all shadow-lg">
+                      {person.photo && (
+                        <img src={person.photo} alt={person.fullName} className="size-full rounded-xl object-cover shadow-2xl" referrerPolicy="no-referrer" />
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-slate-300 uppercase tracking-widest group-hover:text-white transition-colors text-center line-clamp-2 w-full leading-tight break-words">{person.fullName}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Action buttons — landscape inline, portrait in footer panel */}
+          <div className="hidden landscape:flex flex-row gap-4 w-full mt-auto">
             <button
               onClick={onShowRoomDetails}
-              className="h-14 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-[13px] font-black active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider border border-white/10"
+              className="flex-1 h-14 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-base font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider border border-white/10"
             >
-              <span className="material-symbols-outlined text-lg">info</span>
+              <span className="material-symbols-outlined text-xl">info</span>
               Room Info
             </button>
             {canCheckIn && (
               <button
                 onClick={onCheckInOut}
-                className="h-14 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-[13px] font-black active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider border border-white/10"
+                className="flex-1 h-14 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-base font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider border border-white/10"
               >
-                <span className="material-symbols-outlined text-lg">verified_user</span>
-                Check In/Out
+                <span className="material-symbols-outlined text-xl">verified_user</span>
+                Check In / Out
               </button>
             )}
             <button
               onClick={() => onEdit(meeting.id)}
-              className={`h-14 bg-primary text-white rounded-full text-[13px] font-black hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider shadow-lg shadow-primary/20 ${isOngoing ? 'col-span-1' : 'col-span-2'}`}
+              className="flex-1 h-14 bg-primary text-white rounded-full text-base font-black hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-lg shadow-primary/20"
             >
-              <span className="material-symbols-outlined text-lg">edit</span>
+              <span className="material-symbols-outlined text-xl">edit</span>
               Edit
             </button>
             {isOngoing && (
               <button
                 onClick={() => onExtend(meeting.id)}
-                className="h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-[13px] font-black active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider shadow-lg shadow-emerald-500/20 border border-emerald-500/25"
+                className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-base font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-lg shadow-emerald-500/20 border border-emerald-500/25"
               >
-                <span className="material-symbols-outlined text-lg">more_time</span>
+                <span className="material-symbols-outlined text-xl">more_time</span>
                 Extend
               </button>
             )}
           </div>
+
         </div>
-      )}
+      </main>
+
+      {/* Portrait-only footer action buttons */}
+      <div className="landscape:hidden bg-black/35 border-t border-white/5 px-6 sm:px-8 py-5 z-20 shrink-0 backdrop-blur-xl w-full flex flex-col gap-3">
+        <div className="grid grid-cols-2 gap-3 w-full">
+          <button
+            onClick={onShowRoomDetails}
+            className="h-14 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-[13px] font-black active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider border border-white/10"
+          >
+            <span className="material-symbols-outlined text-lg">info</span>
+            Room Info
+          </button>
+          {canCheckIn && (
+            <button
+              onClick={onCheckInOut}
+              className="h-14 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-[13px] font-black active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider border border-white/10"
+            >
+              <span className="material-symbols-outlined text-lg">verified_user</span>
+              Check In/Out
+            </button>
+          )}
+          <button
+            onClick={() => onEdit(meeting.id)}
+            className={`h-14 bg-primary text-white rounded-full text-[13px] font-black hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider shadow-lg shadow-primary/20 ${isOngoing ? 'col-span-1' : 'col-span-2'}`}
+          >
+            <span className="material-symbols-outlined text-lg">edit</span>
+            Edit
+          </button>
+          {isOngoing && (
+            <button
+              onClick={() => onExtend(meeting.id)}
+              className="h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-[13px] font-black active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider shadow-lg shadow-emerald-500/20 border border-emerald-500/25"
+            >
+              <span className="material-symbols-outlined text-lg">more_time</span>
+              Extend
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Services Modal */}
       {isServiceModalOpen && (
