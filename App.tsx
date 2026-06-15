@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getActivationKey } from './lib/activationKey';
-import { getLicense, isLicenseExpired, LicenseInfo } from './lib/license';
+import { getLicense, isLicenseExpired, isLicenseRevoked, refreshLicenseStatus, LicenseInfo } from './lib/license';
 import LicenseExpiredScreen from './components/LicenseExpiredScreen';
+import LicenseRevokedScreen from './components/LicenseRevokedScreen';
 import NetworkBanner from './components/NetworkBanner';
 import { View, RoomStatus, HomeLayout, User, Meeting, Amenity } from './types';
 import DashboardView from './components/DashboardView';
@@ -1052,11 +1053,26 @@ const AppGate: React.FC = () => {
     setLicence(lic);
     setIsSetup(!!hostUrl && !!key && !!lic);
     setChecked(true);
+
+    // Re-validate against the subscription server in the background so a
+    // revocation or renewal applied server-side is picked up without
+    // requiring a restart. Don't block the initial render on this.
+    if (lic) {
+      refreshLicenseStatus().then(updated => {
+        if (updated) setLicence(updated);
+      });
+    }
   };
+
+  const handleLicenseRefresh = useCallback(async () => {
+    const updated = await refreshLicenseStatus();
+    if (updated) setLicence(updated);
+    return updated;
+  }, []);
 
   useEffect(() => {
     loadState();
-    // Re-check expiry every hour without requiring a restart
+    // Re-check status (expiry + revocation) every hour without requiring a restart
     const interval = setInterval(loadState, 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -1077,12 +1093,22 @@ const AppGate: React.FC = () => {
     );
   }
 
-  // License expiry check is skipped in DEV_WEB_MODE
+  // License status checks are skipped in DEV_WEB_MODE
+  if (!DEV_WEB_MODE && licence && isLicenseRevoked(licence)) {
+    return (
+      <>
+        <LicenseRevokedScreen license={licence} onRefresh={handleLicenseRefresh} />
+        <NetworkBanner />
+      </>
+    );
+  }
+
   if (!DEV_WEB_MODE && licence && isLicenseExpired(licence)) {
     return (
       <>
         <LicenseExpiredScreen
           license={licence}
+          onRefresh={handleLicenseRefresh}
           onRenew={() => {
             setIsSetup(false);
             setLicence(null);

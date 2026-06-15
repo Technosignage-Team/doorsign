@@ -3,10 +3,8 @@ import { Capacitor } from '@capacitor/core';
 import { CapacitorHttp } from '@capacitor/core';
 import { setHostUrl, getBaseUrl } from '../lib/hostUrl';
 import { setActivationKey } from '../lib/activationKey';
-import { setLicense, getDeviceId, LicenseInfo } from '../lib/license';
+import { setLicense, getDeviceId, LicenseInfo, LICENSE_API } from '../lib/license';
 import { doorSignFetch } from '../lib/doorSignFetch';
-
-const LICENSE_API = 'https://sw-subscription-1.onrender.com/api/license/activate';
 
 const OFFLINE_MSG = 'No internet connection. Please check your network and try again.';
 const SERVER_UNREACHABLE_MSG = 'Cannot reach the server. Check your internet connection and try again.';

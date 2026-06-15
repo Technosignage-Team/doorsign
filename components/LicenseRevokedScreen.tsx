@@ -1,26 +1,21 @@
 import React, { useState } from 'react';
 import { LicenseInfo } from '../lib/license';
 
-interface LicenseExpiredScreenProps {
+interface LicenseRevokedScreenProps {
   license: LicenseInfo;
-  onRenew: () => void;
   onRefresh: () => Promise<LicenseInfo | null>;
 }
 
-const LicenseExpiredScreen: React.FC<LicenseExpiredScreenProps> = ({ license, onRenew, onRefresh }) => {
+const LicenseRevokedScreen: React.FC<LicenseRevokedScreenProps> = ({ license, onRefresh }) => {
   const [checking, setChecking] = useState(false);
   const [checkMsg, setCheckMsg] = useState<string | null>(null);
-
-  const expiredOn = new Date(license.expiryDate).toLocaleDateString(undefined, {
-    year: 'numeric', month: 'long', day: 'numeric',
-  });
 
   const handleCheckAgain = async () => {
     setChecking(true);
     setCheckMsg(null);
     const result = await onRefresh();
     if (!result) setCheckMsg('Unable to reach the licence server. Check your connection and try again.');
-    else setCheckMsg('Licence status checked — still expired.');
+    else setCheckMsg('Licence status checked — still revoked.');
     setChecking(false);
   };
 
@@ -41,12 +36,12 @@ const LicenseExpiredScreen: React.FC<LicenseExpiredScreenProps> = ({ license, on
 
           {/* Icon + title */}
           <div className="flex flex-col items-center gap-4 text-center">
-            <div className="w-18 h-18 w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center">
-              <span className="material-symbols-outlined text-red-400" style={{ fontSize: '34px' }}>gpp_bad</span>
+            <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center">
+              <span className="material-symbols-outlined text-red-400" style={{ fontSize: '34px' }}>block</span>
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white">Licence Expired</h1>
-              <p className="text-slate-400 text-sm mt-1">Your Sharewinds licence is no longer active</p>
+              <h1 className="text-2xl font-black text-white">Licence Revoked</h1>
+              <p className="text-slate-400 text-sm mt-1">Your Sharewinds licence has been revoked</p>
             </div>
           </div>
 
@@ -55,9 +50,9 @@ const LicenseExpiredScreen: React.FC<LicenseExpiredScreenProps> = ({ license, on
           {/* Details */}
           <div className="flex flex-col gap-3">
             {[
-              { icon: 'business',          label: 'Company',    value: license.companyName },
-              { icon: 'workspace_premium', label: 'Plan',       value: license.plan?.toUpperCase() },
-              { icon: 'event_busy',        label: 'Expired on', value: expiredOn },
+              { icon: 'business',          label: 'Company', value: license.companyName },
+              { icon: 'workspace_premium', label: 'Plan',    value: license.plan?.toUpperCase() },
+              { icon: 'gpp_bad',           label: 'Status',  value: license.status?.toUpperCase() },
             ].map(({ icon, label, value }) => (
               <div key={label} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/4 border border-white/6">
                 <span className="material-symbols-outlined text-slate-500 flex-shrink-0" style={{ fontSize: '18px' }}>{icon}</span>
@@ -71,19 +66,12 @@ const LicenseExpiredScreen: React.FC<LicenseExpiredScreenProps> = ({ license, on
           <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-red-500/6 border border-red-500/12">
             <span className="material-symbols-outlined text-red-400 flex-shrink-0 mt-0.5" style={{ fontSize: '16px' }}>info</span>
             <p className="text-red-300/70 text-xs leading-relaxed">
-              This display is locked until the licence is renewed. Please contact your Sharewinds administrator to renew your subscription.
+              This display is locked because your licence has been revoked. Please contact your Sharewinds administrator to restore access.
             </p>
           </div>
 
-          {/* Actions */}
+          {/* Action */}
           <div className="flex flex-col gap-3">
-            <button
-              onClick={onRenew}
-              className="w-full py-4 rounded-2xl font-black text-sm bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>key</span>
-              Enter New Licence Key
-            </button>
             <button
               onClick={handleCheckAgain}
               disabled={checking}
@@ -106,4 +94,4 @@ const LicenseExpiredScreen: React.FC<LicenseExpiredScreenProps> = ({ license, on
   );
 };
 
-export default LicenseExpiredScreen;
+export default LicenseRevokedScreen;
