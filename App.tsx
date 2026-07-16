@@ -22,6 +22,7 @@ import { setLedAvailable, setLedBusy, refreshLed } from './lib/led';
 import { doorSignFetch } from './lib/doorSignFetch';
 import { getBaseUrl, loadHostUrl, setHostUrl } from './lib/hostUrl';
 import { setActivationKey } from './lib/activationKey';
+import { resolveImageSrc } from './lib/imageSrc';
 import { DEV_WEB_MODE, DEV_HOST_URL, DEV_ACTIVATION_KEY } from './lib/devMode';
 import SetupWizard from './components/SetupWizard';
 
@@ -271,7 +272,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
       location: locationParts.length > 0 ? locationParts.join(' • ') : prev.location,
       ...(resource.capacity != null && { capacity: resource.capacity }),
       ...(resource.description && { description: resource.description }),
-      ...(resource.imageUrl && { imageUrl: resource.imageUrl }),
+      ...(resource.imageUrl && { imageUrl: resolveImageSrc(resource.imageUrl) }),
     }));
     if (Array.isArray(resource.amenities)) {
       setAmenities(resource.amenities.map(a => ({
@@ -280,7 +281,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
         subtitle: a.description ?? '',
         description: a.description ?? '',
         icon: mapIcon(a.icon),
-        img: a.imageUrl ?? '',
+        img: resolveImageSrc(a.imageUrl) ?? '',
         status: 'Operational',
       })));
     }
@@ -323,7 +324,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
             subtitle: a.description ?? '',
             description: a.description ?? '',
             icon: mapIcon(a.icon),
-            img: a.imageUrl ?? '',
+            img: resolveImageSrc(a.imageUrl) ?? '',
             status: 'Operational',
           })));
         }
