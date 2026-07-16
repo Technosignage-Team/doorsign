@@ -15,4 +15,4 @@
 export const DEV_WEB_MODE = true;
 
 export const DEV_HOST_URL       = 'https://sb.asasconnect.com';
-export const DEV_ACTIVATION_KEY = 'BO8BFR5H9I';
+export const DEV_ACTIVATION_KEY = 'U9SNLL036A';
