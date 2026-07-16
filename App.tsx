@@ -19,6 +19,7 @@ import { ROOM_INFO } from './constants';
 import { db } from './lib/db';
 import { useBookingSync } from './lib/useBookingSync';
 import { setLedAvailable, setLedBusy, refreshLed } from './lib/led';
+import { startKioskLockTask, stopKioskLockTask } from './lib/kiosk';
 import { doorSignFetch } from './lib/doorSignFetch';
 import { getBaseUrl, loadHostUrl, setHostUrl } from './lib/hostUrl';
 import { setActivationKey } from './lib/activationKey';
@@ -203,6 +204,20 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
   const [isNavExpanded, setIsNavExpanded] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [enableAtmosphericBg, setEnableAtmosphericBg] = useState(true);
+
+  // Kiosk / Lock Mode
+  const [isKioskMode, setIsKioskMode] = useState(() => localStorage.getItem('kioskMode') === 'true');
+  const [kioskPin, setKioskPin] = useState(() => localStorage.getItem('kioskPin') ?? '');
+  const [showKioskExit, setShowKioskExit] = useState(false);
+  const [kioskPinInput, setKioskPinInput] = useState('');
+  const [kioskPinError, setKioskPinError] = useState(false);
+
+  // Re-enter lock task if kiosk mode was enabled before restart
+  useEffect(() => {
+    if (localStorage.getItem('kioskMode') === 'true') {
+      startKioskLockTask();
+    }
+  }, []);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [roomStatus, setRoomStatus] = useState<RoomStatus>(ROOM_INFO);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -234,7 +249,17 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
         return prev;
       });
     };
-    const onVisibility = () => { if (document.visibilityState === 'visible') reassert(); };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        reassert();
+        // Return to the dashboard whenever the screen wakes up (screen-off/on)
+        setCurrentView(View.DASHBOARD);
+        setCurrentUser(null);
+        setPendingAction(null);
+        setIsNavExpanded(false);
+        setIsSettingsOpen(false);
+      }
+    };
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('focus', reassert);
     return () => {
@@ -444,8 +469,34 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
   const syncBookingsFromApi = useCallback((resId: string) => {
     const today = new Date().toISOString().split('T')[0];
 
-    // Immediately wipe stale API meetings so old data never shows on reload
+    // --- Persistent photo cache ---
+    // Photos are not returned by the API, so we preserve them in a separate
+    // localStorage key that survives multiple rapid/concurrent sync calls.
+    const PHOTO_CACHE_KEY = 'everest_photo_cache';
+    type PhotoEntry = { organizerPhoto?: string; attendees?: Array<{ fullName: string; photo?: string }> };
+    const readPhotoCache = (): Record<string, PhotoEntry> => {
+      try { return JSON.parse(localStorage.getItem(PHOTO_CACHE_KEY) || '{}'); } catch { return {}; }
+    };
+    const writePhotoCache = (cache: Record<string, PhotoEntry>) =>
+      localStorage.setItem(PHOTO_CACHE_KEY, JSON.stringify(cache));
+
+    // Merge any photos from current meetings into the persistent cache BEFORE wiping
     const stale = db.getMeetings();
+    const photoCache = readPhotoCache();
+    stale.forEach(m => {
+      if (!m.apiId) return;
+      const existing = photoCache[m.apiId] ?? {};
+      const mergedAttendees = m.attendees?.some(a => a.photo)
+        ? m.attendees
+        : existing.attendees;
+      photoCache[m.apiId] = {
+        organizerPhoto: m.organizerPhoto ?? existing.organizerPhoto,
+        attendees: mergedAttendees ?? existing.attendees,
+      };
+    });
+    writePhotoCache(photoCache);
+
+    // Immediately wipe stale API meetings so old data never shows on reload
     const localOnly = stale.filter(m => !m.apiId);
     localStorage.setItem('everest_meetings_db', JSON.stringify(localOnly));
     updateRoomStatus();
@@ -454,30 +505,36 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
       .then(r => { if (!r.ok) throw new Error(`Bookings API ${r.status}`); return r.json(); })
       .then((data: unknown) => {
         const list: any[] = Array.isArray(data) ? data : (data as any)?.items ?? (data as any)?.data ?? (data as any)?.bookings ?? [];
-        const existing = db.getMeetings();
-        // Keep only locally-created meetings (no apiId); API is the source of truth for all API meetings
-        const localOnly = existing.filter(m => !m.apiId);
+        // Re-read the photo cache here — it's persistent so safe even if sync ran again
+        const cache = readPhotoCache();
+        const freshLocalOnly = db.getMeetings().filter(m => !m.apiId);
         const apiMeetings: Meeting[] = list.map((b: any) => {
           const apiId = String(b.id ?? b.bookingId ?? b.BookingId ?? b.Id ?? '');
-          const local = existing.find(m => m.apiId === apiId);
+          const cached = cache[apiId];
+          const rawAttendees = (b.attendees ?? []).map((a: any) => {
+            const fullName = a.fullName ?? a.name ?? a.Name ?? '';
+            const cachedAttendee = cached?.attendees?.find(ca => ca.fullName === fullName);
+            return {
+              fullName,
+              photo: a.photo ?? a.avatarUrl ?? a.avatar ?? a.photoUrl ?? a.imageUrl ?? cachedAttendee?.photo ?? undefined,
+            };
+          });
           return {
             id: apiId,
             apiId,
             title: b.title ?? b.subject ?? b.Subject ?? 'Meeting',
             organizer: b.organizer ?? b.organizerName ?? b.OrganizerName ?? '',
-            organizerPhoto: b.organizerPhoto ?? b.OrganizerPhoto ?? local?.organizerPhoto,
+            organizerPhoto: b.organizerPhoto ?? b.OrganizerPhoto ?? cached?.organizerPhoto,
             startTime: b.startTime,
             endTime: b.endTime,
             date: b.date ?? today,
-            type: (b.type ?? local?.type ?? 'INTERNAL') as 'INTERNAL' | 'CLIENT',
-            attendees: (b.attendees ?? []).map((a: any) => ({
-              fullName: a.fullName ?? a.name ?? a.Name ?? '',
-              photo: a.photo ?? a.avatarUrl ?? a.avatar ?? a.photoUrl ?? a.imageUrl ?? undefined,
-            })),
+            type: (b.type ?? 'INTERNAL') as 'INTERNAL' | 'CLIENT',
+            // Prefer merged API attendees; fall back to cached list if API returns none
+            attendees: rawAttendees.length > 0 ? rawAttendees : (cached?.attendees ?? []),
             recurrence: 'NONE' as const,
           };
         });
-        localStorage.setItem('everest_meetings_db', JSON.stringify([...localOnly, ...apiMeetings]));
+        localStorage.setItem('everest_meetings_db', JSON.stringify([...freshLocalOnly, ...apiMeetings]));
         updateRoomStatus();
       })
       .catch(err => console.error('Bookings sync error:', err));
@@ -690,6 +747,48 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
   const handleLogout = () => {
     setCurrentUser(null);
     setCurrentView(View.DASHBOARD);
+  };
+
+  const handleEnableKiosk = (pin: string) => {
+    setIsKioskMode(true);
+    setKioskPin(pin);
+    localStorage.setItem('kioskMode', 'true');
+    localStorage.setItem('kioskPin', pin);
+    startKioskLockTask();
+  };
+
+  const handleDisableKiosk = (pin: string): boolean => {
+    if (pin === kioskPin) {
+      setIsKioskMode(false);
+      localStorage.setItem('kioskMode', 'false');
+      stopKioskLockTask();
+      return true;
+    }
+    return false;
+  };
+
+  const handleKioskPinDigit = (digit: string) => {
+    if (kioskPinInput.length >= 4) return;
+    const newInput = kioskPinInput + digit;
+    setKioskPinInput(newInput);
+    setKioskPinError(false);
+    if (newInput.length === 4) {
+      // Auto-check after 4 digits
+      setTimeout(() => {
+        if (newInput === kioskPin) {
+          setIsKioskMode(false);
+          localStorage.setItem('kioskMode', 'false');
+          stopKioskLockTask();
+          setShowKioskExit(false);
+          setKioskPinInput('');
+          setKioskPinError(false);
+          setIsSettingsOpen(true);
+        } else {
+          setKioskPinError(true);
+          setKioskPinInput('');
+        }
+      }, 150);
+    }
   };
 
   // Idle redirect — return to dashboard after 1 minute of no interaction
@@ -1028,7 +1127,85 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
         enableAtmosphericBg={enableAtmosphericBg}
         onToggleAtmosphericBg={setEnableAtmosphericBg}
         onOpenConfiguration={() => { setIsSettingsOpen(false); setCurrentView(View.CONFIGURATION); }}
+        isKioskMode={isKioskMode}
+        kioskPin={kioskPin}
+        onEnableKiosk={handleEnableKiosk}
+        onDisableKiosk={handleDisableKiosk}
       />
+
+      {/* Kiosk Lock Icon — tap to bring up admin PIN exit dialog */}
+      {isKioskMode && (
+        <button
+          onClick={() => { setShowKioskExit(true); setKioskPinInput(''); setKioskPinError(false); }}
+          className="fixed bottom-4 left-4 z-[200] size-9 rounded-full bg-black/50 border border-white/10 text-slate-600 flex items-center justify-center hover:text-slate-400 hover:border-white/20 transition-all"
+          aria-label="Admin unlock"
+        >
+          <span className="material-symbols-outlined text-base">lock</span>
+        </button>
+      )}
+
+      {/* Kiosk Exit — Admin PIN Dialog */}
+      {showKioskExit && (
+        <div className="fixed inset-0 z-[500] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl">
+          <div className="flex flex-col items-center gap-8 w-full max-w-xs px-6">
+            {/* Header */}
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="size-16 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center mb-2">
+                <span className="material-symbols-outlined text-primary text-3xl">shield_lock</span>
+              </div>
+              <h2 className="text-2xl font-black text-white">Admin Access</h2>
+              <p className="text-slate-400 text-sm">Enter PIN to disable kiosk mode</p>
+            </div>
+
+            {/* PIN Dots */}
+            <div className="flex gap-5">
+              {[0, 1, 2, 3].map(i => (
+                <div
+                  key={i}
+                  className={`size-4 rounded-full border-2 transition-all duration-150 ${kioskPinInput.length > i ? 'bg-primary border-primary scale-110' : 'bg-transparent border-slate-600'}`}
+                />
+              ))}
+            </div>
+
+            {kioskPinError && (
+              <p className="text-red-400 font-black text-sm -mt-4">Incorrect PIN. Try again.</p>
+            )}
+
+            {/* Numeric Keypad */}
+            <div className="grid grid-cols-3 gap-3 w-full">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                <button
+                  key={n}
+                  onClick={() => handleKioskPinDigit(String(n))}
+                  className="h-16 rounded-2xl bg-white/8 border border-white/10 text-white text-2xl font-black hover:bg-white/15 active:scale-95 transition-all"
+                >
+                  {n}
+                </button>
+              ))}
+              <button
+                onClick={() => { setKioskPinInput(p => p.slice(0, -1)); setKioskPinError(false); }}
+                className="h-16 rounded-2xl bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center hover:bg-white/10 active:scale-95 transition-all"
+              >
+                <span className="material-symbols-outlined text-xl">backspace</span>
+              </button>
+              <button
+                onClick={() => handleKioskPinDigit('0')}
+                className="h-16 rounded-2xl bg-white/8 border border-white/10 text-white text-2xl font-black hover:bg-white/15 active:scale-95 transition-all"
+              >
+                0
+              </button>
+              <div className="h-16" />
+            </div>
+
+            <button
+              onClick={() => { setShowKioskExit(false); setKioskPinInput(''); setKioskPinError(false); }}
+              className="text-slate-500 font-black text-sm uppercase tracking-widest hover:text-slate-300 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

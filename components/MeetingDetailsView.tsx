@@ -60,7 +60,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({
     const end = parseTimeString(meeting.endTime);
     const diffMins = Math.floor((start.getTime() - now.getTime()) / 60000);
     if (now >= start && now < end) {
-      return { label: 'On Going', color: 'text-emerald-500', bg: 'bg-emerald-500/25', border: 'border-emerald-500/40', icon: 'sensors', pulse: true, isCurrent: true };
+      return { label: 'IN PROGRESS', color: 'text-emerald-500', bg: 'bg-emerald-500/25', border: 'border-emerald-500/40', icon: 'sensors', pulse: true, isCurrent: true };
     } else if (diffMins > 0 && diffMins <= 15) {
       return { label: `Starting in ${diffMins}m`, color: 'text-amber-500', bg: 'bg-amber-500/25', border: 'border-amber-500/40', icon: 'notification_important', pulse: true, isNear: true };
     } else if (now < start) {
@@ -148,103 +148,104 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({
       </header>
 
       {/* Main — scrollable in portrait, full-fit in landscape */}
-      <main className="flex-1 overflow-y-auto landscape:overflow-hidden w-full px-6 sm:px-8 lg:px-10 pt-4 pb-6 landscape:py-6 relative z-10 flex flex-col">
-        <div className="w-full flex flex-col gap-6 flex-1 landscape:flex-none">
+      <main className="flex-1 overflow-y-auto landscape:overflow-hidden w-full px-6 sm:px-8 lg:px-12 pt-4 pb-6 landscape:py-8 relative z-10 flex flex-col">
+        {/* flex-1 fills full height so mt-auto on buttons reaches the bottom */}
+        <div className="w-full flex flex-col gap-6 landscape:gap-8 flex-1">
 
           {/* Title */}
-          <h2 className={`text-[2rem] landscape:text-3xl lg:landscape:text-4xl leading-tight landscape:leading-none mt-6 landscape:mt-0 mb-4 landscape:mb-6 font-black tracking-tight ${meeting.isCancelled ? 'text-slate-400 line-through' : 'text-white'}`}>
+          <h2 className={`text-[2rem] landscape:text-4xl lg:landscape:text-5xl leading-tight landscape:leading-none mt-6 landscape:mt-0 mb-2 landscape:mb-4 font-black tracking-tight landscape:shrink-0 ${meeting.isCancelled ? 'text-slate-400 line-through' : 'text-white'}`}>
             {meeting.title}
           </h2>
 
           {/* Info Bar — 1 col portrait, 2 col landscape */}
-          <div className="grid grid-cols-1 landscape:grid-cols-2 gap-6 landscape:gap-8 py-5 landscape:py-4 mb-2 border-y border-white/10">
-            <div className="flex items-center gap-5">
+          <div className="grid grid-cols-1 landscape:grid-cols-2 gap-6 landscape:gap-10 py-5 landscape:py-8 mb-2 border-y border-white/10 landscape:shrink-0">
+            <div className="flex items-center gap-6">
               <div className="flex flex-col">
-                <span className="text-[#137fec] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Duration</span>
-                <span className="text-2xl landscape:text-3xl font-black text-white tracking-tight">
+                <span className="text-[#137fec] text-[10px] landscape:text-xs font-black uppercase tracking-[0.3em] mb-2">Duration</span>
+                <span className="text-2xl landscape:text-3xl lg:landscape:text-4xl font-black text-white tracking-tight">
                   {meeting.startTime} - {meeting.endTime}
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-5">
-              <div className="size-14 rounded-2xl bg-white/5 border border-white/10 overflow-hidden shadow-2xl relative shrink-0">
+            <div className="flex items-center gap-6">
+              <div className="size-14 landscape:size-18 rounded-2xl bg-white/5 border border-white/10 overflow-hidden shadow-2xl relative shrink-0">
                 {meeting.organizerPhoto ? (
                   <img src={meeting.organizerPhoto} className="size-full object-cover" alt={meeting.organizer} referrerPolicy="no-referrer" />
                 ) : (
-                  <span className="material-symbols-outlined text-3xl text-primary font-variation-fill absolute inset-0 flex items-center justify-center">person</span>
+                  <span className="material-symbols-outlined text-3xl landscape:text-4xl text-primary font-variation-fill absolute inset-0 flex items-center justify-center">person</span>
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-[#137fec] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Lead Organizer</span>
-                <span className="text-2xl landscape:text-3xl font-black text-white tracking-tight">
+                <span className="text-[#137fec] text-[10px] landscape:text-xs font-black uppercase tracking-[0.3em] mb-2">Lead Host</span>
+                <span className="text-2xl landscape:text-3xl lg:landscape:text-4xl font-black text-white tracking-tight">
                   {meeting.organizer}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Attendees — grid in portrait, horizontal scroll in landscape */}
-          <div className="flex flex-col gap-4 landscape:gap-5 mb-4 landscape:mb-6">
-            <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <h4 className="text-[#137fec] text-xs font-black uppercase tracking-[0.5em]">Attendees List</h4>
-              <span className="text-[10px] font-black bg-white/5 px-3 py-1 rounded-full border border-white/10 text-white shadow-inner">
+          {/* Attendees — fills remaining space in landscape */}
+          <div className="flex flex-col gap-4 landscape:gap-6 mb-4 landscape:mb-0 landscape:flex-1 landscape:min-h-0">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3 landscape:shrink-0">
+              <h4 className="text-[#137fec] text-xs landscape:text-sm font-black uppercase tracking-[0.5em]">Attendees List</h4>
+              <span className="text-[10px] landscape:text-xs font-black bg-white/5 px-3 py-1 rounded-full border border-white/10 text-white shadow-inner">
                 {meeting.attendees?.length || 1} Total
               </span>
             </div>
-            <div className="grid grid-cols-4 landscape:flex landscape:flex-row gap-y-8 gap-x-4 landscape:gap-8 py-3 w-full justify-items-center landscape:justify-items-start landscape:overflow-x-auto landscape:pb-2 custom-scrollbar">
+            <div className="grid grid-cols-4 landscape:flex landscape:flex-row gap-y-8 gap-x-4 landscape:gap-10 py-3 w-full justify-items-center landscape:justify-items-start landscape:overflow-x-auto landscape:pb-2 custom-scrollbar">
               {meeting.attendees?.map((person, i) => (
                 <div
                   key={i}
                   onClick={() => setSelectedAttendee(person)}
-                  className="flex flex-col items-center gap-2 group cursor-pointer hover:scale-105 active:scale-95 transition-all w-full landscape:w-auto landscape:shrink-0"
+                  className="flex flex-col items-center gap-3 group cursor-pointer hover:scale-105 active:scale-95 transition-all w-full landscape:w-auto landscape:shrink-0"
                 >
                   <div className="relative">
                     <div className="absolute inset-0 bg-primary/20 blur-sm rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="size-20 landscape:size-16 rounded-2xl border-2 border-white/10 bg-white/5 p-1 relative z-10 overflow-hidden group-hover:border-primary transition-all shadow-lg flex items-center justify-center">
+                    <div className="size-20 landscape:size-24 rounded-2xl border-2 border-white/10 bg-white/5 p-1 relative z-10 overflow-hidden group-hover:border-primary transition-all shadow-lg flex items-center justify-center">
                       {person.photo ? (
                         <img src={person.photo} alt={person.fullName} className="size-full rounded-xl object-cover shadow-2xl" referrerPolicy="no-referrer" />
                       ) : (
-                        <span className="material-symbols-outlined text-3xl landscape:text-2xl text-slate-500 font-variation-fill">person</span>
+                        <span className="material-symbols-outlined text-3xl landscape:text-4xl text-slate-500 font-variation-fill">person</span>
                       )}
                     </div>
                   </div>
-                  <span className="text-xs font-black text-slate-300 uppercase tracking-widest group-hover:text-white transition-colors text-center line-clamp-2 w-full leading-tight break-words">{person.fullName}</span>
+                  <span className="text-xs landscape:text-sm font-black text-slate-300 uppercase tracking-widest group-hover:text-white transition-colors text-center line-clamp-2 w-full leading-tight break-words">{person.fullName}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Action buttons — landscape inline, portrait in footer panel */}
-          <div className="hidden landscape:flex flex-row gap-4 w-full mt-auto">
+          {/* Action buttons — pushed to bottom via mt-auto, landscape only */}
+          <div className="hidden landscape:flex flex-row flex-nowrap gap-4 landscape:gap-6 w-full mt-auto landscape:shrink-0">
             <button
               onClick={onShowRoomDetails}
-              className="flex-1 h-14 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-base font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider border border-white/10"
+              className="flex-1 h-14 landscape:h-16 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-base landscape:text-lg font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider border border-white/10"
             >
-              <span className="material-symbols-outlined text-xl">info</span>
+              <span className="material-symbols-outlined text-xl landscape:text-2xl">info</span>
               Room Info
             </button>
             {canCheckIn && (
               <button
                 onClick={onCheckInOut}
-                className="flex-1 h-14 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-base font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider border border-white/10"
+                className="flex-1 h-14 landscape:h-16 bg-[#1e293b] hover:bg-[#334155] text-white rounded-full text-base landscape:text-lg font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider border border-white/10"
               >
-                <span className="material-symbols-outlined text-xl">verified_user</span>
+                <span className="material-symbols-outlined text-xl landscape:text-2xl">verified_user</span>
                 Check In / Out
               </button>
             )}
             <button
               onClick={() => onEdit(meeting.id)}
-              className="flex-1 h-14 bg-primary text-white rounded-full text-base font-black hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-lg shadow-primary/20"
+              className="flex-1 h-14 landscape:h-16 bg-primary text-white rounded-full text-base landscape:text-lg font-black hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-lg shadow-primary/20"
             >
-              <span className="material-symbols-outlined text-xl">edit</span>
+              <span className="material-symbols-outlined text-xl landscape:text-2xl">edit</span>
               Edit
             </button>
             {isOngoing && (
               <button
                 onClick={() => onExtend(meeting.id)}
-                className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-base font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-lg shadow-emerald-500/20 border border-emerald-500/25"
+                className="flex-1 h-14 landscape:h-16 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-base landscape:text-lg font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-lg shadow-emerald-500/20 border border-emerald-500/25"
               >
-                <span className="material-symbols-outlined text-xl">more_time</span>
+                <span className="material-symbols-outlined text-xl landscape:text-2xl">more_time</span>
                 Extend
               </button>
             )}
@@ -274,7 +275,7 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({
           )}
           <button
             onClick={() => onEdit(meeting.id)}
-            className={`h-14 bg-primary text-white rounded-full text-[13px] font-black hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider shadow-lg shadow-primary/20 ${isOngoing ? 'col-span-1' : 'col-span-2'}`}
+            className={`h-14 bg-primary text-white rounded-full text-[13px] font-black hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider shadow-lg shadow-primary/20 ${canCheckIn && !isOngoing ? 'col-span-2' : 'col-span-1'}`}
           >
             <span className="material-symbols-outlined text-lg">edit</span>
             Edit
@@ -328,54 +329,54 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({
       )}
 
       {/* Amenities Slide-over */}
-      <div className={`fixed inset-y-0 right-0 z-[60] w-full md:w-[480px] bg-[#080c10]/98 backdrop-blur-[80px] border-l border-white/10 shadow-[20px_0_120px_rgba(0,0,0,0.9)] transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${isAmenitiesOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed inset-y-0 right-0 z-[60] w-full md:w-[680px] lg:w-[760px] bg-[#080c10]/98 backdrop-blur-[80px] border-l border-white/10 shadow-[20px_0_120px_rgba(0,0,0,0.9)] transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${isAmenitiesOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="absolute top-[-10%] right-[-10%] size-[120%] bg-primary/10 blur-[150px] rounded-full pointer-events-none opacity-50" />
         <div className="h-full flex flex-col relative z-10 overflow-hidden">
-          <header className="flex items-center justify-between p-4 lg:p-6 border-b border-white/5 bg-black/20 shrink-0">
+          <header className="flex items-center justify-between p-6 lg:p-8 border-b border-white/5 bg-black/20 shrink-0">
             <div className="flex flex-col justify-center">
-              <div className="flex items-center gap-2">
-                <div className="size-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-lg">
-                  <span className="material-symbols-outlined text-xl font-variation-fill">inventory_2</span>
+              <div className="flex items-center gap-3">
+                <div className="size-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-lg">
+                  <span className="material-symbols-outlined text-2xl font-variation-fill">inventory_2</span>
                 </div>
-                <h2 className="text-xl font-black text-white tracking-tighter uppercase">Room Amenities</h2>
+                <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Room Amenities</h2>
               </div>
             </div>
-            <button onClick={() => setIsAmenitiesOpen(false)} className="size-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all group">
-              <span className="material-symbols-outlined text-lg text-slate-100 group-hover:text-white">close</span>
+            <button onClick={() => setIsAmenitiesOpen(false)} className="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all group">
+              <span className="material-symbols-outlined text-2xl text-slate-100 group-hover:text-white">close</span>
             </button>
           </header>
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 flex flex-col gap-3">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 flex flex-col gap-5">
             {amenities.map((amenity) => (
               <div key={amenity.id} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden group transition-all hover:bg-white/[0.06] hover:border-white/20 shadow-xl">
                 <div className="flex flex-row">
-                  <div className="w-20 aspect-square shrink-0 relative overflow-hidden bg-black/40 border-r border-white/5">
+                  <div className="w-36 lg:w-44 aspect-square shrink-0 relative overflow-hidden bg-black/40 border-r border-white/5">
                     {!imgErrors[amenity.id] && amenity.img ? (
                       <img src={amenity.img} alt={amenity.title} onError={() => setImgErrors(prev => ({ ...prev, [amenity.id]: true }))} className="size-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer" />
                     ) : (
                       <div className="size-full bg-gradient-to-br from-[#0c1622] to-[#050505] flex items-center justify-center relative">
                         <div className="absolute inset-0 opacity-[0.05] grid grid-cols-4 gap-1 p-2 overflow-hidden select-none pointer-events-none">
                           {Array.from({ length: 16 }).map((_, i) => (
-                            <span key={i} className="material-symbols-outlined text-[8px]">{amenity.icon}</span>
+                            <span key={i} className="material-symbols-outlined text-base">{amenity.icon}</span>
                           ))}
                         </div>
                         <div className="relative z-10">
-                          <span className="material-symbols-outlined text-2xl text-primary/40 group-hover:scale-110 transition-transform font-variation-fill">{amenity.icon}</span>
+                          <span className="material-symbols-outlined text-5xl text-primary/40 group-hover:scale-110 transition-transform font-variation-fill">{amenity.icon}</span>
                         </div>
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   </div>
-                  <div className="flex-1 p-3 flex flex-col justify-between gap-1">
+                  <div className="flex-1 p-5 flex flex-col justify-between gap-3">
                     <div className="flex items-start justify-between">
                       <div className="flex flex-col justify-center">
-                        <h4 className="text-white font-black text-base tracking-tight uppercase leading-none">{amenity.title}</h4>
+                        <h4 className="text-white font-black text-xl lg:text-2xl tracking-tight uppercase leading-none">{amenity.title}</h4>
                       </div>
-                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
-                        <span className="size-1 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
-                        <span className="text-[6px] font-black text-emerald-500 uppercase tracking-widest">Active</span>
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                        <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+                        <span className="text-xs font-black text-emerald-500 uppercase tracking-widest">Active</span>
                       </div>
                     </div>
-                    <p className="text-slate-100 text-[9px] font-medium leading-relaxed line-clamp-2 opacity-80 group-hover:opacity-100 transition-opacity">{amenity.description}</p>
+                    <p className="text-slate-300 text-sm lg:text-base font-medium leading-relaxed line-clamp-2 opacity-80 group-hover:opacity-100 transition-opacity">{amenity.description}</p>
                   </div>
                 </div>
               </div>
@@ -404,64 +405,79 @@ const MeetingDetailsView: React.FC<MeetingDetailsViewProps> = ({
         return (
           <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => setSelectedAttendee(null)} />
-            <div className="relative z-10 max-w-md w-full bg-[#0d0d0d] border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden text-left animate-in duration-200 fade-in slide-in-from-bottom-4">
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary via-[#137fec] to-emerald-500" />
-              <button onClick={() => setSelectedAttendee(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors size-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center cursor-pointer">
-                <span className="material-symbols-outlined text-sm">close</span>
-              </button>
-              <div className="flex flex-col items-center text-center mt-3 pb-4 border-b border-white/5">
-                <div className="size-24 rounded-2xl border-2 border-white/10 bg-white/5 p-1 mb-4 shadow-xl overflow-hidden">
-                  <img src={details.photo || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150'} alt={details.name} className="size-full rounded-xl object-cover" referrerPolicy="no-referrer" />
-                </div>
-                <h3 className="text-xl font-black text-white tracking-tight leading-none mb-1">{details.name}</h3>
-                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#137fec]">{details.company}</span>
+            <div className="relative z-10 w-full max-w-5xl bg-[#0d0d0d] border border-white/10 rounded-3xl shadow-2xl overflow-hidden text-left animate-in duration-200 fade-in slide-in-from-bottom-4 flex flex-col max-h-[90vh]">
+              <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary via-[#137fec] to-emerald-500" />
+
+              {/* Header bar with close button */}
+              <div className="flex items-center justify-between px-8 pt-7 pb-4 shrink-0">
+                <span className="text-sm font-black text-slate-400 uppercase tracking-[0.4em]">Attendee Profile</span>
+                <button onClick={() => setSelectedAttendee(null)} className="text-slate-400 hover:text-white transition-colors size-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer">
+                  <span className="material-symbols-outlined text-2xl">close</span>
+                </button>
               </div>
-              <div className="py-5 flex flex-col gap-4">
-                <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 rounded-2xl p-3.5">
-                  <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-[#137fec] shrink-0 border border-white/5">
-                    <span className="material-symbols-outlined text-lg">mail</span>
+
+              {/* Main body — side-by-side in landscape */}
+              <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
+
+                {/* Left column: photo + name */}
+                <div className="flex flex-col items-center justify-center text-center px-10 pt-2 pb-8 lg:py-8 lg:w-80 lg:border-r border-b lg:border-b-0 border-white/5 bg-white/[0.01] shrink-0">
+                  <div className="size-40 lg:size-48 rounded-3xl border-2 border-white/10 bg-white/5 p-2 mb-6 shadow-2xl overflow-hidden">
+                    <img src={details.photo || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=300'} alt={details.name} className="size-full rounded-2xl object-cover" referrerPolicy="no-referrer" />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest leading-none mb-1.5">Email Address</span>
-                    <span className="text-white font-bold text-sm tracking-wide break-all">{details.email}</span>
-                  </div>
+                  <h3 className="text-3xl lg:text-4xl font-black text-white tracking-tight leading-none mb-3">{details.name}</h3>
+                  <span className="text-base font-black uppercase tracking-[0.2em] text-slate-400">{details.company}</span>
                 </div>
-                <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 rounded-2xl p-3.5">
-                  <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-[#137fec] shrink-0 border border-white/5">
-                    <span className="material-symbols-outlined text-lg">call</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest leading-none mb-1.5">Phone Number</span>
-                    <span className="text-white font-bold text-sm tracking-wide">{details.phone}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 rounded-2xl p-3.5">
-                  <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-[#137fec] shrink-0 border border-white/5">
-                    <span className="material-symbols-outlined text-lg">domain</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest leading-none mb-1.5">Organization</span>
-                    <span className="text-white font-bold text-sm tracking-wide">{details.company}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 rounded-2xl p-3.5">
-                  <div className={`size-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 ${details.checkedIn ? 'text-emerald-500' : 'text-amber-500'}`}>
-                    <span className="material-symbols-outlined text-lg">{details.checkedIn ? 'check_circle' : 'pending'}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest leading-none mb-1.5">Attendance Status</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`size-1.5 rounded-full ${details.checkedIn ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                      <span className={`text-xs font-black uppercase tracking-wider ${details.checkedIn ? 'text-emerald-500' : 'text-amber-500'}`}>
-                        {details.checkedIn ? 'Checked In' : 'Checked Out'}
-                      </span>
+
+                {/* Right column: contact rows */}
+                <div className="flex-1 flex flex-col gap-4 p-8 lg:p-10 overflow-y-auto custom-scrollbar">
+                  <div className="flex items-center gap-5 bg-white/[0.03] border border-white/8 rounded-2xl p-5 lg:p-6">
+                    <div className="size-16 rounded-2xl bg-[#137fec]/10 flex items-center justify-center text-[#137fec] shrink-0 border border-[#137fec]/20">
+                      <span className="material-symbols-outlined text-3xl">mail</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5 min-w-0">
+                      <span className="text-slate-400 text-sm font-black uppercase tracking-widest leading-none">Email Address</span>
+                      <span className="text-white font-bold text-xl tracking-wide break-all">{details.email}</span>
                     </div>
                   </div>
+                  <div className="flex items-center gap-5 bg-white/[0.03] border border-white/8 rounded-2xl p-5 lg:p-6">
+                    <div className="size-16 rounded-2xl bg-[#137fec]/10 flex items-center justify-center text-[#137fec] shrink-0 border border-[#137fec]/20">
+                      <span className="material-symbols-outlined text-3xl">call</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-slate-400 text-sm font-black uppercase tracking-widest leading-none">Phone Number</span>
+                      <span className="text-white font-bold text-xl tracking-wide">{details.phone}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-5 bg-white/[0.03] border border-white/8 rounded-2xl p-5 lg:p-6">
+                    <div className="size-16 rounded-2xl bg-[#137fec]/10 flex items-center justify-center text-[#137fec] shrink-0 border border-[#137fec]/20">
+                      <span className="material-symbols-outlined text-3xl">domain</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-slate-400 text-sm font-black uppercase tracking-widest leading-none">Organization</span>
+                      <span className="text-white font-bold text-xl tracking-wide">{details.company}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-5 bg-white/[0.03] border border-white/8 rounded-2xl p-5 lg:p-6">
+                    <div className={`size-16 rounded-2xl flex items-center justify-center shrink-0 border ${details.checkedIn ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                      <span className="material-symbols-outlined text-3xl">{details.checkedIn ? 'check_circle' : 'pending'}</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-slate-400 text-sm font-black uppercase tracking-widest leading-none">Attendance Status</span>
+                      <div className="flex items-center gap-2.5">
+                        <span className={`size-2.5 rounded-full ${details.checkedIn ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                        <span className={`text-xl font-black uppercase tracking-wider ${details.checkedIn ? 'text-emerald-500' : 'text-amber-500'}`}>
+                          {details.checkedIn ? 'Checked In' : 'Checked Out'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer button inside right column */}
+                  <button onClick={() => setSelectedAttendee(null)} className="w-full h-16 mt-2 bg-[#1e293b] hover:bg-[#334155] border border-white/10 text-white rounded-full text-base font-black uppercase tracking-wider active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0">
+                    Close Profile
+                  </button>
                 </div>
               </div>
-              <button onClick={() => setSelectedAttendee(null)} className="w-full h-12 bg-[#1e293b] hover:bg-[#334155] border border-white/10 text-white rounded-full text-xs font-black uppercase tracking-wider active:scale-95 transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer">
-                Close Profile
-              </button>
             </div>
           </div>
         );

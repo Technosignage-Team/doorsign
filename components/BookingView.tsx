@@ -83,7 +83,7 @@ const BookingView: React.FC<BookingViewProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-  const [activeInput, setActiveInput] = useState<'title' | 'organizer' | null>(null);
+  const [activeInput, setActiveInput] = useState<'title' | null>(null);
   const [isShift, setIsShift] = useState(true);
 
   // Service Modal State
@@ -155,21 +155,21 @@ const BookingView: React.FC<BookingViewProps> = ({
       }
     } else {
       if (initialStartTime) {
-        // If the provided start time is in the past (today), snap to first available future slot
+        // Snap to first available, non-past, non-conflicting slot if the proposed time is invalid
         const now = new Date();
         const today = now.toISOString().split('T')[0];
         const isToday = new Date().toISOString().split('T')[0] === today;
         const nowRef = new Date(REF_DATE);
         nowRef.setHours(now.getHours(), now.getMinutes(), 0, 0);
-        const initialParsed = (() => {
-          const [time, modifier] = initialStartTime.split(' ');
-          let [hours, minutes] = time.split(':').map(Number);
-          if (modifier === 'PM' && hours < 12) hours += 12;
-          if (modifier === 'AM' && hours === 12) hours = 0;
-          const d = new Date(REF_DATE); d.setHours(hours, minutes, 0, 0);
-          return d;
-        })();
-        if (isToday && initialParsed <= nowRef) {
+        const initialParsed = parseTimeString(initialStartTime);
+        const isPastSlot = isToday && initialParsed <= nowRef;
+        const isConflictSlot = loadedMeetings.some(m => {
+          if (m.date !== today) return false;
+          const mS = parseTimeString(m.startTime);
+          const mE = parseTimeString(m.endTime);
+          return initialParsed >= mS && initialParsed < mE;
+        });
+        if (isPastSlot || isConflictSlot) {
           // Find first non-past, non-conflicting slot
           const intervals = slotPrecision === 15 ? ['00', '15', '30', '45'] : ['00', '30'];
           const allOpts: string[] = [];
@@ -180,23 +180,14 @@ const BookingView: React.FC<BookingViewProps> = ({
             intervals.forEach(m => allOpts.push(`${hStr}:${m} ${ampm}`));
           }
           const firstAvailable = allOpts.find(t => {
-            const [tm, mod] = t.split(' ');
-            let [hh, mm] = tm.split(':').map(Number);
-            if (mod === 'PM' && hh < 12) hh += 12;
-            if (mod === 'AM' && hh === 12) hh = 0;
-            const d = new Date(REF_DATE); d.setHours(hh, mm, 0, 0);
+            const d = parseTimeString(t);
             if (d <= nowRef) return false;
-            const conflict = loadedMeetings.find(m => {
+            return !loadedMeetings.some(m => {
               if (m.date !== today) return false;
-              const [st, sm] = m.startTime.split(' '); let [sh, smin] = st.split(':').map(Number);
-              if (sm === 'PM' && sh < 12) sh += 12; if (sm === 'AM' && sh === 12) sh = 0;
-              const [et, em] = m.endTime.split(' '); let [eh, emin] = et.split(':').map(Number);
-              if (em === 'PM' && eh < 12) eh += 12; if (em === 'AM' && eh === 12) eh = 0;
-              const mS = new Date(REF_DATE); mS.setHours(sh, smin, 0, 0);
-              const mE = new Date(REF_DATE); mE.setHours(eh, emin, 0, 0);
+              const mS = parseTimeString(m.startTime);
+              const mE = parseTimeString(m.endTime);
               return d >= mS && d < mE;
             });
-            return !conflict;
           });
           setStartTime(firstAvailable || initialStartTime);
         } else {
@@ -250,19 +241,15 @@ const BookingView: React.FC<BookingViewProps> = ({
     });
   }, [allTimeOptions, meetings, initialMeetingId, date, nowTick]);
 
-  // Auto-snap startTime forward if it becomes past while the form sits idle
+  // Auto-snap startTime forward whenever the selected slot becomes past or conflicts with a booking
   useEffect(() => {
     if (initialMeetingId) return; // don't snap when editing existing booking
-    const isSelectedToday = date === nowTick.toISOString().split('T')[0];
-    if (!isSelectedToday) return;
-    const nowRef = new Date(REF_DATE);
-    nowRef.setHours(nowTick.getHours(), nowTick.getMinutes(), 0, 0);
-    const currentStartParsed = parseTimeString(startTime);
-    if (currentStartParsed <= nowRef) {
+    const currentOption = startOptions.find(o => o.time === startTime);
+    if (currentOption?.disabled) {
       const firstAvailable = startOptions.find(o => !o.disabled);
       if (firstAvailable) setStartTime(firstAvailable.time);
     }
-  }, [nowTick, date, startTime, startOptions, initialMeetingId]);
+  }, [startOptions, startTime, initialMeetingId]);
 
   const availableEndOptions = useMemo((): { time: string; disabled: boolean }[] => {
     const sDate = parseTimeString(startTime);
@@ -333,7 +320,6 @@ const BookingView: React.FC<BookingViewProps> = ({
     setError(null);
 
     if (!title.trim()) { setError('Please enter a meeting title'); return; }
-    if (!organizer.trim()) { setError('Please enter an organizer name'); return; }
     if (!startTime || !endTime) { setError('Please select start and end times'); return; }
     if (isPastMeeting) { setError('Cannot book a meeting in the past'); return; }
 
@@ -348,6 +334,20 @@ const BookingView: React.FC<BookingViewProps> = ({
         setError('Start time is in the past. Please select a future time slot.');
         return;
       }
+    }
+
+    // Guard: check for conflicts with existing bookings
+    const conflictingMeeting = meetings.find(m => {
+      if (m.id === initialMeetingId || m.date !== date) return false;
+      const mStart = parseTimeString(m.startTime);
+      const mEnd = parseTimeString(m.endTime);
+      const sDate = parseTimeString(startTime);
+      const eDate = parseTimeString(endTime);
+      return sDate < mEnd && eDate > mStart;
+    });
+    if (conflictingMeeting) {
+      setError(`This time conflicts with an existing booking: "${conflictingMeeting.title}"`);
+      return;
     }
 
     setIsSubmitting(true);
@@ -468,6 +468,20 @@ const BookingView: React.FC<BookingViewProps> = ({
           apiId: newApiId,
         });
 
+        // Seed the persistent photo cache so the sync can restore photos even
+        // if SignalR fires before the cache is written by the sync itself.
+        if (newApiId && organizerPhoto) {
+          try {
+            const PHOTO_CACHE_KEY = 'everest_photo_cache';
+            const cache = JSON.parse(localStorage.getItem(PHOTO_CACHE_KEY) || '{}');
+            cache[newApiId] = {
+              organizerPhoto,
+              attendees: [{ fullName: organizer.trim(), photo: organizerPhoto }],
+            };
+            localStorage.setItem(PHOTO_CACHE_KEY, JSON.stringify(cache));
+          } catch { /* non-critical */ }
+        }
+
         onSuccess();
         } // end else (one-time booking)
       }
@@ -512,21 +526,17 @@ const BookingView: React.FC<BookingViewProps> = ({
     if (isPastMeeting) return;
     if (activeInput === 'title') {
       setTitle(prev => prev + (isShift ? char.toUpperCase() : char.toLowerCase()));
-    } else if (activeInput === 'organizer') {
-      setOrganizer(prev => prev + (isShift ? char.toUpperCase() : char.toLowerCase()));
     }
   };
 
   const handleBackspace = () => {
     if (isPastMeeting) return;
-    if (activeInput === 'title') { setTitle(prev => prev.slice(0, -1)); } 
-    else if (activeInput === 'organizer') { setOrganizer(prev => prev.slice(0, -1)); }
+    if (activeInput === 'title') { setTitle(prev => prev.slice(0, -1)); }
   };
 
   const handleSpace = () => {
     if (isPastMeeting) return;
-    if (activeInput === 'title') { setTitle(prev => prev + ' '); } 
-    else if (activeInput === 'organizer') { setOrganizer(prev => prev + ' '); }
+    if (activeInput === 'title') { setTitle(prev => prev + ' '); }
   };
 
   const keyboardRows = [
@@ -535,7 +545,7 @@ const BookingView: React.FC<BookingViewProps> = ({
     ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
   ];
 
-  const currentInputValue = activeInput === 'title' ? title : organizer;
+  const currentInputValue = title;
 
   const [isPortrait, setIsPortrait] = useState(() =>
     typeof window !== 'undefined' && window.matchMedia('(orientation: portrait)').matches
@@ -648,35 +658,6 @@ const BookingView: React.FC<BookingViewProps> = ({
           />
         </div>
 
-        <div className="flex flex-col gap-1.5 mt-1 shrink-0">
-          <label className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] ml-1">Organizer</label>
-          <button
-            type="button"
-            disabled={!!currentUser || isPastMeeting}
-            onClick={() => { if (!currentUser && !isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('organizer'); } }}
-            className={`flex items-center gap-4 bg-white/[0.02] border-2 rounded-2xl px-5 py-4 w-full text-left transition-all ${!currentUser && !isPastMeeting ? 'border-white/10 hover:border-primary/50 hover:bg-white/[0.06] cursor-pointer active:scale-[0.98]' : 'border-white/5 cursor-default'}`}
-          >
-            <div className="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-0.5 shrink-0 relative overflow-hidden">
-              {organizerPhoto ? (
-                <img src={organizerPhoto} alt={organizer} className="size-full object-cover rounded shadow-2xl" referrerPolicy="no-referrer" />
-              ) : (
-                <span className="material-symbols-outlined text-2xl font-variation-fill text-primary">person</span>
-              )}
-              <div className="absolute -bottom-0.5 -right-0.5 size-3 bg-emerald-500 border border-[#0a0a0a] rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-[6px] font-bold">verified</span>
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="text-primary text-[8px] font-black uppercase tracking-[0.22em] leading-none mb-1 block">Full Name</span>
-              <h3 className="text-lg font-black text-white tracking-tight leading-none truncate flex items-center gap-1.5">
-                {organizer || 'Tap to sign in / enter name'}
-                {!currentUser && !isPastMeeting && (
-                  <span className="material-symbols-outlined text-sm text-primary/70">edit</span>
-                )}
-              </h3>
-            </div>
-          </button>
-        </div>
       </div>
 
       {showBookButton && (
@@ -761,23 +742,105 @@ const BookingView: React.FC<BookingViewProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting}
-                  className="w-full py-6 bg-primary hover:bg-primary/95 text-white rounded-3xl text-xl lg:text-2xl font-black shadow-lg hover:brightness-110 active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50 border border-white/10 uppercase tracking-[0.2em] min-h-[80px]"
+                  className="mx-auto px-20 py-6 bg-primary hover:bg-primary/95 text-white rounded-full text-xl lg:text-2xl font-black shadow-lg hover:brightness-110 active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50 border border-white/10 uppercase tracking-[0.2em] min-h-[80px]"
                 >
                   {isSubmitting ? (
                     <span className="size-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></span>
                   ) : (
                     <>
                       <span className="text-white tracking-widest leading-none text-xl sm:text-2xl">{initialMeetingId ? 'SAVE' : 'BOOK'}</span>
-                      <span className="text-[9px] font-black tracking-widest text-[#a8d3fc]/70 mt-1 normal-case leading-none">SECURE BOOKING</span>
                     </>
                   )}
                 </button>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
-              {renderSchedulePanel()}
-              {renderDetailsPanel(true)}
+            <div className="flex flex-col gap-3 flex-1 min-h-0">
+              {/* Details card */}
+              <div className="flex-1 min-h-0 bg-white/[0.02] border border-white/5 rounded-3xl p-5 flex flex-col gap-3 overflow-hidden">
+                <div className="flex items-center justify-between shrink-0">
+                  <h2 className="text-primary text-sm font-black uppercase tracking-[0.45em] flex items-center gap-2 leading-none">Details</h2>
+                  <button type="button" disabled={isPastMeeting} onClick={() => setIsSuggestionsOpen(true)} className="px-5 py-2.5 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary rounded-xl transition-all flex items-center gap-2 shadow-md active:scale-95 leading-none">
+                    <span className="material-symbols-outlined text-base">magic_button</span>
+                    <span className="text-xs font-black uppercase tracking-widest">Suggestions</span>
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2 flex-1 min-h-0">
+                  <label className="text-slate-400 text-sm font-black uppercase tracking-[0.25em] ml-1 shrink-0">Event Title</label>
+                  <textarea
+                    required
+                    value={title}
+                    onFocus={() => { if (!isPastMeeting) { setIsKeyboardOpen(true); setActiveInput('title'); } }}
+                    readOnly
+                    placeholder="e.g., Weekly Project Sync & Stakeholder Review"
+                    rows={1}
+                    className={`w-full bg-white/5 border-2 rounded-2xl px-5 py-4 text-2xl font-black text-white placeholder:text-slate-600 outline-none transition-all cursor-pointer resize-none flex-1 min-h-0 ${activeInput === 'title' ? 'border-primary ring-4 ring-primary/20 bg-white/10' : 'border-white/10 hover:border-white/20'}`}
+                  />
+                </div>
+              </div>
+
+              {/* Schedule card */}
+              <div className="flex-1 min-h-0 bg-white/[0.02] border border-white/5 rounded-3xl p-5 flex flex-col gap-3 overflow-hidden">
+                <h2 className="text-primary text-sm font-black uppercase tracking-[0.45em] flex items-center gap-2 leading-none shrink-0">
+                  <span className="material-symbols-outlined text-xl">schedule</span> Schedule
+                </h2>
+                <div className="grid grid-cols-3 gap-4 shrink-0">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-slate-400 text-sm font-black uppercase tracking-[0.25em] ml-1">Date</label>
+                    <input type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={!!initialMeetingId}
+                      className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-5 py-4 text-xl font-black text-white outline-none focus:border-primary [color-scheme:dark] disabled:opacity-50 transition-all hover:bg-white/10 cursor-pointer" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-slate-400 text-sm font-black uppercase tracking-[0.25em] ml-1">Start Time</label>
+                    <div className="relative group">
+                      <select disabled={isPastMeeting} value={startTime} onChange={(e) => setStartTime(e.target.value)}
+                        className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-5 py-4 pr-12 text-xl font-black text-white outline-none focus:border-primary appearance-none cursor-pointer transition-all hover:bg-white/10">
+                        {startOptions.map((o) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.reason === 'past' ? ' (past)' : o.reason === 'booked' ? ' (booked)' : ''}</option>)}
+                      </select>
+                      <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-2xl">expand_more</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-slate-400 text-sm font-black uppercase tracking-[0.25em] ml-1">End Time</label>
+                    <div className="relative group">
+                      <select disabled={availableEndOptions.length === 0 || isPastMeeting} value={endTime} onChange={(e) => setEndTime(e.target.value)}
+                        className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-5 py-4 pr-12 text-xl font-black text-white outline-none focus:border-primary appearance-none cursor-pointer transition-all hover:bg-white/10">
+                        {availableEndOptions.map((o) => <option key={o.time} value={o.time} disabled={o.disabled} className="bg-[#111]">{o.time}{o.disabled ? ' (booked)' : ''}</option>)}
+                      </select>
+                      <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-2xl">expand_more</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 flex-1 min-h-0 justify-center">
+                  <label className="text-slate-400 text-sm font-black uppercase tracking-[0.25em] ml-1 shrink-0">Duration</label>
+                  <div className="grid grid-cols-4 gap-3">
+                    {QUICK_DURATIONS.map(dur => (
+                      <button key={dur} type="button" disabled={!availableDurations.includes(dur) || isPastMeeting} onClick={() => handleSetDuration(dur)}
+                        className={`py-4 rounded-2xl text-lg font-black transition-all border-2 ${currentDuration === dur ? 'bg-primary border-primary text-white shadow-md scale-105 z-10' : 'bg-white/5 border-white/10 text-slate-400 disabled:opacity-20 hover:bg-white/10'}`}>
+                        {dur >= 60 ? `${dur / 60}h` : `${dur}m`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Book button at bottom */}
+              <div className="flex flex-col gap-2 shrink-0">
+                {error && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-3 flex items-center gap-3 text-red-500">
+                    <span className="material-symbols-outlined text-xl">error</span>
+                    <p className="text-base font-black uppercase tracking-tight leading-none">{error}</p>
+                  </div>
+                )}
+                <button type="submit" disabled={isSubmitting || availableEndOptions.length === 0 || isPastMeeting}
+                  className="mx-auto px-20 py-5 bg-primary hover:bg-primary/95 text-white rounded-full text-xl font-black shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 border border-white/10 uppercase tracking-[0.2em]">
+                  {isSubmitting ? (
+                    <span className="size-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  ) : (
+                    <span className="tracking-widest leading-none">{initialMeetingId ? 'SAVE' : 'BOOK'}</span>
+                  )}
+                </button>
+              </div>
             </div>
           )}
         </form>

@@ -56,20 +56,33 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
       .then((data: unknown) => {
         const list: any[] = Array.isArray(data) ? data : (data as any)?.items ?? (data as any)?.data ?? (data as any)?.bookings ?? [];
         const existing = db.getMeetings();
+        // Restore photos from the persistent cache written by App.tsx's sync
+        let photoCache: Record<string, { organizerPhoto?: string; attendees?: Array<{ fullName: string; photo?: string }> }> = {};
+        try { photoCache = JSON.parse(localStorage.getItem('everest_photo_cache') || '{}'); } catch { /* ignore */ }
         const apiMeetings: Meeting[] = list.map((b: any) => {
           const apiId = String(b.id ?? b.bookingId ?? b.BookingId ?? b.Id ?? '');
           const local = existing.find(m => m.apiId === apiId);
+          const cached = photoCache[apiId];
+          const rawAttendees = (b.attendees ?? []).map((a: any) => {
+            const fullName = a.fullName ?? a.name ?? a.Name ?? '';
+            const cachedAttendee = cached?.attendees?.find(ca => ca.fullName === fullName)
+              ?? local?.attendees?.find(la => la.fullName === fullName);
+            return {
+              fullName,
+              photo: a.photo ?? a.avatarUrl ?? a.avatar ?? a.photoUrl ?? a.imageUrl ?? cachedAttendee?.photo ?? undefined,
+            };
+          });
           return {
             id: apiId,
             apiId,
             title: b.title ?? b.subject ?? b.Subject ?? 'Meeting',
             organizer: b.organizer ?? b.organizerName ?? b.OrganizerName ?? '',
-            organizerPhoto: b.organizerPhoto ?? b.OrganizerPhoto ?? local?.organizerPhoto,
+            organizerPhoto: b.organizerPhoto ?? b.OrganizerPhoto ?? local?.organizerPhoto ?? cached?.organizerPhoto,
             startTime: b.startTime,
             endTime: b.endTime,
             date: b.date ?? selectedDate,
             type: (b.type ?? local?.type ?? 'INTERNAL') as 'INTERNAL' | 'CLIENT',
-            attendees: b.attendees ?? [],
+            attendees: rawAttendees.length > 0 ? rawAttendees : (local?.attendees ?? cached?.attendees ?? []),
             recurrence: 'NONE' as const,
           } as Meeting;
         });
