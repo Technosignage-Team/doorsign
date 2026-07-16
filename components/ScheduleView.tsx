@@ -36,6 +36,9 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [availableWindows, setAvailableWindows] = useState<AvailableWindow[] | null>(null);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
+  const [isClosed, setIsClosed] = useState(false);
+  const [closedReason, setClosedReason] = useState<string | null>(null);
+  const [workdayHours, setWorkdayHours] = useState<AvailableWindow | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
   const [meetings, setMeetings] = useState<Meeting[]>(() => db.getMeetings(selectedDate));
@@ -100,6 +103,9 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
     if (!resourceId) return;
     setLoadingAvailability(true);
     setAvailableWindows(null);
+    setIsClosed(false);
+    setClosedReason(null);
+    setWorkdayHours(null);
     doorSignFetch(`${getBaseUrl()}/api/resources/${resourceId}/availability?date=${selectedDate}`)
       .then(r => {
         if (!r.ok) throw new Error(`Availability API ${r.status}`);
@@ -114,10 +120,26 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
             end:   parseApiTime(item.end   ?? item.endTime   ?? item.to,   selectedDate),
           }))
         );
+
+        const closed = Boolean((data as any)?.isClosed ?? (data as any)?.IsClosed);
+        setIsClosed(closed);
+        setClosedReason(closed ? ((data as any)?.closedReason ?? (data as any)?.ClosedReason ?? null) : null);
+
+        const wh = (data as any)?.workdayHours ?? (data as any)?.WorkdayHours;
+        const whStart = wh?.start ?? wh?.startTime ?? wh?.from;
+        const whEnd = wh?.end ?? wh?.endTime ?? wh?.to;
+        setWorkdayHours(
+          !closed && wh && whStart && whEnd
+            ? { start: parseApiTime(whStart, selectedDate), end: parseApiTime(whEnd, selectedDate) }
+            : null
+        );
       })
       .catch(err => {
         console.error('Availability API error:', err);
         setAvailableWindows([]); // empty = fall back to local meetings only
+        setIsClosed(false);
+        setClosedReason(null);
+        setWorkdayHours(null);
       })
       .finally(() => setLoadingAvailability(false));
   }, [resourceId, selectedDate]);
@@ -151,6 +173,12 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
   const isSlotFree = (slotStart: Date, slotEnd: Date): boolean => {
     if (!availableWindows || availableWindows.length === 0) return false;
     return availableWindows.some(w => slotStart >= w.start && slotEnd <= w.end);
+  };
+
+  // Slot falls outside the resource's configured workday hours (only meaningful when not closed).
+  const isOutsideWorkdayHours = (slotStart: Date, slotEnd: Date): boolean => {
+    if (!workdayHours) return false;
+    return slotStart < workdayHours.start || slotEnd > workdayHours.end;
   };
 
   const currentMeetingNow = useMemo(() => {
@@ -292,8 +320,10 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
 
             // true = slot is inside a freeSlot window (available), false = booked
             const slotIsFree = isSlotFree(slotStart, slotEnd);
-            // when API has loaded, anything not free is booked
-            const apiSaysBooked = availableWindows !== null && !slotIsFree;
+            // resource is outside its configured working hours for this slot (not a real booking conflict)
+            const outsideWorkday = !isClosed && isOutsideWorkdayHours(slotStart, slotEnd);
+            // when API has loaded, anything not free (and not just an out-of-hours slot) is booked
+            const apiSaysBooked = availableWindows !== null && !slotIsFree && !isClosed && !outsideWorkday;
 
             const minutesPassed = (now.getTime() - slotStart.getTime()) / 60000;
             const topOffsetPercent = isCurrent ? Math.min(Math.max((minutesPassed / slotPrecision) * 100, 0), 100) : 0;
@@ -388,8 +418,30 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
                     className="relative p-1.5 group"
                     style={{ gridRow: `${idx + 1} / span 1`, gridColumn: '2 / span 1' }}
                   >
-                    {/* Not in any freeSlot window → booked externally */}
-                    {apiSaysBooked && !isPast ? (
+                    {/* Resource closed for the day → treat as booked, surface the closed reason */}
+                    {isClosed && !isPast ? (
+                      <div className="w-full h-full min-h-[110px] bg-status-busy/5 border border-status-busy/20 rounded-xl flex items-center gap-6 px-8 opacity-70">
+                        <div className="size-10 rounded-xl bg-status-busy/15 flex items-center justify-center text-status-busy shrink-0">
+                          <span className="material-symbols-outlined text-xl">event_busy</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-status-busy font-black uppercase tracking-widest text-[11px]">{closedReason || 'Closed'}</span>
+                          <span className="text-slate-500 text-[9px] font-black uppercase tracking-widest mt-0.5">{slot}</span>
+                        </div>
+                      </div>
+                    ) : outsideWorkday && !isPast ? (
+                      /* Not closed, but outside configured workday hours — distinct from a real booking conflict */
+                      <div className="w-full h-full min-h-[110px] bg-white/[0.02] border border-white/10 rounded-xl flex items-center gap-6 px-8 opacity-70">
+                        <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 shrink-0">
+                          <span className="material-symbols-outlined text-xl">nights_stay</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-slate-400 font-black uppercase tracking-widest text-[11px]">Outside Working Hours</span>
+                          <span className="text-slate-500 text-[9px] font-black uppercase tracking-widest mt-0.5">{slot}</span>
+                        </div>
+                      </div>
+                    ) : /* Not in any freeSlot window → booked externally */
+                    apiSaysBooked && !isPast ? (
                       <div className="w-full h-full min-h-[110px] bg-status-busy/5 border border-status-busy/20 rounded-xl flex items-center gap-6 px-8 opacity-70">
                         <div className="size-10 rounded-xl bg-status-busy/15 flex items-center justify-center text-status-busy shrink-0">
                           <span className="material-symbols-outlined text-xl">event_busy</span>
