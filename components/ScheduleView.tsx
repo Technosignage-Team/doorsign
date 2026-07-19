@@ -8,7 +8,7 @@ import { getBaseUrl } from '../lib/hostUrl';
 interface ScheduleViewProps {
   onUpdate?: () => void;
   onBack?: () => void;
-  onBook: (startTime?: string, meetingId?: string) => void;
+  onBook: (startTime?: string, meetingId?: string, date?: string) => void;
   onShowMeetingDetails: (meetingId: string) => void;
   slotPrecision?: 15 | 30;
   resourceId?: string;
@@ -470,7 +470,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
                       </div>
                     ) : (
                       <button
-                        onClick={() => !isPast && onBook(slot)}
+                        onClick={() => !isPast && onBook(slot, undefined, selectedDate)}
                         disabled={isPast}
                         className={`w-full h-full min-h-[110px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 px-10 transition-all ${
                           isPast
