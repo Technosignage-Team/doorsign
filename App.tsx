@@ -29,6 +29,7 @@ import SetupWizard from './components/SetupWizard';
 interface PendingAction {
   startTime?: string;
   meetingId?: string;
+  date?: string;
 }
 
 interface ExtensionSlot {
@@ -188,6 +189,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [selectedStartTime, setSelectedStartTime] = useState<string | undefined>(undefined);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | undefined>(undefined);
+  const [selectedBookingDate, setSelectedBookingDate] = useState<string | undefined>(undefined);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   
@@ -589,7 +591,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
     setCurrentView(View.MEETING_DETAILS);
   };
 
-  const handleBookAtTime = (time?: string, meetingId?: string) => {
+  const handleBookAtTime = (time?: string, meetingId?: string, date?: string) => {
     let finalTime = time;
     if (!finalTime && !meetingId) {
       // Calculate current slot start
@@ -602,7 +604,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
 
     // Always require fresh authentication before booking or editing
     setCurrentUser(null);
-    setPendingAction({ startTime: finalTime, meetingId });
+    setPendingAction({ startTime: finalTime, meetingId, date });
     setCurrentView(View.LOGIN);
   };
 
@@ -911,12 +913,14 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
               } else {
                 setSelectedStartTime(pendingAction.startTime);
                 setSelectedMeetingId(pendingAction.meetingId);
+                setSelectedBookingDate(pendingAction.date);
                 setPendingAction(null);
                 setCurrentView(View.BOOKING);
               }
             } else {
               setSelectedStartTime(pendingAction.startTime);
               setSelectedMeetingId(pendingAction.meetingId);
+              setSelectedBookingDate(pendingAction.date);
               setPendingAction(null);
               setCurrentView(View.BOOKING);
             }
@@ -929,6 +933,7 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
           <BookingView
             initialStartTime={selectedStartTime}
             initialMeetingId={selectedMeetingId}
+            initialDate={selectedBookingDate}
             currentUser={currentUser}
             slotPrecision={slotPrecision}
             roomName={roomStatus.name}
@@ -937,14 +942,16 @@ const App: React.FC<AppProps> = ({ initialResourceData, onUnlinked }) => {
               setCurrentView(View.DASHBOARD);
               setSelectedStartTime(undefined);
               setSelectedMeetingId(undefined);
-            }} 
+              setSelectedBookingDate(undefined);
+            }}
             onSuccess={() => {
               if (resourceId) syncBookingsFromApi(resourceId);
               else updateRoomStatus();
               setSelectedStartTime(undefined);
               setSelectedMeetingId(undefined);
+              setSelectedBookingDate(undefined);
               handleLogout();
-            }} 
+            }}
             onTriggerLogin={() => setCurrentView(View.LOGIN)}
           />
         );

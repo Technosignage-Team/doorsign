@@ -8,7 +8,7 @@ import { getBaseUrl } from '../lib/hostUrl';
 interface ScheduleViewProps {
   onUpdate?: () => void;
   onBack?: () => void;
-  onBook: (startTime?: string, meetingId?: string) => void;
+  onBook: (startTime?: string, meetingId?: string, date?: string) => void;
   onShowMeetingDetails: (meetingId: string) => void;
   slotPrecision?: 15 | 30;
   resourceId?: string;
@@ -18,6 +18,11 @@ interface ScheduleViewProps {
 interface AvailableWindow {
   start: Date;
   end: Date;
+}
+
+interface OutOfServiceWindow extends AvailableWindow {
+  reason: string | null;
+  isHoliday: boolean;
 }
 
 // Parse whatever time string the API returns into a Date on a given date
@@ -36,8 +41,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [availableWindows, setAvailableWindows] = useState<AvailableWindow[] | null>(null);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
-  const [isClosed, setIsClosed] = useState(false);
-  const [closedReason, setClosedReason] = useState<string | null>(null);
+  const [outOfServiceWindows, setOutOfServiceWindows] = useState<OutOfServiceWindow[]>([]);
   const [workdayHours, setWorkdayHours] = useState<AvailableWindow | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
@@ -103,8 +107,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
     if (!resourceId) return;
     setLoadingAvailability(true);
     setAvailableWindows(null);
-    setIsClosed(false);
-    setClosedReason(null);
+    setOutOfServiceWindows([]);
     setWorkdayHours(null);
     doorSignFetch(`${getBaseUrl()}/api/resources/${resourceId}/availability?date=${selectedDate}`)
       .then(r => {
@@ -121,15 +124,23 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
           }))
         );
 
-        const closed = Boolean((data as any)?.isClosed ?? (data as any)?.IsClosed);
-        setIsClosed(closed);
-        setClosedReason(closed ? ((data as any)?.closedReason ?? (data as any)?.ClosedReason ?? null) : null);
+        // Out-of-service windows only block the specific slots they cover
+        // (not the whole day) — same shape as bookedSlots: startTime/endTime/reason/isHoliday.
+        const oosItems: Array<Record<string, any>> = (data as any)?.outOfServiceSlots ?? (data as any)?.OutOfServiceSlots ?? [];
+        setOutOfServiceWindows(
+          oosItems.map(item => ({
+            start: parseApiTime(item.startTime ?? item.start ?? item.from, selectedDate),
+            end:   parseApiTime(item.endTime   ?? item.end   ?? item.to,   selectedDate),
+            reason: item.reason ?? item.Reason ?? null,
+            isHoliday: Boolean(item.isHoliday ?? item.IsHoliday),
+          }))
+        );
 
         const wh = (data as any)?.workdayHours ?? (data as any)?.WorkdayHours;
         const whStart = wh?.start ?? wh?.startTime ?? wh?.from;
         const whEnd = wh?.end ?? wh?.endTime ?? wh?.to;
         setWorkdayHours(
-          !closed && wh && whStart && whEnd
+          wh && whStart && whEnd
             ? { start: parseApiTime(whStart, selectedDate), end: parseApiTime(whEnd, selectedDate) }
             : null
         );
@@ -137,8 +148,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
       .catch(err => {
         console.error('Availability API error:', err);
         setAvailableWindows([]); // empty = fall back to local meetings only
-        setIsClosed(false);
-        setClosedReason(null);
+        setOutOfServiceWindows([]);
         setWorkdayHours(null);
       })
       .finally(() => setLoadingAvailability(false));
@@ -175,10 +185,15 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
     return availableWindows.some(w => slotStart >= w.start && slotEnd <= w.end);
   };
 
-  // Slot falls outside the resource's configured workday hours (only meaningful when not closed).
+  // Slot falls outside the resource's configured workday hours (only meaningful when not out of service).
   const isOutsideWorkdayHours = (slotStart: Date, slotEnd: Date): boolean => {
     if (!workdayHours) return false;
     return slotStart < workdayHours.start || slotEnd > workdayHours.end;
+  };
+
+  // Out-of-service window (if any) covering this slot — only that window is blocked, not the whole day.
+  const getOutOfServiceWindow = (slotStart: Date, slotEnd: Date): OutOfServiceWindow | undefined => {
+    return outOfServiceWindows.find(w => slotStart < w.end && slotEnd > w.start);
   };
 
   const currentMeetingNow = useMemo(() => {
@@ -320,10 +335,12 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
 
             // true = slot is inside a freeSlot window (available), false = booked
             const slotIsFree = isSlotFree(slotStart, slotEnd);
+            // out-of-service window (if any) covering this specific slot — not the whole day
+            const oosWindow = getOutOfServiceWindow(slotStart, slotEnd);
             // resource is outside its configured working hours for this slot (not a real booking conflict)
-            const outsideWorkday = !isClosed && isOutsideWorkdayHours(slotStart, slotEnd);
-            // when API has loaded, anything not free (and not just an out-of-hours slot) is booked
-            const apiSaysBooked = availableWindows !== null && !slotIsFree && !isClosed && !outsideWorkday;
+            const outsideWorkday = !oosWindow && isOutsideWorkdayHours(slotStart, slotEnd);
+            // when API has loaded, anything not free (and not just out-of-service/out-of-hours) is booked
+            const apiSaysBooked = availableWindows !== null && !slotIsFree && !oosWindow && !outsideWorkday;
 
             const minutesPassed = (now.getTime() - slotStart.getTime()) / 60000;
             const topOffsetPercent = isCurrent ? Math.min(Math.max((minutesPassed / slotPrecision) * 100, 0), 100) : 0;
@@ -418,14 +435,14 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
                     className="relative p-1.5 group"
                     style={{ gridRow: `${idx + 1} / span 1`, gridColumn: '2 / span 1' }}
                   >
-                    {/* Resource closed for the day → treat as booked, surface the closed reason */}
-                    {isClosed && !isPast ? (
+                    {/* Slot falls in an out-of-service window → surface just that window's reason */}
+                    {oosWindow && !isPast ? (
                       <div className="w-full h-full min-h-[110px] bg-status-busy/5 border border-status-busy/20 rounded-xl flex items-center gap-6 px-8 opacity-70">
                         <div className="size-10 rounded-xl bg-status-busy/15 flex items-center justify-center text-status-busy shrink-0">
-                          <span className="material-symbols-outlined text-xl">event_busy</span>
+                          <span className="material-symbols-outlined text-xl">{oosWindow.isHoliday ? 'celebration' : 'event_busy'}</span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-status-busy font-black uppercase tracking-widest text-[11px]">{closedReason || 'Closed'}</span>
+                          <span className="text-status-busy font-black uppercase tracking-widest text-[11px]">{oosWindow.reason || (oosWindow.isHoliday ? 'Holiday' : 'Closed')}</span>
                           <span className="text-slate-500 text-[9px] font-black uppercase tracking-widest mt-0.5">{slot}</span>
                         </div>
                       </div>
@@ -453,7 +470,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ onUpdate, onBack, onBook, o
                       </div>
                     ) : (
                       <button
-                        onClick={() => !isPast && onBook(slot)}
+                        onClick={() => !isPast && onBook(slot, undefined, selectedDate)}
                         disabled={isPast}
                         className={`w-full h-full min-h-[110px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 px-10 transition-all ${
                           isPast
