@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getActivationKey } from './lib/activationKey';
-import { getLicense, isLicenseExpired, LicenseInfo } from './lib/license';
+import { getLicense, isLicenseExpired, clearLicense, LicenseInfo } from './lib/license';
 import LicenseExpiredScreen from './components/LicenseExpiredScreen';
 import NetworkBanner from './components/NetworkBanner';
 import { View, RoomStatus, HomeLayout, User, Meeting, Amenity } from './types';
@@ -1268,10 +1268,10 @@ const AppGate: React.FC = () => {
       <>
         <LicenseExpiredScreen
           license={licence}
-          onRenew={() => {
-            setIsSetup(false);
+          onRenew={async () => {
+            await clearLicense();
             setLicence(null);
-            setChecked(false);
+            setIsSetup(false);
           }}
         />
         <NetworkBanner />

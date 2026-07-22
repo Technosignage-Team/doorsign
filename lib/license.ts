@@ -44,6 +44,10 @@ export async function getLicense(): Promise<LicenseInfo | null> {
   try { return JSON.parse(value); } catch { return null; }
 }
 
+export async function clearLicense(): Promise<void> {
+  await Preferences.remove({ key: LICENSE_KEY });
+}
+
 /** Days remaining until expiry. Negative = already expired. */
 export function daysUntilExpiry(license: LicenseInfo): number {
   const expiry = new Date(license.expiryDate).getTime();
