@@ -6,7 +6,8 @@ import { setActivationKey } from '../lib/activationKey';
 import { setLicense, getDeviceId, LicenseInfo } from '../lib/license';
 import { doorSignFetch } from '../lib/doorSignFetch';
 
-const LICENSE_API = 'https://sw-subscription-1.onrender.com/api/license/activate';
+const SUBSCRIPTION_API_BASE = 'https://sw-subscription-1.onrender.com';
+const LICENSE_API = `${SUBSCRIPTION_API_BASE}/api/license/activate`;
 
 const OFFLINE_MSG = 'No internet connection. Please check your network and try again.';
 const SERVER_UNREACHABLE_MSG = 'Cannot reach the server. Check your internet connection and try again.';
@@ -204,26 +205,39 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     setSigns([]);
     setSelectedSign(null);
     try {
-      // Plain fetch — no ActivationKey header; tenant is identified via query param only
-      const res = await fetch(
-        `${getBaseUrl()}/api/subscription/unused-signs?tenant=${encodeURIComponent(tenantId.trim())}`,
-        { method: 'GET', cache: 'no-store' }
-      );
+      // Tenant is identified via query param only — no ActivationKey header.
+      // This hits the subscription service (same host as licence activation),
+      // not the tenant's ASAS Connect host set in the previous step.
+      const url = `${SUBSCRIPTION_API_BASE}/api/subscription/unused-signs?tenant=${encodeURIComponent(tenantId.trim())}`;
 
-      if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
+      let ok: boolean;
+      let status: number;
+      let raw: any;
+
+      if (Capacitor.isNativePlatform()) {
+        const response = await CapacitorHttp.get({ url });
+        ok = response.status >= 200 && response.status < 300;
+        status = response.status;
+        raw = response.data;
+      } else {
+        const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+        ok = res.ok;
+        status = res.status;
+        raw = await res.json();
+      }
+
+      if (!ok) {
+        if (status === 401 || status === 403) {
           setSignsError('Account not found or not authorised. Check your account name and try again.');
-        } else if (res.status === 404) {
+        } else if (status === 404) {
           setSignsError('No signs found for this account. Contact your administrator.');
-        } else if (res.status >= 500) {
+        } else if (status >= 500) {
           setSignsError('Server error. Please try again later.');
         } else {
-          setSignsError(`Failed to load signs (${res.status}). Please try again.`);
+          setSignsError(`Failed to load signs (${status}). Please try again.`);
         }
         return;
       }
-
-      const raw = await res.json();
 
       // API returns { count: N, items: [...] }
       const count: number = raw.count ?? 0;
