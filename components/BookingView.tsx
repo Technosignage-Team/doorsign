@@ -7,6 +7,7 @@ import { Meeting, User } from '../types';
 interface BookingViewProps {
   initialStartTime?: string;
   initialMeetingId?: string;
+  initialDate?: string;
   currentUser: User | null;
   slotPrecision?: 15 | 30;
   roomName?: string;
@@ -43,6 +44,7 @@ type ServiceType = 'CATERING' | 'SUPPORT' | 'CLEANING' | null;
 const BookingView: React.FC<BookingViewProps> = ({
   initialStartTime,
   initialMeetingId,
+  initialDate,
   currentUser,
   slotPrecision = 30,
   roomName = 'Conference Room A',
@@ -61,7 +63,7 @@ const BookingView: React.FC<BookingViewProps> = ({
   const [organizerPhoto, setOrganizerPhoto] = useState<string | undefined>(undefined);
   const [startTime, setStartTime] = useState(initialStartTime || '09:00 AM');
   const [endTime, setEndTime] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(initialDate || new Date().toISOString().split('T')[0]);
   const [type, setType] = useState<'INTERNAL' | 'CLIENT'>('INTERNAL');
   
   const [isRecurring, setIsRecurring] = useState(false);
@@ -158,13 +160,14 @@ const BookingView: React.FC<BookingViewProps> = ({
         // Snap to first available, non-past, non-conflicting slot if the proposed time is invalid
         const now = new Date();
         const today = now.toISOString().split('T')[0];
-        const isToday = new Date().toISOString().split('T')[0] === today;
+        const targetDate = initialDate || today;
+        const isToday = targetDate === today;
         const nowRef = new Date(REF_DATE);
         nowRef.setHours(now.getHours(), now.getMinutes(), 0, 0);
         const initialParsed = parseTimeString(initialStartTime);
         const isPastSlot = isToday && initialParsed <= nowRef;
         const isConflictSlot = loadedMeetings.some(m => {
-          if (m.date !== today) return false;
+          if (m.date !== targetDate) return false;
           const mS = parseTimeString(m.startTime);
           const mE = parseTimeString(m.endTime);
           return initialParsed >= mS && initialParsed < mE;
@@ -181,9 +184,9 @@ const BookingView: React.FC<BookingViewProps> = ({
           }
           const firstAvailable = allOpts.find(t => {
             const d = parseTimeString(t);
-            if (d <= nowRef) return false;
+            if (isToday && d <= nowRef) return false;
             return !loadedMeetings.some(m => {
-              if (m.date !== today) return false;
+              if (m.date !== targetDate) return false;
               const mS = parseTimeString(m.startTime);
               const mE = parseTimeString(m.endTime);
               return d >= mS && d < mE;
@@ -199,7 +202,7 @@ const BookingView: React.FC<BookingViewProps> = ({
         setOrganizerPhoto(currentUser.photo);
       }
     }
-  }, [initialMeetingId, initialStartTime, currentUser]);
+  }, [initialMeetingId, initialStartTime, initialDate, currentUser]);
 
   const formatToTimeString = (date: Date) => {
     let hours = date.getHours();

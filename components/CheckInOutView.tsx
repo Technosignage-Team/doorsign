@@ -83,12 +83,25 @@ const CheckInOutView: React.FC<CheckInOutViewProps> = ({ onBack, roomStatus }) =
 
   const onConfirmAction = async () => {
     setApiError(null);
+    // Check-in targets the in-progress meeting if one is running (late arrival),
+    // otherwise the upcoming one. Check-out always targets the in-progress meeting.
+    const bookingId = mode === 'CHECK_IN'
+      ? (roomStatus.currentMeeting?.apiId ?? roomStatus.nextMeeting?.apiId)
+      : roomStatus.currentMeeting?.apiId;
+    if (!bookingId) {
+      setApiError('No booking found to check ' + (mode === 'CHECK_IN' ? 'in to' : 'out of') + '.');
+      return;
+    }
     setIsApiLoading(true);
     const endpoint = mode === 'CHECK_IN'
-      ? `${getBaseUrl()}/api/Bookings/attendees/${encodeURIComponent(inputCode)}/checkin`
-      : `${getBaseUrl()}/api/Bookings/attendees/${encodeURIComponent(inputCode)}/checkout`;
+      ? `${getBaseUrl()}/api/bookings/${bookingId}/checkin`
+      : `${getBaseUrl()}/api/bookings/${bookingId}/checkout`;
     try {
-      const res = await doorSignFetch(endpoint, { method: 'POST' });
+      const res = await doorSignFetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinCode: inputCode }),
+      });
       if (!res.ok) {
         const raw = await res.text().catch(() => '');
         const msg = raw.replace(/[{}"\[\]]/g, '').trim();
